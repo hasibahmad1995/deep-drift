@@ -17,7 +17,7 @@ const bubbles = new THREE.Points(bubbleGeo, new THREE.ShaderMaterial({
   uniforms: { uTex: { value: bubbleTex }, uPix: { value: display.pixelRatio } }, transparent: true, depthWrite: false, fog: false,
   vertexShader: 'attribute float aSize; uniform float uPix; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; gl_PointSize = aSize * uPix * (300.0 / max(-mv.z, 0.2)); }',
   fragmentShader: `uniform sampler2D uTex; void main(){ vec4 c = texture2D(uTex, gl_PointCoord); gl_FragColor = vec4(c.rgb, c.a * 0.8);
-    #include <encodings_fragment>
+    #include <colorspace_fragment>
   }`
 }));
 bubbles.frustumCulled = false; bubbles.renderOrder = 12; scene.add(bubbles);

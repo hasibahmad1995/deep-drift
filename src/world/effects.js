@@ -17,7 +17,7 @@ function makeSmoke(x, y, z) {
     fragmentShader: `uniform vec3 uAbs; varying float vA; varying float vD; void main(){ vec2 c = gl_PointCoord - 0.5; float r = length(c); if (r > 0.5) discard;
         gl_FragColor = vec4(vec3(0.05, 0.05, 0.06), smoothstep(0.5, 0.1, r) * vA * 0.5 * exp(-uAbs.b * vD * 0.5));
         #include <tonemapping_fragment>
-        #include <encodings_fragment>
+        #include <colorspace_fragment>
       }`
   });
   const p = new THREE.Points(g, m); p.frustumCulled = false; p.renderOrder = 6; return p;

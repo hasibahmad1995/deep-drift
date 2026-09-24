@@ -10,7 +10,7 @@
     "test": "python tests/shot.py 20 70 200 230 270"
   },
   "devDependencies": {
-    "three": "0.128.0",
+    "three": "0.186.1",
     "@gltf-transform/core": "^3.10.0",
     "@gltf-transform/cli": "^3.10.0",
     "sharp": "^0.33.0"

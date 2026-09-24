@@ -22,12 +22,14 @@ function envAt(D) {
 function applyEnvironment(D) {
   envAt(D);
   scene.fog.color.copy(envColor);
-  U.absorb.value.copy(envAbs);
+  U.absorb.value.copy(envAbs); U.water.value.copy(envColor);
   const light = Math.exp(-D / 32), day = clamp(1 - D / 160);
-  sun.intensity = 3.4 * light; hemi.intensity = 0.55 + 0.6 * Math.exp(-D / 130);
+  // Physically based lights: Math.PI keeps the same brightness as the older engine, which multiplied every light by PI.
+  sun.intensity = 3.4 * light * Math.PI; hemi.intensity = (0.55 + 0.6 * Math.exp(-D / 130)) * Math.PI;
   hemi.color.copy(envColor).multiplyScalar(1.5).lerp(new THREE.Color(1, 1, 1), 0.3 * day).add(new THREE.Color(0.02, 0.05, 0.09).multiplyScalar(1 - day)); hemi.groundColor.copy(envColor).multiplyScalar(0.35);
-  torch.intensity = clamp((D - 18) / 70) * 6.5 + clamp((D - 1500) / 1500) * 2;   // the water is clear in the deep, so a strong torch would glare on anything close
-  lamp.intensity = clamp((D - 250) / 900) * 1.5;
+  // Torch and lamp fade with distance (decay 1, see lights.js); these values give about the old brightness at 10 m and 8 m.
+  torch.intensity = (clamp((D - 18) / 70) * 6.5 + clamp((D - 1500) / 1500) * 2) * Math.PI * 10;   // clear deep water: a stronger torch would glare on anything close
+  lamp.intensity = clamp((D - 250) / 900) * 1.5 * Math.PI * 8;
   U.caust.value = clamp(1 - D / 45) * 1.0;
   domeUniforms.uUp.value.copy(envColor).multiplyScalar(1.15 + 0.6 * day);
   domeUniforms.uDown.value.copy(envColor).multiplyScalar(0.42);

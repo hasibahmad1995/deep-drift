@@ -78,9 +78,9 @@ function buildLife() {
   const stalk = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.42, 0.24, 0), new THREE.Vector3(0.55, 0.42, 0), new THREE.Vector3(0.8, 0.5, 0)]), 12, 0.006, 5), new THREE.MeshStandardMaterial({ color: 0x3a2d28, roughness: 0.6 }));
   const bulb = glowSprite(1.6, 0xa8f4ff); bulb.position.set(0.8, 0.5, 0); lure.add(stalk, bulb);   // the bacteria in the lure give off blue-green light
   const core = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), new THREE.MeshBasicMaterial({ color: 0xe8fcff, fog: false })); core.position.copy(bulb.position); lure.add(core);
-  const lureLight = new THREE.PointLight(0x9fefff, 0.6, 2.5, 1.5); lureLight.position.copy(bulb.position); lure.add(lureLight);
+  const lureLight = new THREE.PointLight(0x9fefff, 0.6 * Math.PI, 2.5, 2);   // physically based: fades with the square of the distance lureLight.position.copy(bulb.position); lure.add(lureLight);
   ang.add(lure);
-  passBy(ang, tu(2, 0.72), view(tu(2, 0.72), 3.4, 0.7, -0.2), view(tu(2, 0.72), 0.05, -0.32, 0), 'Anglerfish', 16, () => { const k = 0.8 + 0.25 * Math.sin(U.time.value * 3); bulb.scale.setScalar(1.6 * k); lureLight.intensity = 0.6 * k; }, true);
+  passBy(ang, tu(2, 0.72), view(tu(2, 0.72), 3.4, 0.7, -0.2), view(tu(2, 0.72), 0.05, -0.32, 0), 'Anglerfish', 16, () => { const k = 0.8 + 0.25 * Math.sin(U.time.value * 3); bulb.scale.setScalar(1.6 * k); lureLight.intensity = 0.6 * Math.PI * k; }, true);
   // the abyss and the trench
   const wc = new THREE.Vector3(0, groups.wreck.userData.floorH(0, 0) + 12, 0).add(STAGE_ORIGIN(4));   // about the height the diver circles at
   for (let i = 0; i < 3; i++) {

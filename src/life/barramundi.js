@@ -13,7 +13,7 @@ const BARRA_TURN = -Math.PI / 2;
 const SWIM = { mode: 1, amp: 0.09, speed: 8, wave: 5.5 };
 
 function texFrom(uri, srgb) {
-  const t = new THREE.Texture(); t.flipY = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; if (srgb) t.encoding = THREE.sRGBEncoding;
+  const t = new THREE.Texture(); t.flipY = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; if (srgb) t.colorSpace = THREE.SRGBColorSpace;
   const img = new Image(); img.onload = () => { t.image = img; t.needsUpdate = true; }; img.src = uri; return t;
 }
 

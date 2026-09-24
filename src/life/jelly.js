@@ -26,7 +26,7 @@ function makeJelly(hue, glow) {
         c = c * T + uFog * (vec3(1.0) - T) * 0.0;
         gl_FragColor = vec4(c, a * (0.4 + 0.6 * T.b));
         #include <tonemapping_fragment>
-        #include <encodings_fragment>
+        #include <colorspace_fragment>
       }`
   }));
   // tentacles: many thin lines that sway
@@ -48,7 +48,7 @@ function makeJelly(hue, glow) {
       void main(){ float d = length(vWP - cameraPosition); vec3 T = exp(-uAbs * d);
         gl_FragColor = vec4(uCol * (0.4 * uLight + uGlow) , (0.5 - vY * 0.12) * T.b);
         #include <tonemapping_fragment>
-        #include <encodings_fragment>
+        #include <colorspace_fragment>
       }`
   }));
   g.add(bell, lines); g.userData.uni = uni;

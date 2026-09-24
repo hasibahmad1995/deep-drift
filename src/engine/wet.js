@@ -2,8 +2,8 @@
 import * as THREE from '../lib/three.js';
 import { U } from './uniforms.js';
 
-// three.js r128 blends fog after colour encoding. We blend it ourselves inside wet(), before tone mapping,
-// so the fog matches the sky dome exactly. So the stock fog step is switched off.
+// Water fades each colour of light at its own rate (red first), which the stock fog cannot do.
+// We blend our own fog inside wet(), before tone mapping, so it matches the sky dome exactly. So the stock fog step is switched off.
 THREE.ShaderChunk.fog_fragment = '';
 
 const GLSL_NOISE = `
@@ -32,8 +32,8 @@ function wet(mat, o = {}) {
   const bend = o.bend || null;
   mat.customProgramCacheKey = () => JSON.stringify(o);
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
-    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\n' + GLSL_NOISE + GLSL_ROCK;
+    sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uWater = U.water; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
+    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\nuniform vec3 uWater;\n' + GLSL_NOISE + GLSL_ROCK;
     if (bend) {
       sh.uniforms.uBend = { value: new THREE.Vector4(bend.amp, bend.speed, bend.wave, bend.len) };
       vs += 'uniform vec4 uBend;\n';
@@ -49,7 +49,7 @@ function wet(mat, o = {}) {
     sh.vertexShader = sh.vertexShader.replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\nvWN = normalize((vec4(transformedNormal, 0.0) * viewMatrix).xyz);');
     sh.vertexShader = vs + sh.vertexShader;
     let f = sh.fragmentShader;
-    f = f.replace('#include <tonemapping_fragment>', '#ifdef USE_FOG\n vec3 fogT = exp(-uAbsorb * fogDepth);\n gl_FragColor.rgb = gl_FragColor.rgb * fogT + fogColor * (vec3(1.0) - fogT);\n#endif\n#include <tonemapping_fragment>');
+    f = f.replace('#include <tonemapping_fragment>', '#ifdef USE_FOG\n vec3 fogT = exp(-uAbsorb * vFogDepth);\n gl_FragColor.rgb = gl_FragColor.rgb * fogT + uWater * (vec3(1.0) - fogT);\n#endif\n#include <tonemapping_fragment>');
     if (o.detail) {
       let c = '#include <color_fragment>\n vec3 tw = pow(abs(normalize(vWN)), vec3(4.0)); tw /= (tw.x + tw.y + tw.z);\n'
         + ' float rh = tri(vWP, tw, 0.9)*0.5 + tri(vWP, tw, 3.1)*0.3 + tri(vWP, tw, 9.0)*0.14 + tri(vWP, tw, 26.0)*0.06;\n'
@@ -71,8 +71,8 @@ function wet(mat, o = {}) {
         + ' normal = normalize(abs(det) * normal - bk * gr); }');
     }
     if (o.caust !== false) {
-      f = f.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
-        'vec3 wn = inverseTransformDirection( normal, viewMatrix );\n outgoingLight += diffuseColor.rgb * caust(vWP, uTime) * uCaust * max(wn.y, 0.0) * vec3(0.9, 1.0, 0.85);\n gl_FragColor = vec4( outgoingLight, diffuseColor.a );');
+      f = f.replace('#include <opaque_fragment>',
+        'vec3 wn = inverseTransformDirection( normal, viewMatrix );\n outgoingLight += diffuseColor.rgb * caust(vWP, uTime) * uCaust * max(wn.y, 0.0) * vec3(0.9, 1.0, 0.85);\n#include <opaque_fragment>');
     }
     sh.fragmentShader = fs + f;
   };

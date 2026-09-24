@@ -26,7 +26,7 @@ function makeSnow(count, size, additive) {
       void main(){ vec2 c = gl_PointCoord - 0.5; float r = length(c); if (r > 0.5) discard; float a = smoothstep(0.5, 0.0, r) * uAlpha * exp(-uAbs.b * vDist * 1.4) * ${additive ? 'vTw' : '1.0'};
         gl_FragColor = vec4(vC, a);
         #include <tonemapping_fragment>
-        #include <encodings_fragment>
+        #include <colorspace_fragment>
       }`
   });
   const p = new THREE.Points(g, m); p.frustumCulled = false; p.renderOrder = 8;

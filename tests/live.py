@@ -3,6 +3,7 @@ import shot
 with sync_playwright() as p:
     b=p.chromium.launch(args=["--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--ignore-gpu-blocklist"])
     pg=b.new_page(viewport={"width":1000,"height":640}); errs=[]
+    pg.set_default_timeout(90000)   # the software renderer used in tests can be slow to answer clicks while the dive plays
     pg.on("pageerror",lambda e: errs.append(str(e)[:200])); pg.on("console",lambda m: errs.append(m.text[:200]) if m.type=="error" else None)
     pg.route("**/*",shot.route); pg.goto(shot.BASE)
     pg.wait_for_selector("#btnBegin:not([disabled])",timeout=180000)

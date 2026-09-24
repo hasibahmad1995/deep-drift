@@ -16,7 +16,7 @@ const dome = new THREE.Mesh(new THREE.SphereGeometry(1000, 24, 16), new THREE.Sh
       float s = max(dot(d, normalize(uSun)), 0.0); c += vec3(0.55, 0.8, 0.9) * pow(s, 6.0) * 0.55 * uGlow + vec3(1.0, 0.98, 0.9) * pow(s, 90.0) * 1.4 * uGlow;
       gl_FragColor = vec4(c, 1.0);
       #include <tonemapping_fragment>
-      #include <encodings_fragment>
+      #include <colorspace_fragment>
     }`
 }));
 dome.renderOrder = -20; dome.frustumCulled = false;
@@ -51,7 +51,7 @@ const surface = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400, 1, 1), new TH
       c = mix(uFogCol, c, uDay);
       gl_FragColor = vec4(c, 1.0);
       #include <tonemapping_fragment>
-      #include <encodings_fragment>
+      #include <colorspace_fragment>
     }`
 }));
 surface.rotation.x = Math.PI / 2; surface.renderOrder = -15; surface.frustumCulled = false;
@@ -73,7 +73,7 @@ const rayMat = new THREE.ShaderMaterial({
       float a = across * along * fl * uI * smoothstep(1.5, 9.0, d) * 0.16;
       gl_FragColor = vec4(uCol * a, a);
       #include <tonemapping_fragment>
-      #include <encodings_fragment>
+      #include <colorspace_fragment>
     }`
 });
 (function makeRays() {
