@@ -1,0 +1,10 @@
+/* The two fonts, included with the site (both SIL Open Font License 1.1, see assets/fonts/OFL-*.txt).
+   Each file is a variable font that covers every weight we use. Latin letters only, to keep them small. */
+@font-face {
+  font-family: 'Fraunces'; font-style: normal; font-weight: 400 600; font-display: swap;
+  src: url(../assets/fonts/fraunces-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Figtree'; font-style: normal; font-weight: 400 600; font-display: swap;
+  src: url(../assets/fonts/figtree-latin.woff2) format('woff2');
+}

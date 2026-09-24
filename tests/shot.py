@@ -1,28 +1,31 @@
 """Screenshot and test harness (Playwright + software WebGL).
-Serves three.js from node_modules (run `npm install` first) and applies a strict page policy like the real host.
-The page is served from a made-up web address (BASE) that this script answers itself, because Playwright
-cannot intercept file:// pages, so the policy header would never be applied to them.
+The site is served from a made-up web address (BASE) that this script answers itself from the project folder,
+with a strict page policy like a careful real host: only our own files may run or load.
 Usage: python tests/shot.py 3 30 90     (takes screenshots at those dive times in seconds, into tests/out/)"""
-import sys, os, pathlib
+import sys, pathlib, mimetypes
 from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-DIST = ROOT / "dist" / "index.html"
-NM = ROOT / "node_modules" / "three"
 OUT = ROOT / "tests" / "out"          # screenshots go here (ignored by git)
 OUT.mkdir(exist_ok=True)
-BASE = "https://deep-drift.test/index.html"
+SITE = "https://deep-drift.test/"
+BASE = SITE + "index.html"
 URL = BASE + "?still"
-CSP = ("default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline' https://fonts.googleapis.com; "
-       "font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'")
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; "
+       "img-src 'self' data: blob:; connect-src 'self' data: blob:")
+TYPES = {".js": "text/javascript", ".css": "text/css", ".html": "text/html", ".json": "application/json", ".glb": "model/gltf-binary", ".woff2": "font/woff2"}
 GL_ARGS = ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"]
 
 def route(r):
     u = r.request.url
-    if u.startswith(BASE):
-        r.fulfill(body=DIST.read_text(encoding="utf-8"), content_type="text/html", headers={"Content-Security-Policy": CSP})
-    elif u.endswith("build/three.min.js"): r.fulfill(path=str(NM / "build/three.min.js"), content_type="application/javascript")
-    elif u.endswith("loaders/GLTFLoader.js"): r.fulfill(path=str(NM / "examples/js/loaders/GLTFLoader.js"), content_type="application/javascript")
-    else: r.abort()   # nothing else may load (fonts are optional and fall back quietly)
+    if not u.startswith(SITE):
+        r.abort(); return   # nothing from other sites may load
+    rel = u[len(SITE):].split("?")[0].split("#")[0] or "index.html"
+    f = (ROOT / rel).resolve()
+    if ROOT not in f.parents or not f.is_file():
+        r.fulfill(status=404, body="not found"); return
+    ctype = TYPES.get(f.suffix) or mimetypes.guess_type(f.name)[0] or "application/octet-stream"
+    headers = {"Content-Security-Policy": CSP} if f.suffix == ".html" else {}
+    r.fulfill(path=str(f), content_type=ctype, headers=headers)
 
 def open_page(p, w=900, h=540, url=URL):
     """Launches the browser, opens the dive and presses Begin. Returns (browser, page, errors)."""
@@ -32,7 +35,11 @@ def open_page(p, w=900, h=540, url=URL):
     pg.on("pageerror", lambda e: errs.append("PAGEERR " + str(e)[:400]))
     pg.route("**/*", route)
     pg.goto(url)
-    pg.wait_for_selector("#btnBegin:not([disabled])", timeout=180000)   # wait_for_function would need eval, which the page policy blocks
+    try:
+        pg.wait_for_selector("#btnBegin:not([disabled])", timeout=60000)   # wait_for_function would need eval, which the page policy blocks
+    except Exception:
+        b.close()
+        raise SystemExit("The page never became ready. Page errors:\n  " + "\n  ".join(errs[:15]))
     pg.click("#btnBegin"); pg.evaluate("state.playing=false; window.__hold=true")
     return b, pg, errs
 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deep Drift</title>
+<meta name="description" content="A first-person dive from the sunlit surface to the deepest ocean trench.">
+<link rel="stylesheet" href="styles/fonts.css">
+<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+<canvas id="gl" aria-label="First-person underwater dive. Drag to look around."></canvas>
+<canvas id="hose" aria-hidden="true"></canvas>
+<canvas id="mask" aria-hidden="true"></canvas>
+<div id="fade"></div>
+
+<header id="bar">
+  <span class="brand" id="brand">Deep Drift</span>
+  <button class="btn" id="btnMenu" type="button" aria-expanded="false" aria-controls="sheet" hidden>Menu</button>
+  <nav id="controls" aria-label="Controls">
+    <button class="btn" id="btnPause" type="button">Pause</button>
+    <button class="btn" id="btnMusic" type="button" aria-pressed="false">Music: off</button>
+    <button class="btn" id="btnZoom" type="button">Zoom: 1x</button>
+    <button class="btn" id="btnRecenter" type="button">Recenter view</button>
+    <button class="btn" id="btnMotion" type="button" aria-pressed="false" hidden>Motion look: off</button>
+    <button class="btn" id="btnRestart" type="button">Restart</button>
+    <button class="btn" id="btnBlog" type="button">Blog</button>
+    <button class="btn" id="btnCredits" type="button">Credits</button>
+  </nav>
+</header>
+<div id="sheetBackdrop" hidden></div>
+<div id="sheet" role="dialog" aria-label="Controls" hidden><div id="sheetBody"></div></div>
+
+<div id="journal" role="dialog" aria-modal="true" aria-labelledby="journalTitle" hidden>
+  <div class="jwrap">
+    <div class="jhead"><h2 id="journalTitle">The Deep Drift Journal</h2><button class="btn" id="btnCloseJournal" type="button">Close</button></div>
+    <p class="lead">Short posts about life under the ocean, written in our own words. Every post links to the page it is based on.</p>
+    <div class="filters" id="filters" role="group" aria-label="Filter posts by topic"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<div id="meter">
+  <div id="depth"><span id="depthNumber">0</span><small>m</small></div>
+  <div id="meterText"><b id="zoneName"></b><span id="caption"></span><span id="fact"></span></div>
+</div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<div id="intro">
+  <div>
+    <h1 id="siteName">Deep Drift</h1>
+    <p id="tagline"></p>
+    <p class="small">You are the diver, sinking slowly from the surface to the deepest place in the ocean. Drag to look around: you drift toward wherever you look. You can never swim back up, so aim early for anything you want to see, and look up to sink more slowly. Pinch or scroll to zoom. Touch an animal and it will dart away.</p>
+    <p id="loadMsg" role="status">Loading the ocean...</p>
+    <p><button class="btn primary" id="btnBegin" type="button" disabled>Begin the dive</button></p>
+    <p class="small"><a href="#" id="linkBlog">Read the blog</a> &nbsp;|&nbsp; <a href="#" id="linkCredits">About the pictures and credits</a></p>
+  </div>
+</div>
+
+<div id="credits" role="dialog" aria-modal="true" aria-labelledby="creditsTitle" hidden>
+  <h2 id="creditsTitle">Pictures and credits</h2>
+  <ul>
+    <li><b>Barramundi fish (the silver fish in the reef schools):</b> a real 3D model, "BarramundiFish", by Microsoft, shared under CC0 (public domain). Found in the Khronos glTF-Sample-Models collection: <a href="https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/BarramundiFish" target="_blank" rel="noopener noreferrer">github.com/KhronosGroup/glTF-Sample-Models</a>. I shrank its textures to save space.</li>
+    <li><b>Everything else</b> (water, light, rock, coral, sponges, every other animal, the vents, the wreck and the trench) is built by code. These are 3D models made from simple shapes, so they are stylised, not photographs, and not exact in colour. Animals are shown at their real size and at the depths where they really live.</li>
+    <li><b>The places</b> are real kinds of places found around Pacific islands such as the Marianas: a coral reef, the twilight and midnight zones, hydrothermal vents on an undersea volcano, the abyssal plain and a deep trench down to the depth of the Challenger Deep (10,935 m). In the real ocean they are tens to hundreds of kilometres apart; this dive puts them one after another. The shipwreck is imagined.</li>
+    <li><b>The descent is sped up,</b> like a time-lapse. A real submersible takes about four hours to reach the bottom of the deepest trench; here the depth counter runs much faster, while everything near you is at real size and speed.</li>
+    <li>The sound is made live in your browser. There are no recordings.</li>
+    <li>Fonts: Fraunces and Figtree, SIL Open Font License, included with the site.</li>
+    <li>3D engine: three.js r186 (MIT licence), included with the site.</li>
+  </ul>
+  <p><button class="btn" id="btnCloseCredits" type="button">Close</button></p>
+</div>
+
+<!-- All the code is in src/ (ES modules). main.js starts everything. -->
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

@@ -1,11 +1,5 @@
+/* The blog posts (edit this file to change the blog). */
 
-/* =====================================================================
-   12. BLOG POSTS
-   Every post is written in our own words. The source link goes to the page the post is
-   based on. These pages were found with a web search on 24 September 2026 and only their
-   opening text was read, so please read each page yourself before you promote the site.
-   topics = the filter buttons the post shows under.
-   ===================================================================== */
 const TOPICS = ['Coral reefs', 'Whales and dolphins', 'Sharks', 'Deep sea', 'Conservation', 'Ocean science'];
 
 const POSTS = [
@@ -51,3 +45,5 @@ const POSTS = [
            'Detailed mapping with modern sonar covered about 26% of the seafloor as of June 2024. That number keeps changing, so check the NOAA page for the latest figure.'],
     source: { name: 'NOAA Ocean Exploration, How much of the ocean has been explored?', url: 'https://oceanexplorer.noaa.gov/facts/explored.html' } }
 ];
+
+export { TOPICS, POSTS };
