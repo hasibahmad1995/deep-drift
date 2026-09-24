@@ -46,20 +46,102 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="tests: make the test tools work on Windows and apply the page policy for real",
+        version="",
+        title="Make the tests work on Windows and apply the page policy for real",
+        what="The screenshot tests were meant to run under a strict page policy like the real host, but the policy was "
+             "never applied: it only matched an old file name, and the test browser cannot add it to file:// pages anyway. "
+             "The page is now served from a made-up web address that the test script answers itself, so the policy "
+             "really applies and anything not allowed is blocked. Screenshots go to <code>tests/out/</code> instead of "
+             "<code>/tmp</code>, which does not exist on Windows. <code>build.py</code> now reads and writes UTF-8 "
+             "and keeps line endings, so the built page is byte for byte the same.",
+        files=["<code>tests/shot.py</code>, <code>tests/ui.py</code>, <code>tests/live.py</code>, <code>tests/grid.py</code>",
+               "<code>build.py</code>, <code>.gitignore</code> (ignores <code>tests/out/</code>)",
+               "<code>CLAUDE.md</code>: how to install the test tools on Windows (the full npm install fails on "
+               "<code>sharp</code>, which only the old fish-model tools need, so only three.js is fetched)"],
+        state="Same as v1.0. First real screenshots taken: the \"before\" pictures in section 7.",
+        checks="Screenshots at 9 dive moments under the strict policy, no page errors. The real fish model still "
+               "loads under the policy.",
+        status="Kept",
+    ),
+    dict(
+        subject="tests: wait for the Begin button without eval",
+        version="",
+        title="Tests: wait for the Begin button without eval",
+        what="Once the strict policy really applied, one test helper (<code>wait_for_function</code>) broke, because it "
+             "runs text as code and the policy forbids that. The tests now wait with <code>wait_for_selector</code>, "
+             "which the policy allows. Found while testing v1.1.",
+        files=["<code>tests/shot.py</code>, <code>tests/ui.py</code>, <code>tests/live.py</code>"],
+        state="Same as v1.0.",
+        checks="All three test scripts run with no errors.",
+        status="Kept",
+    ),
+    dict(
+        subject="v1.1: a more realistic reef wall, wreck, trench and deep animals",
+        version="v1.1",
+        title="A more realistic reef wall, wreck, trench and deep animals",
+        what="Hasib asked for the four areas in one version. "
+             "<b>Reef wall:</b> rock grain painted from three directions (never stretched) that catches the light like "
+             "real bumps; ledges, deep cracks and lumpy rock; more colour from encrusting life; a new set of corals and "
+             "sponges growing out of the wall (vase and tube sponges, sea fans, soft and plate corals, sea whips). "
+             "<b>Wreck:</b> rebuilt as a 47 m steamship: keel, flat sides, raked bow, flat stern, plate seams, black and "
+             "faded red paint, rotted plank deck with holes, deckhouse with windows and bridge, broken railings, davits, "
+             "a snapped mast across the deck, hatches, a torn hole in the side; rusticles hanging with gravity (as on the "
+             "Titanic, at the same depth), anchor chain, sponges and anemones on deck, a debris field with the fallen "
+             "funnel. "
+             "<b>Trench:</b> finer walls with rock layers and ledges, pale sediment on ledges, boulders at the foot of the "
+             "walls, sea cucumbers on the floor; the dive ends about 7 m above the floor. "
+             "<b>Deep light:</b> the deep water was set so murky you could see only about 8 m; it is now clear, as real "
+             "deep water is, and a soft lamp moves with the diver. "
+             "<b>Deep animals:</b> tube worms thicker and in dense clumps with red plumes; anglerfish dark with fangs and "
+             "a blue-green lure, now in view about 9 s instead of half a second; dumbo octopus with webbed arms; "
+             "snailfish passing close, plus a group feeding near the trench floor; shrimp shapes for vent shrimp and "
+             "amphipods. "
+             "<b>Speed:</b> only the current place is drawn, so the deep places cost about a quarter of v1.0; the reef "
+             "costs the same as v1.0.",
+        files=["<code>src/core.js</code>: rock grain, bumps, rust and rock layers in <code>wet()</code>; clearer deep water; lamp; softer torch",
+               "<code>src/world.js</code>: reef wall and wall corals, new sponges, <code>buildShip</code>, "
+               "<code>addRusticles</code>, debris field, trench walls, boulders, sea cucumbers, tube worms",
+               "<code>src/life.js</code>: dumbo web, anglerfish teeth and colour, <code>shrimpGeo</code>, paler animals toned down",
+               "<code>src/run.js</code>: animals that sink with the diver, dumbo and snailfish routes, lure light, "
+               "trench path, drawing only the current place",
+               "<code>dist/index.html</code> rebuilt; <code>package.json</code> 1.1.0; <code>CLAUDE.md</code> updated"],
+        state="See the before and after pictures in section 7. Still to do: corals are not solid, phone testing, "
+              "anglerfish teeth are too small to notice, trench rock layers are subtle.",
+        checks="Syntax of all scripts; screenshots at 9 dive moments under the strict page policy; phone and desktop "
+               "menu test; live play test (pause, restart, music). No page errors. Triangles per frame measured at "
+               "1300x800 against v1.0: reef 4.2 million (v1.0: 4.0), deep places about 1.0 million (v1.0: 4.0).",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: update the tracking guide for v1.1",
+        version="",
+        title="Update this guide for v1.1",
+        what="Added the four new commits to this table, before and after pictures (section 7), and a history diagram "
+             "drawn from the real commits.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>",
+               "New: <code>docs/img/before-v1.1.jpg</code> and <code>docs/img/after-v1.1.jpg</code>"],
+        state="Same as v1.1.",
+        checks="PDF opened and read through.",
+        status="Kept",
+    ),
+]
+
+# Before and after pictures (section 7): (image in docs/img, caption)
+PICTURES = [
+    ("before-v1.1.jpg", "Before (v1.0). Top: reef at 8, 32 and 52 m. Middle: midnight zone (the anglerfish should be here), "
+     "vents, wreck. Bottom: wreck, trench, trench."),
+    ("after-v1.1.jpg", "After (v1.1), at the same moments of the dive (the anglerfish and trench shots are a few seconds "
+     "later, when the animals pass)."),
 ]
 
 # Planned work, shown in its own table so it is never confused with saved versions.
 PLANNED = [
-    ("", "Test fixes", "Make the screenshot tests work on Windows (they save to /tmp), make the strict page policy "
-     "actually apply in tests, and make build.py read and write files as UTF-8. Tools only, the dive does not change."),
-    ("v1.1", "Reef wall", "Real rock pattern on the wall, ledges and overhangs, more coral and sponges on the wall, "
-     "less haze close to the wall."),
-    ("v1.2", "Wreck", "Proper ship hull (keel, flat sides, deck, pointed bow), rails, broken planks, a hole, rust, "
-     "growth on the hull, better torch light."),
-    ("v1.3", "Trench", "Layered rock, fallen boulders, sea cucumbers and shrimp, a faint glow so it is not pure black."),
-    ("v1.4", "Deep animals", "Thicker, brighter tube worm clusters, brighter anglerfish lure, snailfish and dumbo "
-     "octopus passing closer to the camera."),
-    ("v1.5", "Solid corals", "The diver can no longer swim through tall corals."),
+    ("v1.2", "Solid corals", "The diver can no longer swim through tall corals."),
+    ("", "Phone check", "Try the dive on a real phone: speed, motion look (gyro), press-and-hold swimming. Needs Hasib's phone."),
+    ("", "More real 3D models", "Like the barramundi. Each needs a clear free licence and a line in the Credits panel, so "
+     "only with Hasib's OK on the exact model."),
 ]
 
 
@@ -168,25 +250,40 @@ AREAS_SVG = """
  <text x="360" y="186" text-anchor="middle" fill="#1d6b3a" font-size="12">git switch / git restore: bring an old version back into the folder</text>
 </svg>"""
 
-CHAIN_SVG = """
-<svg viewBox="0 0 720 170" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial" font-size="13">
- <defs><marker id="b" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6f9bb8"/></marker></defs>
- <g>
-  <circle cx="80" cy="95" r="30" fill="#e9f6ee" stroke="#5aa377" stroke-width="2"/><text x="80" y="92" text-anchor="middle" font-weight="700" fill="#1d6b3a">v1.0</text><text x="80" y="108" text-anchor="middle" font-size="11" fill="#555">7929f37</text>
-  <circle cx="220" cy="95" r="30" fill="#f4f9fc" stroke="#6f9bb8" stroke-width="2"/><text x="220" y="92" text-anchor="middle" font-weight="700" fill="#0b3954">docs</text><text x="220" y="108" text-anchor="middle" font-size="11" fill="#555">guide</text>
-  <circle cx="360" cy="95" r="30" fill="#fff" stroke="#aab7c2" stroke-width="2" stroke-dasharray="4 3"/><text x="360" y="92" text-anchor="middle" font-weight="700" fill="#8a97a3">v1.1</text><text x="360" y="108" text-anchor="middle" font-size="11" fill="#8a97a3">planned</text>
-  <circle cx="500" cy="95" r="30" fill="#fff" stroke="#aab7c2" stroke-width="2" stroke-dasharray="4 3"/><text x="500" y="92" text-anchor="middle" font-weight="700" fill="#8a97a3">v1.2</text><text x="500" y="108" text-anchor="middle" font-size="11" fill="#8a97a3">planned</text>
-  <text x="600" y="100" fill="#8a97a3" font-size="20">. . .</text>
-  <line x1="188" y1="95" x2="112" y2="95" stroke="#6f9bb8" stroke-width="2" marker-end="url(#b)"/>
-  <line x1="328" y1="95" x2="252" y2="95" stroke="#aab7c2" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#b)"/>
-  <line x1="468" y1="95" x2="392" y2="95" stroke="#aab7c2" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#b)"/>
- </g>
- <rect x="40" y="20" width="80" height="24" rx="4" fill="#1d6b3a"/><text x="80" y="37" text-anchor="middle" fill="#fff" font-size="12">tag: v1.0</text>
- <line x1="80" y1="44" x2="80" y2="63" stroke="#1d6b3a" stroke-width="2"/>
- <rect x="170" y="20" width="100" height="24" rx="4" fill="#0b3954"/><text x="220" y="37" text-anchor="middle" fill="#fff" font-size="12">main (HEAD)</text>
- <line x1="220" y1="44" x2="220" y2="63" stroke="#0b3954" stroke-width="2"/>
- <text x="360" y="155" text-anchor="middle" fill="#52606d" font-size="11.5">Each commit points back to the one before it. "main" moves forward with every new commit; a tag never moves.</text>
-</svg>"""
+def chain_svg():
+    """The history as a chain of circles, drawn from COMMITS (plus the next planned version)."""
+    nodes = []
+    for c in COMMITS:
+        f = lookup(c["subject"])
+        nodes.append((c["version"] or c["subject"].split(":")[0], f[0] if f else "this one", bool(c["version"]), False))
+    nodes.append((PLANNED[0][0] or "next", "planned", True, True))
+    n, W = len(nodes), 720
+    step = (W - 80) / (n - 1); r = 25; out = []
+    for k, (lab, sub, ver, plan) in enumerate(nodes):
+        x = 40 + k * step
+        stroke, fill, tc = ("#aab7c2", "#fff", "#8a97a3") if plan else (("#5aa377", "#e9f6ee", "#1d6b3a") if ver else ("#6f9bb8", "#f4f9fc", "#0b3954"))
+        dash = ' stroke-dasharray="4 3"' if plan else ""
+        out.append(f'<circle cx="{x:.0f}" cy="95" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="2"{dash}/>'
+                   f'<text x="{x:.0f}" y="92" text-anchor="middle" font-weight="700" font-size="12" fill="{tc}">{html.escape(lab)}</text>'
+                   f'<text x="{x:.0f}" y="107" text-anchor="middle" font-size="10" fill="#555">{html.escape(sub)}</text>')
+        if k > 0:
+            out.append(f'<line x1="{x - r - 2:.0f}" y1="95" x2="{x - step + r + 4:.0f}" y2="95" stroke="{stroke}" stroke-width="2"{dash} marker-end="url(#b)"/>')
+        if ver and not plan:
+            out.append(f'<rect x="{x - 36:.0f}" y="22" width="72" height="22" rx="4" fill="#1d6b3a"/><text x="{x:.0f}" y="37" text-anchor="middle" fill="#fff" font-size="11">tag: {html.escape(lab)}</text>'
+                       f'<line x1="{x:.0f}" y1="44" x2="{x:.0f}" y2="{95 - r}" stroke="#1d6b3a" stroke-width="2"/>')
+    xl = 40 + (n - 2) * step
+    out.append(f'<rect x="{xl - 44:.0f}" y="138" width="88" height="22" rx="4" fill="#0b3954"/><text x="{xl:.0f}" y="153" text-anchor="middle" fill="#fff" font-size="11">main (HEAD)</text>'
+               f'<line x1="{xl:.0f}" y1="138" x2="{xl:.0f}" y2="{95 + r}" stroke="#0b3954" stroke-width="2"/>')
+    return ('<svg viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial">'
+            '<defs><marker id="b" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6f9bb8"/></marker></defs>'
+            + "".join(out) +
+            '<text x="360" y="183" text-anchor="middle" fill="#52606d" font-size="11.5">Each commit points back to the one before it. "main" moves forward with every new commit; a tag never moves.</text></svg>')
+
+
+def picture(name):
+    """An image from docs/img, put inside the page so the PDF needs no other files."""
+    import base64
+    return "data:image/jpeg;base64," + base64.b64encode((ROOT / "docs" / "img" / name).read_bytes()).decode()
 
 
 def esc(s):
@@ -248,7 +345,8 @@ These are set for this project only. Git on this computer has no global name or 
 <tr><td>Branch</td><td><code>{esc(branch)}</code> (the main line of work; see section 3)</td></tr>
 <tr><td>Tags (named versions)</td><td>{", ".join("<code>" + esc(t) + "</code>" for t in tags) or "none"}</td></tr>
 <tr><td>Online copy</td><td>{"<code>" + esc(remote) + "</code>" if remote else "None. The history exists only on this computer. If the project folder is lost, the history is lost too. Putting a copy on GitHub (private) would fix that; ask when you want it."}</td></tr>
-<tr><td>Plain backup page</td><td><code>backup\\deep-drift-v1.0.html</code>. Double-click it to play the v1.0 dive. No git needed.</td></tr>
+<tr><td>Plain backup page</td><td><code>backup\\deep-drift-v1.0.html</code>. Double-click it to play the v1.0 dive. No git needed.
+(For any other version, see <code>git show</code> in section 5.)</td></tr>
 <tr><td>This guide</td><td><code>docs\\git-tracking.pdf</code>, made by <code>docs\\make_git_tracking.py</code></td></tr>
 <tr><td>Special files</td><td><code>.gitignore</code>: things git ignores (<code>node_modules</code>, screenshots <code>*.png</code>, <code>__pycache__</code>).<br>
 <code>.gitattributes</code>: keeps line endings exactly as saved. Without it, Windows git would switch them when restoring,
@@ -261,7 +359,7 @@ so an old version would not come back byte for byte.</td></tr>
 changed to <code>1.0.0</code> so everything agrees.</p>
 <p>The rule from now on (<b>vMAJOR.MINOR</b>):</p>
 <ul>
-<li><b>MINOR goes up by one</b> for each finished, tested change to the dive: v1.1 (reef wall), v1.2 (wreck), and so on.
+<li><b>MINOR goes up by one</b> for each finished, tested change to the dive: v1.1 (the realism work), v1.2 (next), and so on.
 After v1.9 comes v1.10, not v2.0.</li>
 <li><b>MAJOR goes up</b> (v2.0) only for a very big change you decide on, for example a full redesign.</li>
 <li><b>No new number</b> for commits that do not change the dive: this guide, test fixes, notes. They still get a row in the
@@ -289,7 +387,7 @@ cannot be changed quietly. It is also why this file cannot show the ID of the co
 the file is saved. That row is filled in at the next update.</p>
 
 <h3>History, branch, tag and HEAD</h3>
-<div class="fig">{CHAIN_SVG}</div>
+<div class="fig">{chain_svg()}</div>
 <ul>
 <li><b>History</b> is a chain: every commit points back to its parent.</li>
 <li><b>Branch</b> (<code>main</code>): a name that points at the newest commit and moves forward with every commit. We use only one branch.</li>
@@ -301,7 +399,7 @@ the file is saved. That row is filled in at the next update.</p>
 <ol>
 <li>Edit the source files in <code>src\\</code> (never <code>dist\\index.html</code> by hand).</li>
 <li>Rebuild: <code>python build.py</code>, which writes <code>dist\\index.html</code>.</li>
-<li>Test: syntax checks, screenshots at the same dive moments as before, check for page errors.</li>
+<li>Test: syntax checks, screenshots at the same dive moments as before (<code>tests\\shot.py</code>), check for page errors.</li>
 <li>Show Hasib before and after. Only if it looks better and nothing broke:</li>
 <li>Commit, with a message that says what changed and why: <code>git add -A</code> then <code>git commit</code>.</li>
 <li>Tag it with the next version number: <code>git tag -a v1.1 -m "..."</code></li>
@@ -337,13 +435,18 @@ and every commit after it</b> (tagged versions can still be recovered, others ar
 </table>
 
 <h3>Planned (not saved yet)</h3>
-<p class="muted">Order proposed on 24 Sep 2026, not yet confirmed by Hasib. Rows move into the table above when they are committed. The version numbers may shift if the order changes.</p>
+<p class="muted">On 24 Sep 2026 Hasib chose to do the reef wall, wreck, trench and deep animals together as v1.1 (done). What is left is below. Rows move into the table above when they are committed.</p>
 <table class="log plan">
 <thead><tr><th style="width:16mm">Version</th><th style="width:30mm">Change</th><th>What it will do</th></tr></thead>
 {plan_rows}
 </table>
 
-<h2>7. Words used in this guide</h2>
+<h2 class="pb">7. Before and after pictures</h2>
+<p>Taken by the test script with the same settings, at the same moments of the dive. The test window counts as a small screen,
+so these show the lighter phone-level detail.</p>
+{"".join(f'<div class="fig"><img src="{picture(n)}" style="width:100%;border-radius:3px"><div class="cap">{c}</div></div>' for n, c in PICTURES)}
+
+<h2>8. Words used in this guide</h2>
 <table class="facts">
 <tr><td>Repository (repo)</td><td>The project folder plus its <code>.git</code> history.</td></tr>
 <tr><td>Commit</td><td>One saved snapshot of the whole project, with a message.</td></tr>
