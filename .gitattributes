@@ -1,0 +1,4 @@
+# Keep files exactly as saved (Unix line endings), so going back to an old version gives identical files.
+* text=auto eol=lf
+*.glb binary
+*.pdf binary

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deep Drift</title>
+<meta name="description" content="A first-person dive from the sunlit surface to the deepest ocean trench.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   STYLES. The ocean look is dark on purpose, so light and dark mode match.
+   ===================================================================== */
+:root {
+  /* ---- EASY-TO-CHANGE: colours and fonts ---- */
+  --bg: #010509;
+  --ink: #eaf7fb;
+  --ink-soft: #b4d3df;
+  --panel: rgba(5, 24, 43, 0.96);
+  --line: rgba(150, 215, 235, 0.3);
+  --accent: #7fe6f2;
+  --accent-ink: #03222b;
+  --warm: #ffd27a;
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  /* ---- end of the easy list ---- */
+  box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; overscroll-behavior: none; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--warm); outline-offset: 2px; }
+a { color: var(--accent); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#gl.drag { cursor: grabbing; }
+#mask, #hose { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#hose { z-index: 1; }
+#mask { z-index: 2; }
+#fade { position: fixed; inset: 0; pointer-events: none; z-index: 3; background: #000; opacity: 0; }
+
+#bar { position: fixed; z-index: 10; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px; background: linear-gradient(rgba(0, 8, 16, 0.55), rgba(0, 8, 16, 0)); }
+.brand { font-family: var(--serif); font-weight: 600; font-size: 1.25rem; white-space: nowrap; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+#bar nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.btn { font: inherit; font-weight: 500; color: var(--ink); white-space: nowrap; background: rgba(6, 28, 48, 0.72); border: 1px solid var(--line); border-radius: 999px;
+  padding: 0.4rem 1rem; min-height: 44px; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
+.btn:hover { background: rgba(20, 70, 100, 0.85); }
+.btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; font-size: 1.05rem; padding: 0.5rem 1.6rem; }
+
+#meter { position: fixed; z-index: 5; left: 18px; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: flex-end; gap: 14px; pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 10, 25, 0.95), 0 2px 14px rgba(0, 10, 25, 0.9); }
+#depth { font-family: var(--serif); font-size: clamp(2.2rem, 7vw, 3.4rem); line-height: 1; font-variant-numeric: tabular-nums; }
+#depth small { font-size: 0.42em; margin-left: 0.25em; }
+#meterText { font-size: 0.95rem; line-height: 1.3; }
+#meterText b { display: block; font-size: 1.05rem; font-weight: 600; }
+#caption { display: block; }
+#fact { display: block; font-size: 0.86rem; color: var(--ink-soft); max-width: 30rem; margin-top: 2px; }
+
+#intro { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
+  background: radial-gradient(ellipse at 50% 40%, rgba(2, 30, 55, 0.35), rgba(0, 6, 14, 0.82)); }
+#intro > div { max-width: 34rem; }
+#intro h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.8rem, 10vw, 5.4rem); line-height: 1; margin: 0 0 0.6rem; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6); }
+#intro p { margin: 0.5rem 0; line-height: 1.55; }
+#intro .small { color: var(--ink-soft); font-size: 0.92rem; }
+#loadMsg { min-height: 1.6em; color: var(--warm); }
+#credits { backdrop-filter: blur(20px) saturate(1.3); -webkit-backdrop-filter: blur(20px) saturate(1.3); box-shadow: 0 10px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12); position: fixed; z-index: 25; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 560px); max-height: 80vh; overflow: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; line-height: 1.55; font-size: 0.95rem; }
+#credits h2 { font-family: var(--serif); margin: 0 0 0.5rem; }
+#credits ul { padding-left: 1.2rem; }
+
+
+/* ---- phones and tablets: one Menu button opens a sheet with all the controls ---- */
+#sheetBackdrop { position: fixed; inset: 0; z-index: 29; background: rgba(0, 6, 14, 0.5); }
+#sheet { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; max-width: 620px; margin: 0 auto; padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel); backdrop-filter: blur(20px) saturate(1.3); -webkit-backdrop-filter: blur(20px) saturate(1.3); border: 1px solid var(--line); border-bottom: 0;
+  border-radius: 22px 22px 0 0; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5); }
+#sheet #controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#sheet #controls .btn { justify-content: center; min-height: 54px; font-size: 1rem; white-space: normal; text-align: center; }
+
+/* ---- the blog ---- */
+#journal { position: fixed; inset: 0; z-index: 40; overflow-y: auto; background: rgba(3, 14, 26, 0.97); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(40px + env(safe-area-inset-bottom, 0px)); }
+.jwrap { max-width: 1000px; margin: 0 auto; }
+.jhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.jhead h2 { font-family: var(--serif); font-size: clamp(1.7rem, 5vw, 2.6rem); margin: 0; line-height: 1.15; }
+.lead { color: var(--ink-soft); margin: 0.6rem 0 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 1.2rem 0; }
+.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.card { background: rgba(10, 40, 66, 0.8); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 0.6rem; }
+.card h4 { font-family: var(--serif); font-size: 1.25rem; margin: 0; line-height: 1.25; }
+.card p { margin: 0; line-height: 1.5; }
+.tags { font-size: 0.85rem; color: var(--accent); }
+.card .btn { align-self: flex-start; }
+.card .body p + p { margin-top: 0.6rem; }
+.source { font-size: 0.9rem; margin-top: auto; }
+
+@media (max-width: 460px) {
+  #bar { padding-left: 10px; padding-right: 10px; gap: 4px; }
+  #bar nav { gap: 5px; }
+  .brand { font-size: 1.05rem; }
+  #bar .btn { padding: 0.3rem 0.7rem; font-size: 0.86rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<canvas id="gl" aria-label="First-person underwater dive. Drag to look around."></canvas>
+<canvas id="hose" aria-hidden="true"></canvas>
+<canvas id="mask" aria-hidden="true"></canvas>
+<div id="fade"></div>
+
+<header id="bar">
+  <span class="brand" id="brand">Deep Drift</span>
+  <button class="btn" id="btnMenu" type="button" aria-expanded="false" aria-controls="sheet" hidden>Menu</button>
+  <nav id="controls" aria-label="Controls">
+    <button class="btn" id="btnPause" type="button">Pause</button>
+    <button class="btn" id="btnMusic" type="button" aria-pressed="false">Music: off</button>
+    <button class="btn" id="btnZoom" type="button">Zoom: 1x</button>
+    <button class="btn" id="btnRecenter" type="button">Recenter view</button>
+    <button class="btn" id="btnMotion" type="button" aria-pressed="false" hidden>Motion look: off</button>
+    <button class="btn" id="btnRestart" type="button">Restart</button>
+    <button class="btn" id="btnBlog" type="button">Blog</button>
+    <button class="btn" id="btnCredits" type="button">Credits</button>
+  </nav>
+</header>
+<div id="sheetBackdrop" hidden></div>
+<div id="sheet" role="dialog" aria-label="Controls" hidden><div id="sheetBody"></div></div>
+
+<div id="journal" role="dialog" aria-modal="true" aria-labelledby="journalTitle" hidden>
+  <div class="jwrap">
+    <div class="jhead"><h2 id="journalTitle">The Deep Drift Journal</h2><button class="btn" id="btnCloseJournal" type="button">Close</button></div>
+    <p class="lead">Short posts about life under the ocean, written in our own words. Every post links to the page it is based on.</p>
+    <div class="filters" id="filters" role="group" aria-label="Filter posts by topic"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<div id="meter">
+  <div id="depth"><span id="depthNumber">0</span><small>m</small></div>
+  <div id="meterText"><b id="zoneName"></b><span id="caption"></span><span id="fact"></span></div>
+</div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<div id="intro">
+  <div>
+    <h1 id="siteName">Deep Drift</h1>
+    <p id="tagline"></p>
+    <p class="small">You are the diver. The dive runs by itself. Drag to look in any direction. Press and hold to swim toward what you see (W and S on a keyboard). Pinch or scroll to zoom. Touch a fish and it will dart away.</p>
+    <p id="loadMsg" role="status">Loading the ocean...</p>
+    <p><button class="btn primary" id="btnBegin" type="button" disabled>Begin the dive</button></p>
+    <p class="small"><a href="#" id="linkBlog">Read the blog</a> &nbsp;|&nbsp; <a href="#" id="linkCredits">About the pictures and credits</a></p>
+  </div>
+</div>
+
+<div id="credits" role="dialog" aria-modal="true" aria-labelledby="creditsTitle" hidden>
+  <h2 id="creditsTitle">Pictures and credits</h2>
+  <ul>
+    <li><b>Barramundi fish (the silver fish in the reef schools):</b> a real 3D model, "BarramundiFish", by Microsoft, shared under CC0 (public domain). Found in the Khronos glTF-Sample-Models collection: <a href="https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/BarramundiFish" target="_blank" rel="noopener noreferrer">github.com/KhronosGroup/glTF-Sample-Models</a>. I shrank its textures to save space.</li>
+    <li><b>Everything else</b> (water, light, coral, sharks, turtle, manta, whales, jellyfish, squid, anglerfish, vents, wreck) is built by code. These are 3D models made from simple shapes, so they are stylised, not photographs, and they are not to scale or exact in colour.</li>
+    <li>The sound is made live in your browser. There are no recordings.</li>
+    <li>3D engine: three.js r128 (MIT licence), loaded from the jsDelivr network.</li>
+  </ul>
+  <p><button class="btn" id="btnCloseCredits" type="button">Close</button></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>

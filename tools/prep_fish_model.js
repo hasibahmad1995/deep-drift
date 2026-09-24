@@ -1,0 +1,12 @@
+const {NodeIO}=require('@gltf-transform/core');const fs=require('fs');
+(async()=>{const io=new NodeIO();const doc=await io.read('barra_jpg.glb');
+const m=doc.getRoot().listMaterials()[0];
+const grab=(t)=>'data:image/jpeg;base64,'+Buffer.from(t.getImage()).toString('base64');
+const out={color:grab(m.getBaseColorTexture()),normal:grab(m.getNormalTexture()),orm:grab(m.getMetallicRoughnessTexture())};
+console.log('factors',m.getRoughnessFactor(),m.getMetallicFactor());
+const texs=[m.getBaseColorTexture(),m.getNormalTexture(),m.getMetallicRoughnessTexture(),m.getOcclusionTexture()];
+m.setBaseColorTexture(null);m.setNormalTexture(null);m.setMetallicRoughnessTexture(null);m.setOcclusionTexture(null);
+texs.forEach(t=>t&&t.dispose());
+await io.write('barra_geo.glb',doc);
+fs.writeFileSync('barra_tex.json',JSON.stringify(out));
+})();

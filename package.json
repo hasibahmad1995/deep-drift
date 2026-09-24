@@ -1,0 +1,4 @@
+{ "name": "deep-drift", "private": true, "version": "1.0.0",
+  "description": "Deep Drift: a first-person 3D dive from the surface to the deepest trench (single HTML file).",
+  "scripts": { "build": "python3 build.py", "serve": "python3 -m http.server 8080 --directory dist" },
+  "devDependencies": { "three": "0.128.0", "@gltf-transform/core": "^3.10.0", "@gltf-transform/cli": "^3.10.0", "sharp": "^0.33.0" } }
