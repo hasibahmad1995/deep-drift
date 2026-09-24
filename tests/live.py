@@ -10,5 +10,5 @@ with sync_playwright() as p:
     pg.click("#btnMusic"); pg.wait_for_timeout(1500)
     pg.click("#btnPause"); a=pg.evaluate("state.t"); pg.wait_for_timeout(1500); b2=pg.evaluate("state.t")
     pg.click("#btnRestart"); pg.wait_for_timeout(800)
-    print("t after 8s:",round(a,1),"paused delta:",round(b2-a,3),"restart t:",round(pg.evaluate("state.t"),2),"music:",pg.evaluate("music.on"),"pixelRatio:",pg.evaluate("pixelRatio"))
+    print("t after 8s:",round(a,1),"paused delta:",round(b2-a,3),"restart t:",round(pg.evaluate("state.t"),2),"music:",pg.evaluate("music.on"),"pixelRatio:",pg.evaluate("display.pixelRatio"))
     print("errors:",[e for e in errs if 'ERR_FAILED' not in e][:5]); b.close()

@@ -1,36 +1,55 @@
 # Deep Drift
 
-A first-person 3D dive from the sunlit surface to the deepest ocean trench. It ships as one HTML file (`dist/index.html`).
-The 3D engine is three.js r128, loaded from the jsDelivr network. There are no other files to host.
+A first-person 3D dive from the sunlit surface to the deepest ocean trench, in the browser.
+Built with three.js (included in `vendor/three`). The site loads nothing from other websites.
 
-## Quick start
+## Run it on your computer
 
 ```
-python3 build.py                 # writes dist/index.html from src/ and assets/
-python3 -m http.server 8080 --directory dist     # then open http://localhost:8080
+node tools/serve.mjs          # or: npm start
 ```
+Then open http://localhost:8080. Edit any file in `src/` and reload the page to see the change.
 
-To host it, upload `dist/index.html` (rename not needed) to Netlify Drop, GitHub Pages or any static host.
+## Make the folder to publish
+
+```
+python tools/build.py         # or: npm run build
+```
+This writes `dist/` with only the files a visitor needs. Upload that folder to any static host (for example GitHub Pages).
 
 ## Folder map
 
 | Path | What it is |
 |---|---|
-| `src/head.html` | Page shell: CSS, buttons, panels (menu sheet, blog, credits), script tags for three.js |
-| `src/core.js` | Settings, renderer, underwater light and fog, sky dome, surface, sun rays, drifting specks, shape-building tools |
-| `src/life.js` | Animals (built from code), the real CC0 fish loader, schools, turtle, jellyfish, touch settings |
-| `src/world.js` | Places: reef wall and corals, vents, wreck, trench, boat, whale skeleton, collision maps |
-| `src/posts.js` | The 7 blog posts (edit this file to change the blog) |
-| `src/run.js` | Dive path, animals' routes, touch and passers, camera and controls, mask and hose, sound, main loop |
-| `assets/barra_geo.glb`, `barra_tex.json` | The barramundi model: shape, and 3 texture pictures as data URIs |
-| (original model) | Not included (12.5 MB). Download BarramundiFish.glb from the Khronos link in Credits if you need to redo `tools/` |
-| `tools/` | Node scripts used to shrink and split the fish model |
-| `tests/` | Playwright screenshot and behaviour checks (run after `npm install` and `pip install playwright`) |
+| `index.html`, `styles/` | Page shell (buttons, panels, blog, credits) and the CSS |
+| `src/main.js` | Starts everything and runs the frame loop |
+| `src/config.js` | Easy settings, the parts of the dive, water colour per depth |
+| `src/engine/` | Renderer, lights, underwater materials, sky and surface, drifting specks |
+| `src/dive/` | Dive state, timeline and the diver's path |
+| `src/world/` | The places: reef, corals, vents, shipwreck, trench, sea floors |
+| `src/life/` | The animals: recipes, schools, the real barramundi, touching, who appears where |
+| `src/diver/` | Looking around, swimming, camera, collisions, breathing bubbles |
+| `src/ui/` | Mask and hose, depth meter, menus, blog and credits panels |
+| `src/audio/`, `src/content/` | The live soundtrack; facts and blog posts |
+| `vendor/three/` | three.js (MIT licence), copied by `tools/vendor_three.py` |
+| `assets/` | The barramundi model and its pictures; the fonts (SIL Open Font License) |
+| `tools/` | Local server, build, vendoring; `fish-model/` holds the Node scripts used once to shrink the fish model |
+| `tests/` | Playwright screenshot and behaviour checks |
+| `docs/` | The git tracking guide (PDF) and the script that makes it |
 
-`build.py` joins the files in this order: head.html, fish data, core, life, world, posts, run. Order matters because the scripts share top-level names.
+## Tests
+
+```
+python -m pip install playwright pillow
+python -m playwright install chromium
+python tests/shot.py 3 30 90      # screenshots at those dive times, into tests/out/
+python tests/ui.py                # phone and desktop menus
+python tests/live.py              # live play: pause, restart, music
+```
 
 ## Credits
 
 Barramundi fish: "BarramundiFish" by Microsoft, CC0. From the Khronos glTF-Sample-Models collection
 (https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/BarramundiFish). Textures were shrunk and converted to JPEG.
+Fonts: Fraunces and Figtree, SIL Open Font License 1.1 (licences in `assets/fonts/`).
 Everything else is built by code. three.js is MIT licensed. Blog sources are linked from each post.
