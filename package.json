@@ -1,7 +1,7 @@
 {
   "name": "deep-drift",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "Deep Drift: a first-person 3D dive from the surface to the deepest trench.",
   "scripts": {
