@@ -32,7 +32,7 @@ def open_page(p, w=900, h=540, url=URL):
     pg.on("pageerror", lambda e: errs.append("PAGEERR " + str(e)[:400]))
     pg.route("**/*", route)
     pg.goto(url)
-    pg.wait_for_function("document.getElementById('btnBegin') && !document.getElementById('btnBegin').disabled", timeout=180000)
+    pg.wait_for_selector("#btnBegin:not([disabled])", timeout=180000)   # wait_for_function would need eval, which the page policy blocks
     pg.click("#btnBegin"); pg.evaluate("state.playing=false; window.__hold=true")
     return b, pg, errs
 

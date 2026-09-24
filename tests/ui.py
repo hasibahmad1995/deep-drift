@@ -5,7 +5,7 @@ def go(p, name, **ctx):
     c=b.new_context(**ctx); pg=c.new_page(); errs=[]
     pg.on("pageerror",lambda e: errs.append(str(e)[:200])); pg.on("console",lambda m: errs.append(m.text[:200]) if m.type=="error" and "ERR_FAILED" not in m.text else None)
     pg.route("**/*",shot.route); pg.goto(shot.URL)
-    pg.wait_for_function("!document.getElementById('btnBegin').disabled",timeout=180000)
+    pg.wait_for_selector("#btnBegin:not([disabled])",timeout=180000)
     pg.click("#btnBegin"); pg.evaluate("state.playing=false; window.__hold=true; state.t=30; step(0.03)")
     pg.wait_for_timeout(300)
     pg.screenshot(path=str(shot.OUT / f"dd_{name}_a.png"),timeout=200000)
