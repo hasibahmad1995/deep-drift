@@ -13,6 +13,11 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
 - Software WebGL is slow. The tests use `?still` and `window.__hold` so the page stops its own loop and you call `step(0.03)` yourself.
 - Handy in the page console: `state.t = 120` jumps in time, `step(0.03)` draws a frame, `look`, `swim`, `ACTORS`, `groups`, `pathAt(t)`.
 
+## Versions and git
+- The project is a git repo (branch `main`). Each finished, tested change to the dive is one commit, tagged `v1.1`, `v1.2`, ... (Hasib chose v1.0 for the starting point, tag `v1.0`). Docs and test-only commits get no version number.
+- After every commit, add an entry to `COMMITS` in `docs/make_git_tracking.py`, run `python docs/make_git_tracking.py`, and commit the new `docs/git-tracking.pdf`. Hasib uses that PDF to track versions.
+- `backup/deep-drift-v1.0.html` is a plain copy of the v1.0 page. Do not edit it.
+
 ## Architecture in one minute
 - **Timeline:** `STAGES` (core.js) lists 6 places and their length. `pathAt(t)` (run.js) gives camera position, forward direction and depth D (metres).
   Reef, open ocean and midnight share one world (origin 0). Vents, wreck and trench each live at `STAGE_ORIGIN(i)` (3000 m apart in z) and the page fades to black between them.
