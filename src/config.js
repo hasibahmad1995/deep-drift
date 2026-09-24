@@ -1,4 +1,4 @@
-/* Easy-to-change settings, the six parts of the dive, and the colour of the water at each depth. */
+/* Easy-to-change settings and the colour of the water at each depth. */
 
 const SETTINGS = {
   siteName: 'Deep Drift',
@@ -10,15 +10,7 @@ const SETTINGS = {
   maxPixelRatio: 2     // lower (for example 1.5) if a phone feels slow
 };
 
-// The dive, one row per place. seconds = how long it lasts at normal speed.
-const STAGES = [
-  { id: 'reef',   name: 'Coral reef',          seconds: 80 },
-  { id: 'blue',   name: 'Open ocean',          seconds: 62 },
-  { id: 'mid',    name: 'Midnight zone',       seconds: 44 },
-  { id: 'vents',  name: 'Hydrothermal vents',  seconds: 30 },
-  { id: 'wreck',  name: 'The abyss',           seconds: 30 },
-  { id: 'trench', name: 'Deep trench',         seconds: 36 }
-];
+// The parts of the dive and their timing are in src/dive/route.js; the plan of the world is in src/world/sites.js.
 
 // Colour of the water at each depth (metres) and how fast each colour of light fades per metre.
 // Red fades first, then green, then blue. This is why deep water looks blue and then black.
@@ -32,4 +24,4 @@ const ENV = [
   { d: 11000, fog: '#010409', abs: [0.095, 0.058, 0.046] }
 ];
 
-export { SETTINGS, STAGES, ENV };
+export { SETTINGS, ENV };

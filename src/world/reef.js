@@ -5,20 +5,19 @@ import { wet } from '../engine/wet.js';
 import { col, mixc } from '../util/color.js';
 import { clamp, lerp, seeded, smooth } from '../util/math.js';
 import { fbm2 } from '../util/noise.js';
-import { WALL_SETS, scatterCorals } from './corals.js';
-import { wg } from './layout.js';
+import { DEEP_REEF_SETS, WALL_SETS, scatterCorals } from './corals.js';
 
 /* ---- the reef wall: a shallow shelf that drops off into deep water ---- */
 function buildReef() {
-  const G = wg(0), R = seeded(2);
+  const G = new THREE.Group(), R = seeded(2); G.name = 'reef';
   const prof = [[110, -9], [48, -9], [32, -9.4], [28, -11], [26.4, -16], [26, -28], [26.5, -45], [27.5, -62], [29.5, -90], [33, -130], [38, -190]];
   const pts = [], step = SMALL ? 0.9 : 0.55;
   for (let i = 0; i < prof.length - 1; i++) {
-    const [x0, y0] = prof[i], [x1, y1] = prof[i + 1], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (y0 > -70 ? step : 2.5)));
+    const [x0, y0] = prof[i], [x1, y1] = prof[i + 1], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (y0 > -70 ? step : y0 > -195 ? step * 1.8 : 2.5)));
     for (let k = 0; k < n; k++) pts.push([lerp(x0, x1, k / n), lerp(y0, y1, k / n)]);
   }
   pts.push(prof[prof.length - 1]);
-  const NZ = SMALL ? 130 : 220, ZR = 65, pos = [], colr = [], idx = [], cand = [], wallCand = [], sizes = [];
+  const NZ = SMALL ? 130 : 220, ZR = 65, pos = [], colr = [], idx = [], cand = [], wallCand = [], mesoCand = [], sizes = [];
   const ridged = (x, y) => 1 - Math.abs(fbm2(x, y, 3) * 2 - 1);   // sharp creases, for cracks in the rock
   const wallMax = new Float32Array(100 * 66).fill(-1e9), shelfTop = new Float32Array(60 * 66).fill(-1e9);   // where the rock is, so the diver cannot swim into it
   for (let i = 0; i < pts.length; i++) {
@@ -52,10 +51,12 @@ function buildReef() {
         if (b2 > 0.6) c = c.clone().lerp(col(['#b87aa0', '#d88a6a', '#c7b25a'][Math.floor(b * 30) % 3]), clamp((b2 - 0.6) * 8) * 0.7);
       }
       c = c.clone().multiplyScalar(0.5 + 0.7 * crev);
-      if (y < -60) c = c.clone().lerp(col('#26231f'), clamp((-y - 60) / 90));
+      if (y < -60) c = c.clone().lerp(col('#4b4540'), clamp((-y - 60) / 120) * 0.6);   // deeper: less coral colour, grey-brown rock and sponges
       colr.push(c.r, c.g, c.b);
       if ((y > -58 && y < -8.5 && Math.abs(z) < 60) || (sand && x > 26 && x < 75 && Math.abs(z) < 60)) { cand.push(i * (NZ + 1) + k); }
       if (!sand && y > -56 && y < -10 && Math.abs(z) < 55) wallCand.push(i * (NZ + 1) + k);
+      // the deep reef (60 to 190 m): life thins out with depth as the light fades
+      if (!sand && y <= -56 && y > -188 && Math.abs(z - 8) < 32 && ((i * 7919 + k * 104729) % 1000) / 1000 < 1 - 0.65 * (-y - 56) / 132) mesoCand.push(i * (NZ + 1) + k);
       sizes.push(fbm2(x * 0.2, z * 0.2 + y * 0.2));
     }
   }
@@ -68,8 +69,10 @@ function buildReef() {
   const terrain = new THREE.Mesh(g, wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }), { detail: true, bump: 2.2 }));
   G.add(terrain);
   G.userData.bins = { wallMax, shelfTop };
+  G.userData.cull = { center: new THREE.Vector3(-40, -80, 0), radius: 170 };
   scatterCorals(G, { pos: g.attributes.position.array, nor: g.attributes.normal.array, candidates: cand, size: sizes });
   scatterCorals(G, { pos: g.attributes.position.array, nor: g.attributes.normal.array, candidates: wallCand, size: sizes }, WALL_SETS, 0.12, 321);
+  scatterCorals(G, { pos: g.attributes.position.array, nor: g.attributes.normal.array, candidates: mesoCand, size: sizes }, DEEP_REEF_SETS, 0.15, 777);
   return G;
 }
 

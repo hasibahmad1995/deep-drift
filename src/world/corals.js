@@ -132,10 +132,21 @@ const WALL_SETS = [
   { geo: () => anemoneGeo(), n: 90, cols: ['#e28fb0', '#f0a86a', '#d8d6a0'], s: [0.6, 1.2], rough: 0.5, up: 0.3 }
 ];
 
+// The deep reef (60 to 190 m, the 'mesophotic' zone): big sea fans, dark black corals and sponges replace the corals that need bright light.
+const DEEP_REEF_SETS = [
+  { geo: () => fanGeo(), n: 300, cols: ['#e8c040', '#e07a30', '#d84a4a', '#efe2c8', '#b84fa0'], s: [1.4, 3.2], rough: 0.8, fan: true, up: 0.15 },
+  { geo: () => whipGeo(), n: 260, cols: ['#2a1c14', '#3a2a1c', '#5a3a24'], s: [1.1, 2.2], rough: 0.7, up: 0.55 },   // black corals (their skeleton is black; the living tissue is brown)
+  { geo: () => vaseGeo(), n: 160, cols: ['#c98a3a', '#b0527a', '#d8c070', '#8a6a9a'], s: [0.8, 2.0], rough: 0.8, up: 0.55 },
+  { geo: () => spongeGeo(), n: 200, cols: ['#e0b13a', '#c9862e', '#d2587a'], s: [0.8, 1.6], rough: 0.7, up: 0.5 },
+  { geo: () => tableGeo(), n: 50, cols: ['#9a8a6a', '#8a9a6a', '#a08060'], s: [0.8, 1.8], rough: 0.7, up: 0.8 },   // plate corals, near the top of the deep reef
+  { geo: () => softGeo(), n: 80, cols: ['#e0507a', '#f07a5a', '#d84a4a', '#f0a04a'], s: [0.5, 1.2], rough: 0.5, up: 0.35 }
+];
+
 // Puts many copies of each coral on the reef surface. up = how much a coral turns to grow upward (default 0.35).
 function scatterCorals(group, surf, sets = CORAL_SETS, upDefault = 0.35, seed = 123) {
   const R = seeded(seed), q = new THREE.Quaternion(), q2 = new THREE.Quaternion(), m = new THREE.Matrix4(), p = new THREE.Vector3(), s = new THREE.Vector3(), nrm = new THREE.Vector3();
   sets.forEach(set => {
+    if (!surf.candidates.length) return;
     const n = Math.max(6, Math.round(set.n * DETAIL));
     const mat = new THREE.MeshStandardMaterial({ vertexColors: !set.fan, roughness: set.rough, side: THREE.DoubleSide, map: set.fan ? fanTexture : null, alphaTest: set.fan ? 0.5 : 0 });
     wet(mat, { detail: false });
@@ -154,4 +165,4 @@ function scatterCorals(group, surf, sets = CORAL_SETS, upDefault = 0.35, seed = 
   });
 }
 
-export { branchGeo, brainGeo, tableGeo, fanGeo, softGeo, spongeGeo, anemoneGeo, fanTexture, CORAL_SETS, vaseGeo, whipGeo, WALL_SETS, scatterCorals };
+export { branchGeo, brainGeo, tableGeo, fanGeo, softGeo, spongeGeo, anemoneGeo, fanTexture, CORAL_SETS, vaseGeo, whipGeo, WALL_SETS, DEEP_REEF_SETS, scatterCorals };

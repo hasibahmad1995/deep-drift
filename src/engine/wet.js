@@ -32,8 +32,8 @@ function wet(mat, o = {}) {
   const bend = o.bend || null;
   mat.customProgramCacheKey = () => JSON.stringify(o);
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uWater = U.water; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
-    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\nuniform vec3 uWater;\n' + GLSL_NOISE + GLSL_ROCK;
+    sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uWaterUp = U.waterUp; sh.uniforms.uWaterDown = U.waterDown; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
+    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\nuniform vec3 uWaterUp;\nuniform vec3 uWaterDown;\n' + GLSL_NOISE + GLSL_ROCK;
     if (bend) {
       sh.uniforms.uBend = { value: new THREE.Vector4(bend.amp, bend.speed, bend.wave, bend.len) };
       vs += 'uniform vec4 uBend;\n';
@@ -49,7 +49,7 @@ function wet(mat, o = {}) {
     sh.vertexShader = sh.vertexShader.replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\nvWN = normalize((vec4(transformedNormal, 0.0) * viewMatrix).xyz);');
     sh.vertexShader = vs + sh.vertexShader;
     let f = sh.fragmentShader;
-    f = f.replace('#include <tonemapping_fragment>', '#ifdef USE_FOG\n vec3 fogT = exp(-uAbsorb * vFogDepth);\n gl_FragColor.rgb = gl_FragColor.rgb * fogT + uWater * (vec3(1.0) - fogT);\n#endif\n#include <tonemapping_fragment>');
+    f = f.replace('#include <tonemapping_fragment>', '#ifdef USE_FOG\n vec3 fogT = exp(-uAbsorb * vFogDepth);\n vec3 fogDir = normalize(vWP - cameraPosition);\n vec3 fogCol = mix(uWaterDown, uWaterUp, smoothstep(-0.55, 0.75, fogDir.y));\n gl_FragColor.rgb = gl_FragColor.rgb * fogT + fogCol * (vec3(1.0) - fogT);\n#endif\n#include <tonemapping_fragment>');
     if (o.detail) {
       let c = '#include <color_fragment>\n vec3 tw = pow(abs(normalize(vWN)), vec3(4.0)); tw /= (tw.x + tw.y + tw.z);\n'
         + ' float rh = tri(vWP, tw, 0.9)*0.5 + tri(vWP, tw, 3.1)*0.3 + tri(vWP, tw, 9.0)*0.14 + tri(vWP, tw, 26.0)*0.06;\n'

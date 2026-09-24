@@ -1,6 +1,6 @@
 /* Deep Drift: starts everything and runs one picture (frame) after another. */
 import * as THREE from './lib/three.js';
-import { SETTINGS, STAGES } from './config.js';
+import { SETTINGS } from './config.js';
 import { $ } from './util/dom.js';
 import { clamp } from './util/math.js';
 import { REDUCED } from './engine/device.js';
@@ -8,11 +8,14 @@ import { renderer, display, scene, camera } from './engine/renderer.js';
 import { U } from './engine/uniforms.js';
 import { applyEnvironment } from './engine/environment.js';
 import { dome, surface, rayGroup } from './engine/sky.js';
-import { snow, glowSpecks } from './engine/particles.js';
+import { snow, glowSpecks, backscatter } from './engine/particles.js';
 import { state, clock } from './dive/state.js';
-import { TOTAL } from './dive/timeline.js';
-import { groups } from './world/layout.js';
+import { TOTAL } from './dive/route.js';
+import { addPlace } from './world/layout.js';
+import { updateCulling } from './world/culling.js';
 import { buildReef } from './world/reef.js';
+import { buildTerrain } from './world/terrain.js';
+import { buildBenthos } from './world/benthos.js';
 import { buildVents } from './world/vents.js';
 import { buildWreck } from './world/wreck.js';
 import { buildTrench } from './world/trench.js';
@@ -20,6 +23,7 @@ import { ACTORS } from './life/actors.js';
 import { loadBarramundi } from './life/barramundi.js';
 import { buildLife } from './life/cast.js';
 import { buildExtras } from './life/extras.js';
+import { buildDeepCast } from './life/cast-deep.js';
 import { runPassers } from './life/passers.js';
 import { TOUCH, HIT, reactActor } from './life/touch.js';
 import { updateBubbles } from './diver/bubbles.js';
@@ -49,15 +53,11 @@ function step(dt) {
   if (state.playing) { state.t += dt; if (state.t >= TOTAL) state.t = 0; }
   const p = updateCamera(dt);
   camera.getWorldDirection(tmpV); TOUCH.point.copy(camera.position).addScaledVector(tmpV, 0.3);
-  applyEnvironment(p.D);
+  applyEnvironment(state.D);   // light and water colour for the depth where you really are
   runPassers(p);
   dome.position.copy(camera.position); surface.position.set(camera.position.x, 0, camera.position.z); rayGroup.position.set(camera.position.x, 0, camera.position.z);
-  // the sun's shafts and surface belong to the reef water only
-  const inReefWater = p.si <= 1;
-  // only draw the place you are in (the screen fades to black between places)
-  if (groups.trench) { groups.reef.visible = p.si <= 2; groups.vents.visible = p.si === 3; groups.wreck.visible = p.si === 4; groups.trench.visible = p.si === 5; }
-  surface.visible = surface.visible && inReefWater; rayGroup.visible = rayGroup.visible && inReefWater;
-  snow.material.uniforms.uCam.value.copy(camera.position); glowSpecks.material.uniforms.uCam.value.copy(camera.position);
+  updateCulling(camera.position);   // skip parts of the world too far away to see
+  snow.material.uniforms.uCam.value.copy(camera.position); glowSpecks.material.uniforms.uCam.value.copy(camera.position); backscatter.material.uniforms.uCam.value.copy(camera.position);
   for (let i = 0; i < ACTORS.length; i++) {
     const a = ACTORS[i];
     if (a.obj) { const far = a.obj.position.distanceToSquared(camera.position) > 90000; a.obj.visible = !far && a.active !== false; if (far || a.active === false) continue; }
@@ -65,15 +65,9 @@ function step(dt) {
     if (a.obj) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
   }
   updateBubbles(dt); drawHose(dt);
-  // fade to black between the places that are far apart
-  let f = 0;
-  const S = STAGES[p.si];
-  if (p.si >= 2 && p.si <= 5) { f = Math.max(f, 1 - (state.t - S.t0) / 1.4); }
-  if (p.si >= 2 && p.si <= 4) { f = Math.max(f, 1 - (S.t0 + S.dur - state.t) / 1.4); }
-  if (p.si === 5) f = Math.max(f, 1 - (TOTAL - state.t) / 1.6);
-  if (state.t < 1.6) f = Math.max(f, 1 - state.t / 1.6);
-  $('fade').style.opacity = clamp(f);
-  updateHud(p.D, p.si);
+  // the one continuous dive only fades in at the start and out at the very end
+  $('fade').style.opacity = clamp(Math.max(1 - state.t / 1.6, 1 - (TOTAL - state.t) / 1.6));
+  updateHud(state.D, p.si);
   renderer.render(scene, camera);
   // if the picture is slow, draw fewer pixels
   frames++; if (dt > 0.034) slow++;
@@ -99,9 +93,10 @@ function boot() {
   requestAnimationFrame(t => { last = t; frame(t); });
   setTimeout(async () => {
     await loadBarramundi();
-    groups.reef = buildReef(); groups.vents = buildVents(); groups.wreck = buildWreck(); groups.trench = buildTrench();
+    addPlace('reef', buildReef()); addPlace('terrain', buildTerrain()); addPlace('vents', buildVents()); addPlace('plain', buildWreck()); addPlace('trench', buildTrench()); addPlace('benthos', buildBenthos());
     buildLife();
     buildExtras();
+    buildDeepCast();
     $('loadMsg').textContent = '';
     $('btnBegin').disabled = false; $('btnBegin').focus();
   }, 30);

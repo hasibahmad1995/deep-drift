@@ -2,7 +2,7 @@
 import * as THREE from '../lib/three.js';
 import { ENV } from '../config.js';
 import { hemi, lamp, sun, torch } from './lights.js';
-import { glowSpecks, snow } from './particles.js';
+import { backscatter, glowSpecks, snow } from './particles.js';
 import { scene } from './renderer.js';
 import { domeUniforms, rayGroup, rayUniforms, surface, surfaceUniforms } from './sky.js';
 import { U } from './uniforms.js';
@@ -28,11 +28,11 @@ function applyEnvironment(D) {
   sun.intensity = 3.4 * light * Math.PI; hemi.intensity = (0.55 + 0.6 * Math.exp(-D / 130)) * Math.PI;
   hemi.color.copy(envColor).multiplyScalar(1.5).lerp(new THREE.Color(1, 1, 1), 0.3 * day).add(new THREE.Color(0.02, 0.05, 0.09).multiplyScalar(1 - day)); hemi.groundColor.copy(envColor).multiplyScalar(0.35);
   // Torch and lamp fade with distance (decay 1, see lights.js); these values give about the old brightness at 10 m and 8 m.
-  torch.intensity = (clamp((D - 18) / 70) * 6.5 + clamp((D - 1500) / 1500) * 2) * Math.PI * 10;   // clear deep water: a stronger torch would glare on anything close
+  torch.intensity = (clamp((D - 18) / 70) * 3.8 + clamp((D - 1500) / 1500) * 1.2) * Math.PI * 10;   // modest, so animals right in front of you keep their colour; the lamp lights further out
   lamp.intensity = clamp((D - 250) / 900) * 1.5 * Math.PI * 8;
   U.caust.value = clamp(1 - D / 45) * 1.0;
-  domeUniforms.uUp.value.copy(envColor).multiplyScalar(1.15 + 0.6 * day);
-  domeUniforms.uDown.value.copy(envColor).multiplyScalar(0.42);
+  U.waterUp.value.copy(envColor).multiplyScalar(1.15 + 0.6 * day); U.waterDown.value.copy(envColor).multiplyScalar(0.42);
+  domeUniforms.uUp.value.copy(U.waterUp.value); domeUniforms.uDown.value.copy(U.waterDown.value);
   domeUniforms.uGlow.value = day;
   surfaceUniforms.uFogCol.value.copy(envColor); surfaceUniforms.uDay.value = clamp(1 - D / 120);
   surface.visible = D < 140;
@@ -40,6 +40,7 @@ function applyEnvironment(D) {
   rayGroup.visible = D < 260;
   glowSpecks.material.uniforms.uAlpha.value = clamp((D - 120) / 500) * 0.9;
   snow.material.uniforms.uAlpha.value = 0.5 * (0.25 + 0.75 * clamp(1 - D / 400));
+  backscatter.material.uniforms.uBeam.value = clamp((D - 60) / 200) * 0.9;   // the beam only shows once it is dark enough for the torch to matter
 }
 
 export { envColor, envAbs, envAt, applyEnvironment };

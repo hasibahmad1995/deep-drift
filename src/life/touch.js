@@ -10,7 +10,8 @@ const HIT = {
   'Whale shark': { len: 7, rad: 1.1, flee: 0.9, k: 0.7 }, 'Great white shark': { len: 3.6, rad: 0.6, flee: 2.0, k: 1.0 }, 'Humpback whale': { len: 10, rad: 1.5, flee: 0.6, k: 0.6 },
   'Sperm whale': { len: 10, rad: 1.5, flee: 0.6, k: 0.6 }, 'Dolphin': { len: 2, rad: 0.35, flee: 3.2, k: 1.2 }, 'Jellyfish': { len: 0, rad: 0.75, flee: 0.9, k: 1.2 },
   'Giant squid': { len: 5, rad: 0.4, flee: 2.6, k: 1.0 }, 'Anglerfish': { len: 0.9, rad: 0.35, flee: 1.4, k: 1.5 }, 'Dumbo octopus': { len: 0.4, rad: 0.25, flee: 1.3, k: 1.5 },
-  'Mariana snailfish': { len: 0.3, rad: 0.15, flee: 1.2, k: 1.5 }
+  'Mariana snailfish': { len: 0.3, rad: 0.15, flee: 1.2, k: 1.5 }, 'Vampire squid': { len: 0.3, rad: 0.15, flee: 1.4, k: 1.5 },
+  'Gulper eel': { len: 0.75, rad: 0.1, flee: 1.2, k: 1.5 }, 'Grenadier fish': { len: 0.8, rad: 0.15, flee: 1.6, k: 1.3 }, 'Tripod fish': { len: 0.3, rad: 0.12, flee: 1.5, k: 1.4 }
 };
 const rA = new THREE.Vector3(), rP1 = new THREE.Vector3(), rP2 = new THREE.Vector3(), rN = new THREE.Vector3(), rD = new THREE.Vector3(), rQ = new THREE.Quaternion(), rE = new THREE.Euler(0, 0, 0, 'YZX');
 // If the diver touches this animal it darts away from the hand, turns to face where it is going, and slowly calms down.

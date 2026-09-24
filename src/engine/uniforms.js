@@ -7,6 +7,10 @@ const U = {   // values shared by every material
   // The water colour for our own fog, in linear light. (three.js gives its stock fog colour already converted for the
   // screen, because its fog runs last; ours runs before tone mapping, so it needs the linear colour.)
   water: { value: new THREE.Color() },
+  // The open water all around (the background) is lighter looking up and darker looking down. Fog fades toward the same
+  // colours, so far rock melts into the background with no outline. Set in environment.js; the sky dome uses them too.
+  waterUp: { value: new THREE.Color() },
+  waterDown: { value: new THREE.Color() },
   caust: { value: 1 }
 };
 

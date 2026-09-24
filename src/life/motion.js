@@ -1,6 +1,6 @@
 /* Simple ways animals move: pass by the diver, or circle a point. */
 import * as THREE from '../lib/three.js';
-import { pathAt } from '../dive/path.js';
+import { pathAt } from '../dive/route.js';
 import { scene } from '../engine/renderer.js';
 import { ACTORS } from './actors.js';
 import { clamp } from '../util/math.js';

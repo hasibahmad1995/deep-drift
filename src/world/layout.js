@@ -1,10 +1,11 @@
-/* Where each place sits in the 3D world, and the list of built places. */
+/* The built places (reef, sea floor, vents, wreck, trench), all in one continuous world. See sites.js for the plan. */
 import * as THREE from '../lib/three.js';
 import { scene } from '../engine/renderer.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
-const STAGE_ORIGIN = i => new THREE.Vector3(0, 0, i * 3000);
-const wg = (i) => { const g = new THREE.Group(); g.position.copy(STAGE_ORIGIN(i)); scene.add(g); return g; };
-const groups = {};   // the built places: reef, vents, wreck, trench
+const groups = {};   // name -> the group of 3D objects for that place
 
-export { UP, STAGE_ORIGIN, wg, groups };
+// Adds a built place to the scene. Anything inside with userData.cull = { center, radius } is hidden when far away (see main.js).
+function addPlace(name, group) { scene.add(group); groups[name] = group; return group; }
+
+export { UP, groups, addPlace };

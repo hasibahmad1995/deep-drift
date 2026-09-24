@@ -4,11 +4,11 @@ import { scene } from '../engine/renderer.js';
 import { wet } from '../engine/wet.js';
 import { col } from '../util/color.js';
 import { loft, mergeGeo, paintGeo } from '../util/geometry.js';
-import { STAGE_ORIGIN, UP } from './layout.js';
+import { UP } from './layout.js';
 
 /* ---- a dive boat, seen from below at the start ---- */
 function buildBoat() {
-  const G = new THREE.Group(), O = STAGE_ORIGIN(0);
+  const G = new THREE.Group(), O = new THREE.Vector3();   // the boat floats above the reef
   const hull = loft(9, [[0, 0.002, 0.002, 0.03, 0], [0.08, 0.07, 0.002, 0.055, 0], [0.25, 0.15, 0.002, 0.085, 0], [0.7, 0.16, 0.002, 0.09, 0], [0.95, 0.11, 0.002, 0.06, 0], [1, 0.09, 0.002, 0.05, 0]], 30, 20);
   paintGeo(hull, p => (p.y < -0.28 ? '#1d3a63' : '#e9eef0'));
   const motor = new THREE.BoxGeometry(0.4, 0.9, 0.3); motor.translate(-4.6, -0.5, 0); paintGeo(motor, () => '#2a2d31');
