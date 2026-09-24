@@ -126,10 +126,111 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="refactor: split the code into small ES modules and run the site locally",
+        version="", lane="feature",
+        title="Split the code into small modules; run the site locally",
+        what="Hasib asked for clean, separated code that can be found later, and for local testing before shipping. "
+             "The five big script files (about 2,400 lines) became 55 small modules, one job each, in folders by area "
+             "(engine, dive, world, life, diver, ui, audio, content). The page is a normal folder now: index.html, styles/, "
+             "src/, and three.js and the fonts included in the project, so nothing is loaded from other websites. "
+             "A small local server (<code>node tools/serve.mjs</code>) runs it at http://localhost:8080. "
+             "The dive itself did not change: screenshots at 9 moments looked the same as v1.1.",
+        files=["New folders <code>src/engine</code>, <code>src/dive</code>, <code>src/world</code>, <code>src/life</code>, "
+               "<code>src/diver</code>, <code>src/ui</code>, <code>src/audio</code>, <code>src/content</code>, <code>src/util</code>",
+               "<code>index.html</code>, <code>styles/</code>, <code>vendor/three/</code>, <code>assets/fonts/</code>",
+               "<code>tools/serve.mjs</code> (local server), <code>tools/build.py</code> (makes <code>dist/</code> for publishing), "
+               "<code>tools/vendor_three.py</code>",
+               "Removed: the old single-file build; <code>dist/</code> is no longer kept in git"],
+        state="Same as v1.1.",
+        checks="Screenshots at 9 moments, menus on phone and desktop, live play. A first Python server dropped requests "
+               "on Windows and the page could hang while loading; the Node server loaded 6 of 6 times in about 2 s.",
+        status="Kept",
+    ),
+    dict(
+        subject="engine: upgrade three.js from r128 (2021) to r186",
+        version="", lane="feature",
+        title="Upgrade the 3D engine to the current three.js",
+        what="three.js r128 (2021) became r186. This turns on modern colour management and physically based lights "
+             "(light fades with distance, as in reality), the base for more realistic pictures. Strengths were converted so "
+             "the dive looked the same. One bug found on the way: the new engine gives its fog colour already converted for "
+             "the screen, which made every deep place flat bright blue; our fog now keeps its own colour.",
+        files=["<code>vendor/three/</code> (r186), <code>tools/vendor_three.py</code>",
+               "<code>src/engine/</code> lights, environment, uniforms and <code>wet.js</code>; small renames in several shaders"],
+        state="Same as v1.1, on the new engine.",
+        checks="Screenshots at 9 moments matched v1.1; menus and live play pass.",
+        status="Kept",
+    ),
+    dict(
+        subject="dive: one continuous 7-minute dive from the surface to the Challenger Deep",
+        version="", lane="feature",
+        title="One continuous dive, gliding swim, life at real depths",
+        what="Hasib found the jumps between places jarring and wanted more to explore, kept real. "
+             "<b>One world:</b> the dive now goes down the side of a volcanic island without any fade or depth jump: reef, "
+             "the island cliff into the twilight and midnight zones, a vent terrace at ~1,600 m, the volcano slope, the "
+             "abyssal plain with the wreck at ~5,000 m, the trench wall, and the floor of the Challenger Deep at 10,935 m. "
+             "<b>Swimming:</b> no button. You drift toward wherever you look and are always sinking; looking up slows the "
+             "sinking, looking down speeds it up; you can never swim back up, so you must aim early; a gentle current brings "
+             "you back if you stray too far. <b>Life at real depths:</b> every animal only appears where it really lives "
+             "(for example snailfish only between about 6,500 and 8,300 m). New: deep reef (sea fans, black corals, sponges), "
+             "hatchetfish, vampire squid, gulper eel, grenadiers, tripod fish, bamboo corals, glass sponges, sea lilies, "
+             "brittle stars, sea pigs, xenophyophores, manganese nodules, liquid CO2 droplets at the vents. "
+             "<b>Look:</b> backscatter (specks lit in the torch beam, like real deep-sea footage), fog that melts into the "
+             "background, realistic rock brightness. <b>Honest page text:</b> the places are moved closer together and the "
+             "descent is sped up.",
+        files=["New: <code>src/dive/depth.js</code>, <code>route.js</code>; <code>src/world/sites.js</code>, <code>terrain.js</code>, "
+               "<code>benthos.js</code>, <code>culling.js</code>; <code>src/diver/glide.js</code>; <code>src/life/species-deep.js</code>, "
+               "<code>cast-deep.js</code>; <code>tests/glide.py</code>",
+               "Changed: vents, wreck, trench, reef, corals, collision, camera, input, cast, extras, passers, facts, HUD, "
+               "particles, page text, README, CLAUDE.md",
+               "Removed: <code>src/dive/timeline.js</code>, <code>src/dive/path.js</code> (the old six separate places)"],
+        state="One continuous ~7 minute dive from the surface to 10,935 m. See the pictures in section 7.",
+        checks="Screenshots down the whole dive under the strict page policy; menus on phone and desktop; live play; "
+               "glide test (steers, never rises, sinks slower or faster, roaming limit). No page errors. Triangles per frame "
+               "at 1300x800: reef about 4.7 million (v1.1: 4.2), open water 0.8 million, deep places 1.1 to 2.2 million.",
+        status="Kept",
+    ),
+    dict(
+        subject="release: set the version to 1.2.0",
+        version="", lane="feature",
+        title="Set the version number to 1.2.0",
+        what="The last step on the branch before merging: <code>package.json</code> says 1.2.0.",
+        files=["<code>package.json</code>"],
+        state="Same as the commit before.",
+        checks="None needed.",
+        status="Kept",
+    ),
+    dict(
+        subject="v1.2: one continuous dive to the Challenger Deep, glide swimming, life at real depths",
+        version="v1.2", merge=True,
+        title="Release v1.2: merge the branch into main",
+        what="The merge commit that brings the four commits of <code>feature/v1.2-continuous-dive</code> into <code>main</code>, "
+             "tagged <code>v1.2</code>. From here, <code>main</code> is the v1.2 dive.",
+        files=["Everything changed on the branch (the four rows above it)."],
+        state="v1.2: one continuous dive to the Challenger Deep with gliding swim and life at real depths.",
+        checks="All tests passed on the branch before merging.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: update the tracking guide for v1.2",
+        version="",
+        title="Update this guide for v1.2",
+        what="New rows, a history diagram that shows the branch and the merge, a new part explaining branches and "
+             "releases (section 4), before and after pictures for v1.2, and the plan for v1.3 and later.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>",
+               "New: <code>docs/img/before-v1.2.jpg</code>, <code>docs/img/after-v1.2.jpg</code>"],
+        state="Same as v1.2.",
+        checks="PDF opened and read through.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)
 PICTURES = [
+    ("before-v1.2.jpg", "v1.1 (before v1.2): six separate places, with a fade to black between the vents, the wreck and the trench."),
+    ("after-v1.2.jpg", "v1.2: one continuous dive. Left to right, top to bottom: reef 11 m and 54 m, reef drop-off 155 m, "
+     "twilight 560 m (hatchetfish), midnight 1,120 m (vampire squid) and 1,450 m (anglerfish), vents 1,580 m, volcano slope "
+     "2,270 and 3,440 m, abyssal plain 4,840 m, wreck 4,860 m, whale skeleton 5,185 m, trench 6,300 and 8,275 m, Challenger Deep 10,890 m."),
     ("before-v1.1.jpg", "Before (v1.0). Top: reef at 8, 32 and 52 m. Middle: midnight zone (the anglerfish should be here), "
      "vents, wreck. Bottom: wreck, trench, trench."),
     ("after-v1.1.jpg", "After (v1.1), at the same moments of the dive (the anglerfish and trench shots are a few seconds "
@@ -138,10 +239,12 @@ PICTURES = [
 
 # Planned work, shown in its own table so it is never confused with saved versions.
 PLANNED = [
-    ("v1.2", "Solid corals", "The diver can no longer swim through tall corals."),
-    ("", "Phone check", "Try the dive on a real phone: speed, motion look (gyro), press-and-hold swimming. Needs Hasib's phone."),
-    ("", "More real 3D models", "Like the barramundi. Each needs a clear free licence and a line in the Credits panel, so "
-     "only with Hasib's OK on the exact model."),
+    ("v1.3", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
+     "flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton."),
+    ("v1.4+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
+    ("", "Phone check", "Try the dive on a real phone: speed, motion look (gyro), and the look-to-swim glide. Needs Hasib's phone."),
+    ("", "Publish", "First public version on GitHub Pages (free), after local testing. Needs a GitHub account."),
+    ("", "Solid corals", "The diver can no longer swim through tall corals."),
 ]
 
 
@@ -251,33 +354,39 @@ AREAS_SVG = """
 </svg>"""
 
 def chain_svg():
-    """The history as a chain of circles, drawn from COMMITS (plus the next planned version)."""
+    """The history as circles: main along the bottom row, a side branch (lane "feature") on the row above,
+    with the fork and the merge drawn as slanted lines. Drawn from COMMITS plus the next planned version."""
     nodes = []
     for c in COMMITS:
         f = lookup(c["subject"])
-        nodes.append((c["version"] or c["subject"].split(":")[0], f[0] if f else "this one", bool(c["version"]), False))
-    nodes.append((PLANNED[0][0] or "next", "planned", True, True))
-    n, W = len(nodes), 720
-    step = (W - 80) / (n - 1); r = 25; out = []
-    for k, (lab, sub, ver, plan) in enumerate(nodes):
-        x = 40 + k * step
-        stroke, fill, tc = ("#aab7c2", "#fff", "#8a97a3") if plan else (("#5aa377", "#e9f6ee", "#1d6b3a") if ver else ("#6f9bb8", "#f4f9fc", "#0b3954"))
-        dash = ' stroke-dasharray="4 3"' if plan else ""
-        out.append(f'<circle cx="{x:.0f}" cy="95" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="2"{dash}/>'
-                   f'<text x="{x:.0f}" y="92" text-anchor="middle" font-weight="700" font-size="12" fill="{tc}">{html.escape(lab)}</text>'
-                   f'<text x="{x:.0f}" y="107" text-anchor="middle" font-size="10" fill="#555">{html.escape(sub)}</text>')
-        if k > 0:
-            out.append(f'<line x1="{x - r - 2:.0f}" y1="95" x2="{x - step + r + 4:.0f}" y2="95" stroke="{stroke}" stroke-width="2"{dash} marker-end="url(#b)"/>')
-        if ver and not plan:
-            out.append(f'<rect x="{x - 36:.0f}" y="22" width="72" height="22" rx="4" fill="#1d6b3a"/><text x="{x:.0f}" y="37" text-anchor="middle" fill="#fff" font-size="11">tag: {html.escape(lab)}</text>'
-                       f'<line x1="{x:.0f}" y1="44" x2="{x:.0f}" y2="{95 - r}" stroke="#1d6b3a" stroke-width="2"/>')
-    xl = 40 + (n - 2) * step
-    out.append(f'<rect x="{xl - 44:.0f}" y="138" width="88" height="22" rx="4" fill="#0b3954"/><text x="{xl:.0f}" y="153" text-anchor="middle" fill="#fff" font-size="11">main (HEAD)</text>'
-               f'<line x1="{xl:.0f}" y1="138" x2="{xl:.0f}" y2="{95 + r}" stroke="#0b3954" stroke-width="2"/>')
-    return ('<svg viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial">'
-            '<defs><marker id="b" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6f9bb8"/></marker></defs>'
-            + "".join(out) +
-            '<text x="360" y="183" text-anchor="middle" fill="#52606d" font-size="11.5">Each commit points back to the one before it. "main" moves forward with every new commit; a tag never moves.</text></svg>')
+        lab = c["version"] or ("merge" if c.get("merge") else c["subject"].split(":")[0])
+        nodes.append(dict(lab=lab, sub=f[0] if f else "this one", ver=bool(c["version"]), plan=False, lane=c.get("lane", "main"), merge=c.get("merge", False)))
+    nodes.append(dict(lab=PLANNED[0][0] or "next", sub="planned", ver=True, plan=True, lane="main", merge=False))
+    n, W, r = len(nodes), 720, 19
+    step = (W - 60) / (n - 1); Y = {"main": 120, "feature": 55}; out = []
+    X = [30 + k * step for k in range(n)]
+    last = {"main": None, "feature": None}
+    for k, nd in enumerate(nodes):   # lines to the parent(s) first, so circles sit on top
+        y, parent = Y[nd["lane"]], last[nd["lane"]] if last[nd["lane"]] is not None else last["main"]
+        dash = ' stroke-dasharray="4 3"' if nd["plan"] else ""
+        col = "#aab7c2" if nd["plan"] else "#6f9bb8"
+        if parent is not None: out.append(f'<line x1="{X[parent]:.0f}" y1="{Y[nodes[parent]["lane"]]}" x2="{X[k]:.0f}" y2="{y}" stroke="{col}" stroke-width="2"{dash}/>')
+        if nd["merge"] and last["feature"] is not None: out.append(f'<line x1="{X[last["feature"]]:.0f}" y1="{Y["feature"]}" x2="{X[k]:.0f}" y2="{y}" stroke="#c9a24a" stroke-width="2"/>')
+        last[nd["lane"]] = k
+    for k, nd in enumerate(nodes):
+        x, y = X[k], Y[nd["lane"]]
+        stroke, fill, tc = ("#aab7c2", "#fff", "#8a97a3") if nd["plan"] else (("#5aa377", "#e9f6ee", "#1d6b3a") if nd["ver"] else (("#c9a24a", "#fff8e8", "#7a5a10") if nd["lane"] == "feature" else ("#6f9bb8", "#f4f9fc", "#0b3954")))
+        dash = ' stroke-dasharray="4 3"' if nd["plan"] else ""
+        out.append(f'<circle cx="{x:.0f}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="2"{dash}/>'
+                   f'<text x="{x:.0f}" y="{y - 2}" text-anchor="middle" font-weight="700" font-size="9.5" fill="{tc}">{html.escape(nd["lab"])}</text>'
+                   f'<text x="{x:.0f}" y="{y + 10}" text-anchor="middle" font-size="8" fill="#555">{html.escape(nd["sub"])}</text>')
+        if nd["ver"] and not nd["plan"]:
+            out.append(f'<rect x="{x - 26:.0f}" y="{y + r + 10}" width="52" height="17" rx="3" fill="#1d6b3a"/><text x="{x:.0f}" y="{y + r + 22}" text-anchor="middle" fill="#fff" font-size="9.5">tag {html.escape(nd["lab"])}</text>'
+                       f'<line x1="{x:.0f}" y1="{y + r}" x2="{x:.0f}" y2="{y + r + 10}" stroke="#1d6b3a" stroke-width="2"/>')
+    xl = X[n - 2]
+    out.append(f'<rect x="{xl - 34:.0f}" y="{Y["main"] + r + 32}" width="68" height="17" rx="3" fill="#0b3954"/><text x="{xl:.0f}" y="{Y["main"] + r + 44}" text-anchor="middle" fill="#fff" font-size="9.5">main (HEAD)</text>')
+    out.append(f'<text x="30" y="30" fill="#7a5a10" font-size="11">side branch: feature/v1.2-continuous-dive</text><text x="30" y="{Y["main"] + r + 72}" fill="#0b3954" font-size="11">main: released versions</text>')
+    return ('<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial">' + "".join(out) + '</svg>')
 
 
 def picture(name):
@@ -342,11 +451,12 @@ copy to return to.</div>
 inside it (packed and compressed). <b>Never edit or delete it:</b> deleting it deletes all history. Your normal files are not affected.</td></tr>
 <tr><td>Settings for this project</td><td><code>.git\\config</code>. Name <code>{esc(name)}</code>, email <code>{esc(email)}</code>.
 These are set for this project only. Git on this computer has no global name or email.</td></tr>
-<tr><td>Branch</td><td><code>{esc(branch)}</code> (the main line of work; see section 3)</td></tr>
+<tr><td>Branches</td><td><code>main</code>: released versions. <code>feature/v1.2-continuous-dive</code>: where v1.2 was built (kept for the record). You are on <code>{esc(branch)}</code>. See section 4.</td></tr>
+<tr><td>Run it locally</td><td>In the project folder: <code>node tools/serve.mjs</code>, then open <code>http://localhost:8080</code>. Stop it with Ctrl+C.</td></tr>
 <tr><td>Tags (named versions)</td><td>{", ".join("<code>" + esc(t) + "</code>" for t in tags) or "none"}</td></tr>
 <tr><td>Online copy</td><td>{"<code>" + esc(remote) + "</code>" if remote else "None. The history exists only on this computer. If the project folder is lost, the history is lost too. Putting a copy on GitHub (private) would fix that; ask when you want it."}</td></tr>
 <tr><td>Plain backup page</td><td><code>backup\\deep-drift-v1.0.html</code>. Double-click it to play the v1.0 dive. No git needed.
-(For any other version, see <code>git show</code> in section 5.)</td></tr>
+(Any other version: see section 5.)</td></tr>
 <tr><td>This guide</td><td><code>docs\\git-tracking.pdf</code>, made by <code>docs\\make_git_tracking.py</code></td></tr>
 <tr><td>Special files</td><td><code>.gitignore</code>: things git ignores (<code>node_modules</code>, screenshots <code>*.png</code>, <code>__pycache__</code>).<br>
 <code>.gitattributes</code>: keeps line endings exactly as saved. Without it, Windows git would switch them when restoring,
@@ -359,7 +469,7 @@ so an old version would not come back byte for byte.</td></tr>
 changed to <code>1.0.0</code> so everything agrees.</p>
 <p>The rule from now on (<b>vMAJOR.MINOR</b>):</p>
 <ul>
-<li><b>MINOR goes up by one</b> for each finished, tested change to the dive: v1.1 (the realism work), v1.2 (next), and so on.
+<li><b>MINOR goes up by one</b> for each finished, tested change to the dive: v1.1 (the realism work), v1.2 (the continuous dive), and so on.
 After v1.9 comes v1.10, not v2.0.</li>
 <li><b>MAJOR goes up</b> (v2.0) only for a very big change you decide on, for example a full redesign.</li>
 <li><b>No new number</b> for commits that do not change the dive: this guide, test fixes, notes. They still get a row in the
@@ -390,35 +500,43 @@ the file is saved. That row is filled in at the next update.</p>
 <div class="fig">{chain_svg()}</div>
 <ul>
 <li><b>History</b> is a chain: every commit points back to its parent.</li>
-<li><b>Branch</b> (<code>main</code>): a name that points at the newest commit and moves forward with every commit. We use only one branch.</li>
+<li><b>Branch</b>: a name that points at the newest commit of a line of work and moves forward with every commit. <code>main</code> holds the released versions; each new version is built on its own side branch first (the upper row).</li>
 <li><b>Tag</b> (<code>v1.0</code>): a permanent name for one commit. It never moves. This is how "go back to v1.1" stays easy.</li>
 <li><b>HEAD</b>: "where you are now", the version the working folder is based on. Normally HEAD is on <code>main</code>.</li>
 </ul>
 
-<h2>4. How each change will be made</h2>
+<h2>4. Branches, testing and releases (how each version is made)</h2>
+<p>Since v1.2 each version is built the way software teams do it (a simple "SDLC": build, test, release):</p>
 <ol>
-<li>Edit the source files in <code>src\\</code> (never <code>dist\\index.html</code> by hand).</li>
-<li>Rebuild: <code>python build.py</code>, which writes <code>dist\\index.html</code>.</li>
-<li>Test: syntax checks, screenshots at the same dive moments as before (<code>tests\\shot.py</code>), check for page errors.</li>
-<li>Show Hasib before and after. Only if it looks better and nothing broke:</li>
-<li>Commit, with a message that says what changed and why: <code>git add -A</code> then <code>git commit</code>.</li>
-<li>Tag it with the next version number: <code>git tag -a v1.1 -m "..."</code></li>
-<li>Add a row to <code>COMMITS</code> in <code>docs\\make_git_tracking.py</code>, run it, and commit the new PDF.</li>
+<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.3-behaviour</code>. <code>main</code> is not touched,
+so the last released version is always safe there.</li>
+<li><b>Build in small steps,</b> each saved as its own commit on the branch (for v1.2: refactor, engine upgrade, the continuous dive).
+The code is split into small files, one job each, so every part can be found and changed later.</li>
+<li><b>Test locally</b> after every step: <code>node tools/serve.mjs</code> to play it at http://localhost:8080, and the test scripts
+(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>).</li>
+<li><b>Show Hasib</b> before and after. Only if it looks better and nothing broke:</li>
+<li><b>Release.</b> Set the version in <code>package.json</code>, merge the branch into <code>main</code> with a merge commit
+(<code>git switch main</code> then <code>git merge --no-ff feature/...</code>), and tag it (<code>git tag -a v1.3 -m "..."</code>).</li>
+<li><b>Record it:</b> add rows to <code>COMMITS</code> in <code>docs\\make_git_tracking.py</code>, run it, and commit the new PDF.</li>
+<li><b>Publish</b> (later): <code>python tools\\build.py</code> makes <code>dist\\</code> with only the files a visitor needs; that folder goes to the host.</li>
 </ol>
-<p>If a change looks worse or breaks something, it is not committed; the files are put back with <code>git restore</code>. If a
-problem is found only later, that one commit is undone with <code>git revert</code> (below), and the table shows it as "Undone".</p>
+<p>If a step looks worse or breaks something, it is not committed; the files are put back with <code>git restore</code>. If a problem is found
+only later, that one commit is undone with <code>git revert</code> (below), and the table shows it as "Undone". A whole branch can also simply be
+left unmerged: <code>main</code> never saw it.</p>
 
 <h2>5. How to look back and go back</h2>
 <p>Type these in <b>Git Bash</b> (Start menu, "Git Bash") or in PowerShell, after moving into the project folder:
 <code>cd C:\\Users\\hasib\\Downloads\\deep-drift-project</code>. Or ask Claude to do it.</p>
 <table class="cmd">
 <tr><td><code>git log --oneline --decorate</code></td><td>List every saved version, newest first, with IDs and tags.</td></tr>
+<tr><td><code>git log --oneline --graph --all</code></td><td>The same, drawn with the branches and merges.</td></tr>
 <tr><td><code>git status</code></td><td>Show which files changed since the last save. Safe, changes nothing.</td></tr>
 <tr><td><code>git diff</code></td><td>Show the exact lines changed since the last save. Safe.</td></tr>
-<tr><td><code>git show v1.0:dist/index.html &gt; old.html</code></td><td>Get the playable page of any version as a separate file,
-without touching the project. Open <code>old.html</code> in a browser.</td></tr>
-<tr><td><code>git switch --detach v1.0</code><br>then <code>git switch main</code></td><td>Visit an old version: the folder turns into v1.0.
-The second command comes back to the newest. Nothing is lost. (Save or undo current edits first; git will warn you.)</td></tr>
+<tr><td><code>git show v1.1:dist/index.html &gt; old.html</code></td><td>v1.0 and v1.1 were one single file: this saves one as <code>old.html</code>,
+without touching the project. Open it in a browser.</td></tr>
+<tr><td><code>git switch --detach v1.2</code><br><code>node tools/serve.mjs</code><br>then <code>git switch main</code></td><td>Play any version from v1.2 on:
+the folder turns into that version, the server runs it, and the last command comes back to the newest. Nothing is lost.
+(Save or undo current edits first; git will warn you.)</td></tr>
 <tr><td><code>git restore src/world.js</code></td><td>Throw away unsaved edits to one file, back to the last commit.</td></tr>
 <tr><td><code>git revert 1a2b3c4</code></td><td>Undo one commit by adding a new commit that does the opposite. Later changes are kept,
 and the history still shows what happened. <b>The safe way to undo.</b></td></tr>
@@ -435,7 +553,7 @@ and every commit after it</b> (tagged versions can still be recovered, others ar
 </table>
 
 <h3>Planned (not saved yet)</h3>
-<p class="muted">On 24 Sep 2026 Hasib chose to do the reef wall, wreck, trench and deep animals together as v1.1 (done). What is left is below. Rows move into the table above when they are committed.</p>
+<p class="muted">v1.1 (the realism work) and v1.2 (the continuous dive) are done. What is left is below. Rows move into the table above when they are committed.</p>
 <table class="log plan">
 <thead><tr><th style="width:16mm">Version</th><th style="width:30mm">Change</th><th>What it will do</th></tr></thead>
 {plan_rows}
@@ -452,7 +570,9 @@ so these show the lighter phone-level detail.</p>
 <tr><td>Commit</td><td>One saved snapshot of the whole project, with a message.</td></tr>
 <tr><td>Commit ID (hash)</td><td>The fingerprint name of a commit, like <code>7929f37</code>.</td></tr>
 <tr><td>Stage / staging area</td><td>The waiting list of changes for the next commit.</td></tr>
-<tr><td>Branch</td><td>A moving name for the newest commit of a line of work. Ours is <code>main</code>.</td></tr>
+<tr><td>Branch</td><td>A moving name for the newest commit of a line of work: <code>main</code> for releases, a side branch per new version.</td></tr>
+<tr><td>Merge</td><td>Bringing a side branch into <code>main</code>. The merge commit has two parents: the last commit on each line.</td></tr>
+<tr><td>Release</td><td>A tested version merged into <code>main</code> and given a tag, like <code>v1.2</code>.</td></tr>
 <tr><td>Tag</td><td>A fixed name for one commit, used for version numbers.</td></tr>
 <tr><td>HEAD</td><td>The commit the working folder is currently based on.</td></tr>
 <tr><td>Revert</td><td>Undo a commit by adding its opposite as a new commit.</td></tr>
