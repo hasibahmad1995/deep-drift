@@ -52,7 +52,7 @@ function pathAt(t) {
     }
     case 'trench': {
       D = 6000 + 4900 * u;
-      pos.set(6 * Math.sin(u * 4), lerp(TRENCH_TOP_Y + 110, TRENCH_TOP_Y - 120, smooth(u)), lerp(-40, 55, u)).add(O);
+      pos.set(6 * Math.sin(u * 4), lerp(TRENCH_TOP_Y + 110, TRENCH_TOP_Y - 142, smooth(u)), lerp(-40, 55, u)).add(O);   // ends about 7 m above the floor
       facing(-Math.PI / 2 + 0.45 * Math.sin(u * 3.2), -0.32 + 0.1 * Math.sin(u * 5), fwd);
       break;
     }
@@ -69,12 +69,15 @@ function orient(obj, vx, vy, vz) {
   obj.rotation.order = 'YZX'; obj.rotation.set(0, Math.atan2(-vz, vx), Math.asin(vy / l));
 }
 // An animal that swims in a straight line and passes the diver at time tMeet.
-function passBy(obj, tMeet, offset, vel, name, range, tick) {
-  const meet = pathAt(tMeet).pos.clone().add(offset);
-  scene.add(obj); orient(obj, vel.x, vel.y, vel.z);
+// follow = also move with the diver (for the deep, where the diver sinks fast and a still animal would flash past in half a second).
+function passBy(obj, tMeet, offset, vel, name, range, tick, follow) {
+  const meet = pathAt(tMeet).pos.clone().add(offset), swimVel = vel;   // it faces the way it swims
+  if (follow) vel = vel.clone().add(pathAt(tMeet + 0.5).pos.sub(pathAt(tMeet - 0.5).pos));
+  scene.add(obj); orient(obj, swimVel.x, swimVel.y, swimVel.z);
   ACTORS.push({ obj, name, range: range || 22, update(t) {
-    obj.position.copy(meet).addScaledVector(vel, t - tMeet);
-    orient(obj, vel.x, vel.y, vel.z); if (tick) tick(t);
+    // a following animal only moves within 10 s of the meeting, so it never drifts far from the dive path
+    obj.position.copy(meet).addScaledVector(vel, follow ? clamp(t - tMeet, -10, 10) : t - tMeet);
+    orient(obj, swimVel.x, swimVel.y, swimVel.z); if (tick) tick(t);
   } });
 }
 // An animal that swims in circles around a point.
@@ -147,26 +150,25 @@ function buildLife() {
   passBy(squid, tu(2, 0.3), view(tu(2, 0.3), 12, 6, 0), view(tu(2, 0.3), -0.3, -0.55, 0), 'Giant squid', 34);
   const ang = makeCreature(SPECIES.angler), lure = new THREE.Group();
   const stalk = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.42, 0.24, 0), new THREE.Vector3(0.55, 0.42, 0), new THREE.Vector3(0.8, 0.5, 0)]), 12, 0.006, 5), new THREE.MeshStandardMaterial({ color: 0x3a2d28, roughness: 0.6 }));
-  const bulb = glowSprite(0.7, 0xffe9a8); bulb.position.set(0.8, 0.5, 0); lure.add(stalk, bulb);
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff2c0, fog: false })); core.position.copy(bulb.position); lure.add(core);
+  const bulb = glowSprite(1.6, 0xa8f4ff); bulb.position.set(0.8, 0.5, 0); lure.add(stalk, bulb);   // the bacteria in the lure give off blue-green light
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), new THREE.MeshBasicMaterial({ color: 0xe8fcff, fog: false })); core.position.copy(bulb.position); lure.add(core);
+  const lureLight = new THREE.PointLight(0x9fefff, 0.6, 2.5, 1.5); lureLight.position.copy(bulb.position); lure.add(lureLight);
   ang.add(lure);
-  passBy(ang, tu(2, 0.72), view(tu(2, 0.72), 4.5, 1.0, -0.2), view(tu(2, 0.72), 0.05, -0.4, 0), 'Anglerfish', 16, () => { bulb.scale.setScalar(0.6 + 0.15 * Math.sin(U.time.value * 3)); });
+  passBy(ang, tu(2, 0.72), view(tu(2, 0.72), 3.4, 0.7, -0.2), view(tu(2, 0.72), 0.05, -0.32, 0), 'Anglerfish', 16, () => { const k = 0.8 + 0.25 * Math.sin(U.time.value * 3); bulb.scale.setScalar(1.6 * k); lureLight.intensity = 0.6 * k; }, true);
   // the abyss and the trench
-  const wc = new THREE.Vector3(0, groups.wreck.userData.floorH(0, 0) + 9, 0).add(STAGE_ORIGIN(4));
+  const wc = new THREE.Vector3(0, groups.wreck.userData.floorH(0, 0) + 12, 0).add(STAGE_ORIGIN(4));   // about the height the diver circles at
   for (let i = 0; i < 3; i++) {
-    const d = makeCreature({
-      L: 0.42, rough: 0.5, map: 'dumbo', alpha: 0.95, bend: { mode: 1, amp: 0.04, speed: 3, wave: 2, len: 0.42 },
-      rows: [[0, 0.004, 0.004, 0.004, 0], [0.06, 0.11, 0.13, 0.1, 0], [0.25, 0.17, 0.17, 0.13, 0], [0.55, 0.14, 0.12, 0.1, 0], [0.85, 0.06, 0.05, 0.04, 0], [1, 0.02, 0.02, 0.02, 0]], paint: () => '#ffffff',
-      fins: [{ pts: [[0, 0], [0.06, 0.16], [0.14, 0.17], [0.16, 0.05]], at: [0.16, 0.09, 0.11], rot: [Math.PI / 2 - 0.5, 0, 0], color: '#f7cfc3' }, { pts: [[0, 0], [0.06, 0.16], [0.14, 0.17], [0.16, 0.05]], at: [0.16, 0.09, -0.11], rot: [-Math.PI / 2 + 0.5, 0, 0], color: '#f7cfc3' }],
-      eyes: [[0.36, 0.05, 0.1, 0.02], [0.36, 0.05, -0.1, 0.02]]
-    });
-    orbit(d, wc.clone().add(new THREE.Vector3(0, i * 1.2 - 3, 0)), 12 + i * 5, 0.09 * (i % 2 ? -1 : 1), i * 2.1, 2, 'Dumbo octopus', 16);
+    const d = makeCreature(SPECIES.dumbo); d.scale.setScalar(1.3);
+    orbit(d, wc.clone().add(new THREE.Vector3(0, i * 1.2 - 1, 0)), 18 + i * 2.5, 0.07 * (i % 2 ? -1 : 1), i * 2.1 - 1.2, 1.2, 'Dumbo octopus', 16);
   }
   const tc = new THREE.Vector3(0, TRENCH_TOP_Y - 60, 0).add(STAGE_ORIGIN(5));
   for (let i = 0; i < 6; i++) {
-    const sfish = makeCreature(SPECIES.snailfish);
-    passBy(sfish, tu(5, 0.25 + i * 0.11), view(tu(5, 0.25 + i * 0.11), rand(4, 8), rand(-3, 3), rand(-1, 1)), view(tu(5, 0.25 + i * 0.11), 0.1, -0.16, 0), 'Mariana snailfish', 12);
+    const sfish = makeCreature(SPECIES.snailfish), tm = tu(5, 0.25 + i * 0.11);
+    passBy(sfish, tm, view(tm, rand(2.2, 3.4), rand(-1, 1), rand(-0.5, 0.3)), view(tm, 0.1, Math.random() < 0.5 ? -0.12 : 0.12, 0), 'Mariana snailfish', 12, null, true);
   }
+  { const te = tu(5, 0.93), p = pathAt(te), c = p.pos.clone().add(view(te, 5, 0, 0));
+    c.y = Math.max(groups.trench.userData.floorH(c.x - STAGE_ORIGIN(5).x, c.z - STAGE_ORIGIN(5).z) + 2.4, p.pos.y - 2.6);   // low, but still in view
+    for (let i = 0; i < 8; i++) orbit(makeCreature(SPECIES.snailfish), c.clone().add(new THREE.Vector3(rand(-0.8, 0.8), rand(-0.4, 0.6), rand(-0.8, 0.8))), rand(0.8, 2.4), rand(0.15, 0.3) * (i % 2 ? 1 : -1), rand(0, TAU), 0.3, 'Mariana snailfish', 12); }
 }
 
 
@@ -217,13 +219,13 @@ function buildExtras() {
   const whiteMat = wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, emissive: new THREE.Color(0.25, 0.12, 0.05), emissiveIntensity: 1.0, side: THREE.DoubleSide }), { caust: false, bend: { mode: 1, amp: 0.14, speed: 14, wave: 6, len: 0.18 } });
   [0, 3].forEach(k => {
     const v = vents[k], c = new THREE.Vector3(v[0], fh(v[0], v[1]) + 5, v[1]).add(VO);
-    const sch = new School(smallFishGeo(), whiteMat, 90, { center: [c.x, c.y, c.z], radius: 2, omega: 0.7, phase: k, spread: 1.2, scale: 0.5, colors: ['#f3ede0', '#ffe9d0'], rise: 1 });
+    const sch = new School(shrimpGeo(), whiteMat, 90, { center: [c.x, c.y, c.z], radius: 2, omega: 0.7, phase: k, spread: 1.2, scale: 0.5, colors: ['#f3ede0', '#ffe9d0'], rise: 1 });
     scene.add(sch.mesh); ACTORS.push({ obj: null, update: t => sch.update(t) }); pseudo('Vent shrimp', c, 14);
   });
   vents.forEach((v, i) => { pseudo('Hydrothermal vent', new THREE.Vector3(v[0], fh(v[0], v[1]) + 5, v[1]).add(VO), 14); if (i < 3) pseudo('Giant tube worms', new THREE.Vector3(v[0] + 2, fh(v[0], v[1]) + 1, v[1] + 2).add(VO), 9); });
   // tiny amphipods swarm in the trench
   { const tt = tu(5, 0.5), c = pathAt(tt).pos.clone().add(view(tt, 7, 2, -1));
-    const sch = new School(smallFishGeo(), whiteMat, 70, { center: [c.x, c.y, c.z], radius: 2.5, omega: 0.5, phase: 1, spread: 1.6, scale: 0.4, colors: ['#f5e6dc', '#ffd9c0'], rise: 1 });
+    const sch = new School(shrimpGeo(), whiteMat, 70, { center: [c.x, c.y, c.z], radius: 2.5, omega: 0.5, phase: 1, spread: 1.6, scale: 0.4, colors: ['#f5e6dc', '#ffd9c0'], rise: 1 });
     scene.add(sch.mesh); ACTORS.push({ obj: null, update: t => sch.update(t) }); pseudo('Amphipods', c, 12); }
   // the abyss: the imagined wreck and a whale skeleton
   const WO = STAGE_ORIGIN(4);
@@ -326,9 +328,9 @@ function initPassers(M) {
   if (barra) { swarm(0, 'Barramundi', barra.geometry.clone(), barra.material, Math.round(26 * D), null, 1.0); swarm(1, 'Barramundi', barra.geometry.clone(), barra.material, Math.round(24 * D), null, 1.0, { maxD: 260 }); }
   swarm(1, 'Silver jacks', smallFishGeo(), M.silverMat, Math.round(70 * D), ['#c9d3d8', '#b5c2c9', '#dfe6e9'], 1.6);
   swarm(2, 'Lanternfish', smallFishGeo(), M.glowMat, Math.round(60 * D), ['#9fe8ff', '#7fd6ff'], 1.5);
-  swarm(3, 'Vent shrimp', smallFishGeo(), M.whiteMat, Math.round(60 * D), ['#f3ede0', '#ffe9d0'], 0.5);
-  swarm(4, 'Amphipods', smallFishGeo(), M.whiteMat, Math.round(60 * D), ['#f3ede0', '#ffe9d0'], 0.5);
-  swarm(5, 'Amphipods', smallFishGeo(), M.whiteMat, Math.round(60 * D), ['#f5e6dc', '#ffd9c0'], 0.4);
+  swarm(3, 'Vent shrimp', shrimpGeo(), M.whiteMat, Math.round(60 * D), ['#f3ede0', '#ffe9d0'], 0.5);
+  swarm(4, 'Amphipods', shrimpGeo(), M.whiteMat, Math.round(60 * D), ['#f3ede0', '#ffe9d0'], 0.5);
+  swarm(5, 'Amphipods', shrimpGeo(), M.whiteMat, Math.round(60 * D), ['#f5e6dc', '#ffd9c0'], 0.4);
 }
 const spF = new THREE.Vector3(), spR = new THREE.Vector3(), spU = new THREE.Vector3(), spT = new THREE.Vector3(), spV = new THREE.Vector3();
 function spawnPasser(p) {
@@ -749,6 +751,8 @@ function step(dt) {
   dome.position.copy(camera.position); surface.position.set(camera.position.x, 0, camera.position.z); rayGroup.position.set(camera.position.x, 0, camera.position.z);
   // the sun's shafts and surface belong to the reef water only
   const inReefWater = p.si <= 1;
+  // only draw the place you are in (the screen fades to black between places)
+  if (groups.trench) { groups.reef.visible = p.si <= 2; groups.vents.visible = p.si === 3; groups.wreck.visible = p.si === 4; groups.trench.visible = p.si === 5; }
   surface.visible = surface.visible && inReefWater; rayGroup.visible = rayGroup.visible && inReefWater;
   snow.material.uniforms.uCam.value.copy(camera.position); glowSpecks.material.uniforms.uCam.value.copy(camera.position);
   for (let i = 0; i < ACTORS.length; i++) {

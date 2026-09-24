@@ -153,29 +153,43 @@ SPECIES.squid = {
 };
 
 // ---- Anglerfish ----
+// Long, glassy fangs around the wide mouth, pointing in so prey cannot escape.
+function anglerTeeth(L) {
+  const parts = [], R = seeded(17);
+  [1, -1].forEach(jaw => {
+    for (let k = 0; k < 11; k++) {
+      const a = lerp(-1.25, 1.25, k / 10), len = L * (0.035 + R() * 0.05) * (1 - 0.5 * Math.abs(a) / 1.25), g = new THREE.ConeGeometry(L * 0.007, len, 5);
+      g.translate(0, len / 2, 0); g.rotateZ(jaw > 0 ? Math.PI + 0.5 : -0.5);   // top teeth point down and forward, bottom teeth up and forward
+      g.translate(L * (0.5 - 0.09 * Math.pow(a / 1.25, 2)), jaw > 0 ? L * 0.06 : -L * 0.08, Math.sin(a) * L * 0.15);
+      parts.push(g);
+    }
+  });
+  const g = mergeGeo(parts); return paintGeo(g, () => '#ece8dc');
+}
 SPECIES.angler = {
-  L: 1.1, rough: 0.7, map: 'angler', emissive: 0x150c06, bend: { mode: 1, amp: 0.05, speed: 3.2, wave: 3, len: 1.1 },
+  L: 1.1, rough: 0.7, map: 'angler', emissive: 0x0a0604, bend: { mode: 1, amp: 0.05, speed: 3.2, wave: 3, len: 1.1 },
   rows: [[0, 0.004, 0.004, 0.004, 0], [0.03, 0.12, 0.12, 0.1, 0], [0.12, 0.22, 0.24, 0.22, 0], [0.32, 0.27, 0.28, 0.26, 0], [0.55, 0.2, 0.2, 0.19, 0], [0.78, 0.09, 0.1, 0.09, 0], [0.93, 0.045, 0.05, 0.045, 0], [1, 0.03, 0.03, 0.03, 0]],
-  paint: () => '#ffffff',
+  paint: () => '#2e2a28',   // almost black: most deep-sea anglers are dark brown to black
   fins: [
     { pts: [[0.03, 0], [-0.02, 0.06], [-0.07, 0]], at: [-0.22, 0.24, 0], color: '#2c221d' },
     { pts: [[0.03, 0], [-0.03, 0.02], [-0.1, 0.16], [-0.16, 0.15], [-0.1, 0.02], [-0.16, -0.1], [-0.1, -0.1], [-0.03, -0.02]], at: [-0.48, 0, 0], color: '#2c221d' },
     { pts: [[0.03, 0], [-0.05, 0], [-0.12, 0.12], [-0.05, 0.11]], at: [0.05, -0.12, 0.2], rot: [Math.PI / 2 + 0.3, 0, 0], color: '#2c221d' },
     { pts: [[0.03, 0], [-0.05, 0], [-0.12, 0.12], [-0.05, 0.11]], at: [0.05, -0.12, -0.2], rot: [-Math.PI / 2 - 0.3, 0, 0], color: '#2c221d' }
   ],
-  eyes: [[0.38, 0.13, 0.19, 0.02], [0.38, 0.13, -0.19, 0.02]], eyeColor: '#c9d6b0'
+  eyes: [[0.38, 0.13, 0.19, 0.02], [0.38, 0.13, -0.19, 0.02]], eyeColor: '#c9d6b0',
+  extra: [anglerTeeth(1.1)]
 };
 
 // ---- Mariana snailfish ----
 SPECIES.snailfish = {
   L: 0.34, rough: 0.35, map: 'snailfish', alpha: 0.92, bend: { mode: 1, amp: 0.1, speed: 4, wave: 5, len: 0.34 },
   rows: [[0, 0.004, 0.004, 0.004, 0], [0.03, 0.06, 0.06, 0.05, 0], [0.12, 0.1, 0.11, 0.09, 0], [0.3, 0.1, 0.1, 0.08, 0], [0.6, 0.06, 0.07, 0.055, 0], [0.9, 0.035, 0.04, 0.035, 0], [1, 0.03, 0.03, 0.03, 0]],
-  paint: () => '#ffffff',
+  paint: () => '#a89494'   /* pale animals: not pure white, so the torch does not wash them out */,
   fins: [
-    { pts: [[0.3, 0], [0.1, 0.06], [-0.1, 0.08], [-0.4, 0.05], [-0.5, 0]], at: [0.0, 0.07, 0], color: '#f1d3d3' },
-    { pts: [[0.2, 0], [0, -0.05], [-0.25, -0.07], [-0.5, -0.04], [-0.5, 0]], at: [0.0, -0.06, 0], color: '#f1d3d3' },
-    { pts: [[0.03, 0], [-0.03, 0.1], [-0.09, 0.1], [-0.05, 0]], at: [0.25, -0.02, 0.09], rot: [Math.PI / 2 + 0.2, 0, 0], color: '#f5dede' },
-    { pts: [[0.03, 0], [-0.03, 0.1], [-0.09, 0.1], [-0.05, 0]], at: [0.25, -0.02, -0.09], rot: [-Math.PI / 2 - 0.2, 0, 0], color: '#f5dede' }
+    { pts: [[0.3, 0], [0.1, 0.06], [-0.1, 0.08], [-0.4, 0.05], [-0.5, 0]], at: [0.0, 0.07, 0], color: '#b89a9a' },
+    { pts: [[0.2, 0], [0, -0.05], [-0.25, -0.07], [-0.5, -0.04], [-0.5, 0]], at: [0.0, -0.06, 0], color: '#b89a9a' },
+    { pts: [[0.03, 0], [-0.03, 0.1], [-0.09, 0.1], [-0.05, 0]], at: [0.25, -0.02, 0.09], rot: [Math.PI / 2 + 0.2, 0, 0], color: '#bca2a2' },
+    { pts: [[0.03, 0], [-0.03, 0.1], [-0.09, 0.1], [-0.05, 0]], at: [0.25, -0.02, -0.09], rot: [-Math.PI / 2 - 0.2, 0, 0], color: '#bca2a2' }
   ],
   eyes: [[0.44, 0.03, 0.085, 0.022], [0.44, 0.03, -0.085, 0.022]], eyeColor: '#2a1a1c'
 };
@@ -210,12 +224,41 @@ SPECIES.sperm = {
 };
 
 // ---- Dumbo octopus ----
+// Its eight arms are joined by a web, like an umbrella. It swims mantle first, with the web trailing behind.
+function dumboWebGeo(L) {
+  const NI = 10, NJ = 48, pos = [], idx = [];
+  for (let i = 0; i <= NI; i++) for (let j = 0; j <= NJ; j++) {
+    const t = i / NI, a = j / NJ * TAU, arm = Math.pow(Math.abs(Math.cos(a * 4)), 6);   // arm = 1 along each of the 8 arms
+    const r = L * (0.1 + 0.3 * Math.pow(t, 1.2)) * (1 + 0.08 * arm), x = -L * (0.12 + 0.45 * t) + L * 0.1 * t * (1 - arm);   // the web sags back between the arms
+    pos.push(x, Math.sin(a) * r, Math.cos(a) * r);
+  }
+  for (let i = 0; i < NI; i++) for (let j = 0; j < NJ; j++) { const a = i * (NJ + 1) + j, b = a + NJ + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  return paintGeo(g, p => mixc('#b08a80', '#c4a298', clamp(-p.x / L)));
+}
 SPECIES.dumbo = {
   L: 0.42, rough: 0.5, map: 'dumbo', alpha: 0.95, bend: { mode: 1, amp: 0.04, speed: 3, wave: 2, len: 0.42 },
-  rows: [[0, 0.004, 0.004, 0.004, 0], [0.06, 0.11, 0.13, 0.1, 0], [0.25, 0.17, 0.17, 0.13, 0], [0.55, 0.14, 0.12, 0.1, 0], [0.85, 0.06, 0.05, 0.04, 0], [1, 0.02, 0.02, 0.02, 0]], paint: () => '#ffffff',
-  fins: [{ pts: [[0, 0], [0.06, 0.16], [0.14, 0.17], [0.16, 0.05]], at: [0.16, 0.09, 0.11], rot: [Math.PI / 2 - 0.5, 0, 0], color: '#f7cfc3' }, { pts: [[0, 0], [0.06, 0.16], [0.14, 0.17], [0.16, 0.05]], at: [0.16, 0.09, -0.11], rot: [-Math.PI / 2 + 0.5, 0, 0], color: '#f7cfc3' }],
-  eyes: [[0.36, 0.05, 0.1, 0.02], [0.36, 0.05, -0.1, 0.02]]
+  rows: [[0, 0.004, 0.004, 0.004, 0], [0.06, 0.11, 0.13, 0.1, 0], [0.25, 0.17, 0.17, 0.13, 0], [0.55, 0.14, 0.12, 0.1, 0], [0.85, 0.06, 0.05, 0.04, 0], [1, 0.02, 0.02, 0.02, 0]], paint: () => '#a8948e'   /* pale animals: not pure white, so the torch does not wash them out */,
+  fins: [{ pts: [[0, 0], [0.06, 0.16], [0.14, 0.17], [0.16, 0.05]], at: [0.16, 0.09, 0.11], rot: [Math.PI / 2 - 0.5, 0, 0], color: '#b8968c' }, { pts: [[0, 0], [0.06, 0.16], [0.14, 0.17], [0.16, 0.05]], at: [0.16, 0.09, -0.11], rot: [-Math.PI / 2 + 0.5, 0, 0], color: '#b8968c' }],
+  eyes: [[0.36, 0.05, 0.1, 0.02], [0.36, 0.05, -0.1, 0.02]],
+  extra: [dumboWebGeo(0.42)]
 };
+
+// ---- Shrimp (vent shrimp and the amphipods of the trench), the same size as the small fish so they can school ----
+function shrimpGeo() {
+  const L = 0.18, body = loft(L, [[0, 0.004, 0.004, 0.004, 0], [0.06, 0.05, 0.06, 0.05, 0], [0.3, 0.08, 0.1, 0.08, 0], [0.55, 0.06, 0.07, 0.06, 0], [0.85, 0.035, 0.04, 0.03, 0], [1, 0.012, 0.012, 0.012, 0]], 16, 10);
+  const p = body.attributes.position;
+  for (let i = 0; i < p.count; i++) { const b = Math.max(0, -p.getX(i) / L); p.setY(i, p.getY(i) - b * b * L * 0.55); }   // the tail curls down
+  body.computeVertexNormals();
+  const parts = [body, place(flat([[0, 0], [-0.08, 0.07], [-0.1, 0], [-0.08, -0.07]], L), -0.5 * L, -0.14 * L, 0, Math.PI / 2, 0, 0)];   // tail fan
+  [-1, 1].forEach(sd => {   // two long feelers and five pairs of legs
+    parts.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.45 * L, 0.02 * L, sd * 0.02 * L), new THREE.Vector3(0.9 * L, 0.2 * L, sd * 0.2 * L), new THREE.Vector3(1.2 * L, 0.1 * L, sd * 0.45 * L)]), 8, 0.003, 3));
+    for (let k = 0; k < 5; k++) parts.push(place(new THREE.CylinderGeometry(0.002, 0.003, 0.07, 3), (0.25 - k * 0.08) * L, -0.08 * L, sd * 0.05 * L, sd * 0.5, 0, 0));
+  });
+  const g = mergeGeo(parts);
+  paintGeo(g, (q, n) => mixc('#ffffff', '#d8c8c0', clamp(-n.y * 0.6 + 0.2)));
+  return g;
+}
 
 // ---- Small reef fish, used by the big schools (colour is set for each fish) ----
 function smallFishGeo() {

@@ -29,9 +29,9 @@ const ENV = [
   { d: 60,    fog: '#0e6e9c', abs: [0.150, 0.056, 0.028] },
   { d: 200,   fog: '#0b5583', abs: [0.220, 0.090, 0.050] },
   { d: 500,   fog: '#07345a', abs: [0.300, 0.130, 0.080] },
-  { d: 1000,  fog: '#041a33', abs: [0.340, 0.170, 0.110] },
-  { d: 3000,  fog: '#020c1a', abs: [0.320, 0.170, 0.120] },
-  { d: 11000, fog: '#010409', abs: [0.320, 0.170, 0.120] }
+  { d: 1000,  fog: '#041a33', abs: [0.300, 0.120, 0.075] },
+  { d: 3000,  fog: '#020c1a', abs: [0.095, 0.058, 0.046] },   // deep water is very clear; it is dark only because no light reaches it
+  { d: 11000, fog: '#010409', abs: [0.095, 0.058, 0.046] }
 ];
 
 /* =====================================================================
@@ -71,6 +71,8 @@ const hemi = new THREE.HemisphereLight(0x7fd0ff, 0x1a3b4a, 1);
 const torch = new THREE.SpotLight(0xfff0d8, 0, 80, 0.75, 0.85, 1.0);   // the diver's torch
 camera.add(torch); camera.add(torch.target);
 torch.position.set(0.15, -0.15, 0); torch.target.position.set(0, 0, -10);
+const lamp = new THREE.PointLight(0xdfe9ff, 0, 38, 1.4);   // soft light all around the diver in the deep, like a submersible's work lights
+camera.add(lamp); lamp.position.set(0, 0.6, 0.5);
 scene.add(sun, hemi);
 
 const U = {   // values shared by every material
@@ -91,8 +93,15 @@ float caust(vec3 p, float t){ vec2 q = vec2(p.x * 0.6 + p.z * 0.5, p.y * 0.5 + p
   float b = vnoise(q * 1.8 - vec2(t * 0.12, -t * 0.09) + a * 2.0); float c = 1.0 - abs(b * 2.0 - 1.0); return pow(c, 7.0) * 1.5; }
 `;
 
+// Rock grain seen from three directions and blended by which way the surface faces (so it never looks stretched).
+const GLSL_ROCK = `
+float tri(vec3 p, vec3 w, float s){ return w.x * vnoise(p.yz * s) + w.y * vnoise(p.xz * s + 17.3) + w.z * vnoise(p.xy * s + 41.1); }
+`;
+
 /* Makes an ordinary material feel wet: colour fading with distance, moving light patches (caustics),
    rock grain, and swimming movement.
+   detail: rock grain, painted from three directions and bending the light like real bumps.
+   bump: how strong those bumps are (default 1).  rust: rust streaks and plates (wreck).  strata: layers of rock (trench).
    bend = { mode, amp, speed, wave, len }
      mode 1 = swims side to side (fish, sharks, squid arms)
      mode 2 = swims up and down (whales)
@@ -103,7 +112,7 @@ function wet(mat, o = {}) {
   mat.customProgramCacheKey = () => JSON.stringify(o);
   mat.onBeforeCompile = sh => {
     sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
-    let vs = 'varying vec3 vWP;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\n' + GLSL_NOISE;
+    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\n' + GLSL_NOISE + GLSL_ROCK;
     if (bend) {
       sh.uniforms.uBend = { value: new THREE.Vector4(bend.amp, bend.speed, bend.wave, bend.len) };
       vs += 'uniform vec4 uBend;\n';
@@ -116,10 +125,30 @@ function wet(mat, o = {}) {
     }
     sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>',
       '#include <project_vertex>\nvec4 wp4 = vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\nwp4 = instanceMatrix * wp4;\n#endif\nvWP = (modelMatrix * wp4).xyz;');
+    sh.vertexShader = sh.vertexShader.replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\nvWN = normalize((vec4(transformedNormal, 0.0) * viewMatrix).xyz);');
     sh.vertexShader = vs + sh.vertexShader;
     let f = sh.fragmentShader;
     f = f.replace('#include <tonemapping_fragment>', '#ifdef USE_FOG\n vec3 fogT = exp(-uAbsorb * fogDepth);\n gl_FragColor.rgb = gl_FragColor.rgb * fogT + fogColor * (vec3(1.0) - fogT);\n#endif\n#include <tonemapping_fragment>');
-    if (o.detail) f = f.replace('#include <color_fragment>', '#include <color_fragment>\n vec2 dp = vec2(vWP.x*0.8 + vWP.z*0.6, vWP.y*1.1 + vWP.z*0.3); float dn = vnoise(dp*1.3)*0.55 + vnoise(dp*4.5)*0.3 + vnoise(dp*14.0)*0.15; diffuseColor.rgb *= 0.35 + 1.25*dn * (0.75 + 0.5*vnoise(dp*40.0));');
+    if (o.detail) {
+      let c = '#include <color_fragment>\n vec3 tw = pow(abs(normalize(vWN)), vec3(4.0)); tw /= (tw.x + tw.y + tw.z);\n'
+        + ' float rh = tri(vWP, tw, 0.9)*0.5 + tri(vWP, tw, 3.1)*0.3 + tri(vWP, tw, 9.0)*0.14 + tri(vWP, tw, 26.0)*0.06;\n'
+        + ' diffuseColor.rgb *= 0.42 + 1.15*rh * (0.8 + 0.4*tri(vWP, tw, 41.0));\n';
+      // layers of rock: bands of uneven thickness that break off here and there, with thin dark partings between them
+      if (o.strata) c += ' float band = sin(vWP.y*1.7 + tri(vWP, tw, 0.22)*2.4 + vWP.z*0.05); float brk = smoothstep(0.3, 0.62, tri(vWP, tw, 0.13));\n'
+        + ' float lay = smoothstep(0.25, 0.8, band) * brk; float part = 1.0 - (1.0 - smoothstep(0.0, 0.07, abs(sin(vWP.y*1.9 + tri(vWP, tw, 0.3)*3.0)))) * 0.35 * smoothstep(0.45, 0.7, tri(vWP, tw, 0.2));\n'
+        + ' diffuseColor.rgb *= mix(vec3(0.82, 0.8, 0.78), vec3(1.14, 1.08, 1.0), lay) * part; rh += lay*0.3 - (1.0 - part)*0.6;\n';
+      // rust runs down in streaks (long in y), so the pattern is stretched upright in world space
+      if (o.rust) c += ' float st = vnoise(vec2(dot(vWP.xz, vec2(1.9, 1.3))*1.3, vWP.y*0.22)) * 0.6 + vnoise(vec2(dot(vWP.xz, vec2(-1.1, 2.1))*4.0, vWP.y*0.7)) * 0.4;\n'
+        + ' float patchy = smoothstep(0.35, 0.75, vnoise(vWP.xz*0.35 + vec2(vWP.y*0.3, 0.0)));\n'
+        + ' vec3 rustC = mix(vec3(0.30, 0.085, 0.02), vec3(0.62, 0.26, 0.07), vnoise(vWP.xz*3.0 + vWP.y));\n'
+        + ' diffuseColor.rgb = mix(diffuseColor.rgb, rustC, clamp(smoothstep(0.5, 0.85, st)*0.6*patchy + rh*0.12, 0.0, 0.7)); rh += st*0.35*patchy;\n';
+      f = f.replace('#include <color_fragment>', c);
+      // bumps: tilt the surface normal by the slope of the grain (worked out from how the grain changes across the screen)
+      f = f.replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n { vec3 dpx = dFdx(-vViewPosition), dpy = dFdy(-vViewPosition); float dhx = dFdx(rh), dhy = dFdy(rh);\n'
+        + ' vec3 r1 = cross(dpy, normal), r2 = cross(normal, dpx); float det = dot(dpx, r1); vec3 gr = sign(det) * (dhx * r1 + dhy * r2);\n'
+        + ' float bk = ' + (o.bump == null ? 1 : o.bump).toFixed(2) + ' * 0.22 * smoothstep(45.0, 4.0, length(vViewPosition));\n'
+        + ' normal = normalize(abs(det) * normal - bk * gr); }');
+    }
     if (o.caust !== false) {
       f = f.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
         'vec3 wn = inverseTransformDirection( normal, viewMatrix );\n outgoingLight += diffuseColor.rgb * caust(vWP, uTime) * uCaust * max(wn.y, 0.0) * vec3(0.9, 1.0, 0.85);\n gl_FragColor = vec4( outgoingLight, diffuseColor.a );');
@@ -267,7 +296,8 @@ function applyEnvironment(D) {
   const light = Math.exp(-D / 32), day = clamp(1 - D / 160);
   sun.intensity = 3.4 * light; hemi.intensity = 0.55 + 0.6 * Math.exp(-D / 130);
   hemi.color.copy(envColor).multiplyScalar(1.5).lerp(new THREE.Color(1, 1, 1), 0.3 * day).add(new THREE.Color(0.02, 0.05, 0.09).multiplyScalar(1 - day)); hemi.groundColor.copy(envColor).multiplyScalar(0.35);
-  torch.intensity = clamp((D - 18) / 70) * 24;
+  torch.intensity = clamp((D - 18) / 70) * 6.5 + clamp((D - 1500) / 1500) * 2;   // the water is clear in the deep, so a strong torch would glare on anything close
+  lamp.intensity = clamp((D - 250) / 900) * 1.5;
   U.caust.value = clamp(1 - D / 45) * 1.0;
   domeUniforms.uUp.value.copy(envColor).multiplyScalar(1.15 + 0.6 * day);
   domeUniforms.uDown.value.copy(envColor).multiplyScalar(0.42);
