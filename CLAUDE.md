@@ -6,10 +6,11 @@ The user is Hasib. Keep writing plain and simple, and **never use em dashes** in
 Prefer plain language over jargon. If you write study notes as .md, also make a matching .pdf.
 
 ## Build and test
-- `python3 build.py` then open `dist/index.html`. Never edit `dist/index.html` by hand.
-- Tests: `npm install` (for three.js files used by the test server) and `pip install playwright && playwright install chromium`.
-  `python3 tests/shot.py 3 30 90` takes stills at those dive times (seconds) into `/tmp/dd_shot_N.png`. It runs under a strict page policy
-  (script only from jsDelivr, images only data:, no connect) that mimics the claude.ai artifact host. Keep it that way.
+- `python build.py` then open `dist/index.html`. Never edit `dist/index.html` by hand.
+- Tests need three.js in `node_modules/three` and Playwright. The full `npm install` fails on Windows (sharp, only used by `tools/`), so fetch three alone:
+  `cd node_modules && npm pack three@0.128.0 && tar -xzf three-0.128.0.tgz && mv package three`. Then `python -m pip install playwright pillow && python -m playwright install chromium`.
+  `python tests/shot.py 3 30 90` takes stills at those dive times (seconds) into `tests/out/dd_shot_N.png` (ignored by git). The page is served from a
+  made-up https address so a strict page policy really applies (script only from jsDelivr, images only data:, no connect), like the claude.ai artifact host. Keep it that way.
 - Software WebGL is slow. The tests use `?still` and `window.__hold` so the page stops its own loop and you call `step(0.03)` yourself.
 - Handy in the page console: `state.t = 120` jumps in time, `step(0.03)` draws a frame, `look`, `swim`, `ACTORS`, `groups`, `pathAt(t)`.
 
