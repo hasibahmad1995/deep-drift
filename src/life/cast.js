@@ -58,7 +58,7 @@ function buildLife() {
       const j = makeJelly(hue + rand(-0.05, 0.05), glow), s = rand(0.6, 1.5), meet = new THREE.Vector3(); let tm = 0;
       j.scale.setScalar(s);
       const drift = (t, out) => out.set(meet.x, meet.y + (t - tm) * 0.18, meet.z), actor = { active: true };
-      vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(si, lerp(u0, u1, Math.random())); meet.copy(pathAt(tm).pos).add(view(tm, rand(4, 16), rand(-9, 9), rand(-4, 5))); actor.active = clearPath(drift, tm - 60, tm + 60); } });   // a new spot each dive, clear of rock (or none)
+      vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(si, lerp(u0, u1, Math.random())); meet.copy(pathAt(tm).pos).add(view(tm, rand(4, 16), rand(-9, 9), rand(-4, 5))); actor.active = clearPath(drift, tm - 60, tm + 60, 1, 1.3); } });   // a new spot each dive, clear of rock (or none)
       scene.add(j);
       ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 12, cyclic: true, update(t) { j.position.set(meet.x + Math.sin(t * 0.13 + i) * 0.6, meet.y + (t - tm) * 0.18, meet.z + Math.cos(t * 0.11 + i) * 0.6); } }));
     }

@@ -45,6 +45,7 @@ function bodyGap(o, h, sc, p, out) {
    animal's surface. c = the closest point on the animal's body line (from bodyGap). For a flat, wide animal the move
    is worked out in its own squashed frame, so a manta's wide wings push as far as they reach. */
 const sq = new THREE.Vector3();
+const CUSHION = 0.6;   // metres
 function separation(o, h, sc, p, c, out) {
   inv.copy(o.quaternion).invert(); rel.copy(p).sub(c).applyQuaternion(inv);
   const k = h.wide ? h.rad / h.wide : 1;
@@ -71,6 +72,12 @@ function reactActor(a, dt) {
     r.off.addScaledVector(r.vel, dt); o.position.addScaledVector(r.vel, dt); r.vel.multiplyScalar(Math.exp(-dt * h.k));
     const s = r.vel.length();
     if (s > 0.25 && h.len > 0) { rE.set(0, Math.atan2(-r.vel.z, r.vel.x), Math.asin(clamp(r.vel.y / s, -1, 1))); rQ.setFromEuler(rE); o.quaternion.slerp(rQ, clamp(s / h.flee) * 0.85); }
+  }
+  // a big, heavy animal gently pushes the diver aside as it comes within CUSHION metres, like its bow wave, so a real
+  // contact never builds up into a sudden shove
+  if (h.heavy) {
+    const g = bodyGap(o, h, sc, camera.position, rN) - BODY;
+    if (g < CUSHION && g >= 0) shoveDiver(shove.copy(away).multiplyScalar(-(CUSHION - g) * Math.min(1, dt * 4)));   // away from it
   }
   // still touching the diver: something has to give
   const still = bodyGap(o, h, sc, camera.position, rN) - BODY;

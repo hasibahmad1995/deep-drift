@@ -51,7 +51,8 @@ class School {
     const s = this.cfg.spread;
     this.centre(t - f.lag * 0.5, out);
     out.x += f.o.x * s + Math.sin(t * 2.3 + f.w) * 0.18; out.y += f.o.y * s * 0.6 + Math.sin(t * 1.7 + f.w * 1.3) * 0.1; out.z += f.o.z * s + Math.cos(t * 2.0 + f.w) * 0.12;
-    return out.add(f.off);
+    out.add(f.off); if (out.y > -0.5) out.y = -0.5;   // fish stay in the water
+    return out;
   }
   update(t) {
     if (!this.mesh.visible && !this.away) return;

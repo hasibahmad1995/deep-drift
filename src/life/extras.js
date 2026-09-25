@@ -33,7 +33,7 @@ function buildExtras() {
   for (let i = 0; i < 9; i++) {
     const j = makeJelly(0.56 + rand(-0.05, 0.05), 0.05), s = rand(0.35, 0.8), meet = new THREE.Vector3(); let tm = 0;
     const drift = (t, out) => out.set(meet.x, meet.y + (t - tm) * 0.1, meet.z), actor = { active: true };
-    vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(0, rand(0.1, 0.7)); meet.copy(pathAt(tm).pos).add(view(tm, rand(3, 9), rand(-6, 6), rand(-2, 3))); actor.active = clearPath(drift, tm - 60, tm + 60); } });   // a new spot each dive, clear of rock (or none)
+    vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(0, rand(0.1, 0.7)); meet.copy(pathAt(tm).pos).add(view(tm, rand(3, 9), rand(-6, 6), rand(-2, 3))); actor.active = clearPath(drift, tm - 60, tm + 60, 1, 1.3); } });   // a new spot each dive, clear of rock (or none)
     j.scale.setScalar(s); scene.add(j);
     ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 8, cyclic: true, update(t) { j.position.set(meet.x + Math.sin(t * 0.13 + i) * 0.5, meet.y + (t - tm) * 0.1, meet.z + Math.cos(t * 0.11 + i) * 0.5); } }));
   }

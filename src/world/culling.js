@@ -15,7 +15,7 @@ function sightRange() {
 }
 
 function show(o, eye, see) {
-  const c = o.userData.cull, gap = eye.distanceTo(c.center) - c.radius, limit = c.far ? Math.min(see, c.far) : see;
+  const c = o.userData.cull, gap = eye.distanceTo(c.center) - c.radius, limit = c.far ? Math.min(see, c.far * U.zoom.value) : see;   // zoomed in, small things look bigger
   o.visible = gap < limit + (o.visible ? MARGIN : 0);
   return o.visible;
 }

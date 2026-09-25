@@ -30,13 +30,14 @@ SITE = dict(
     ],
     controls=[
         ("Look and swim", "Drag with the mouse or a finger. You slowly swim toward where you look. Looking up slows your sinking, looking down speeds it up; you can never swim back up."),
-        ("Arrow keys", "Turn your head smoothly (it speeds up while held and eases to a stop)."),
-        ("Zoom", "Pinch, or scroll the mouse wheel, or the Zoom button."),
-        ("Pause", "Button or Space. You hover in place while the sea keeps moving around you. Play to swim on."),
+        ("Arrow keys", "Turn your head smoothly, always around the true vertical with the horizon level (it speeds up while held and eases to a stop)."),
+        ("Side panel", "A small handle on the left edge. Move the mouse over it (or tap it on a phone) to show Pause, Music and Zoom; otherwise it stays hidden."),
+        ("Pause", "In the side panel, or Space. You hover in place while the sea keeps moving around you. Play to swim on."),
+        ("Zoom", "In the side panel: each press zooms a step in (up to 2.5x, less in murky water) and then back out step by step; hold it to zoom smoothly. Pinch or the mouse wheel also zoom."),
+        ("Music", "In the side panel. A live soundtrack made in the browser."),
+        ("Deep Drift (top left)", "The home button: back to the start screen. Begin starts a new dive, and every dive is a little different. The end of the dive also brings you back there."),
         ("Recenter view", "Button or double-click: look along the dive again."),
-        ("Restart", "Start the dive again. Each dive is a little different."),
-        ("Music", "A live soundtrack made in the browser."),
-        ("Phones", "The buttons sit in a Menu. Motion look turns the view with the phone."),
+        ("Phones", "The top buttons sit in a Menu. Motion look turns the view with the phone."),
         ("Blog and Credits", "Short posts in our own words with source links; credits say what is real and what is built by code."),
     ],
     feel=[
@@ -44,7 +45,7 @@ SITE = dict(
         "Animals keep a comfortable distance and swim aside; big ones (whales, the whale shark, the manta) gently push you aside.",
         "School fish part around you and beat their tails as fast as real fish of their size.",
         "Nothing pops in or out: visitors arrive from out of sight and leave out of sight; far things fade into the water.",
-        "Each dive is a little different: animals come a bit earlier or later, on either side, nearer or farther, and some are not there every time.",
+        "Each dive is different: scripted animals meet you at a new depth each time (always within the depths where they really live), on either side, nearer or farther, and some are not there every time; random visitors come and go too.",
         "Animals only live where they really live (for example no fish below about 8,300 m).",
     ],
     real="Real: the barramundi (a CC0 3D model by Microsoft from the Khronos glTF samples) and the fonts. Everything else "
@@ -140,6 +141,75 @@ REPORTS = {
             ("any time", "Lighter reef", "Draw far corals with simpler shapes so laptops like this one can use full sharpness."),
             ("after testing", "Publish", "First public version on GitHub Pages (free). Needs a GitHub account."),
             ("v1.6+", "Real 3D models", "In small batches from Sketchfab, each with your OK on its licence and a credit on the page."),
+        ],
+    ),
+    "v1.5": dict(
+        date="26 September 2026",
+        title="Smooth zoom, level turning, a side panel and a home button",
+        oneline="Five things Hasib found in v1.4 are fixed: the zoom button, turning with the arrow keys on steep parts of the dive, "
+                "where the Pause, Music and Zoom buttons live, going back to the start, and seeing the same animals at the same places.",
+        fixes=[
+            dict(asked="The zoom button lags. It should zoom in gradually and, once at the highest point, gradually come back down.",
+                 found="Each press jumped between three fixed levels (1x, 1.6x, 2.4x) and then straight back to 1x. Also, deeper than about "
+                       "200 m the murky-water limit held zoom at 1.2x, so a press often seemed to do nothing. And when zoomed, small corals "
+                       "still disappeared at the distance meant for normal view.",
+                 did="Each press now moves one smooth step: 1x, 1.3x, 1.6x, 2x, 2.5x, then back down 2x, 1.6x, 1.3x, 1x, and so on. Holding the "
+                     "button zooms smoothly, turning round at each end. The button says what the next press does (Zoom in or Zoom out). The "
+                     "limit in deep, clear water is now 1.5x to 2.5x. When zoomed, small corals are drawn farther out, as they should be.",
+                 result="Measured: presses gave 1.3, 1.6, 2, 2.5, 2, 1.6, 1.3, 1, 1.3; holding changes the zoom smoothly (no step over 0.5x in 0.3 s)."),
+            dict(asked="When paused and turning with the arrow keys, the view goes round in a circle; we cannot look sideways. It should be the normal free view, just frozen in place.",
+                 found="Turning happened around the dive path's own tilted axis. Where the dive heads steeply down (up to about 45 degrees), turning "
+                       "left or right therefore swung the view around in a circle instead of turning your head. It shows most while paused, "
+                       "because nothing else moves then.",
+                 did="Turning left and right is now always around the true vertical, with the horizon level, like turning your head: while paused "
+                     "and while diving.",
+                 result="Measured after turning 90 degrees at four points of the dive (including a 43-degree dive slope): the horizon stays level "
+                        "(the only tilt left is the diver's gentle sway of up to about 1 degree)."),
+            dict(asked="Move Play, Music and Zoom to the left side of the screen, stacked up and down, shown only when hovering over them.",
+                 found="All buttons sat in one row at the top right.",
+                 did="A slim handle on the left edge. Move the mouse over it and Pause (or Play), Music and Zoom slide out, stacked; move away "
+                     "and they hide again. On a phone, tap the handle to open or close it. The keyboard can still reach them.",
+                 result="Checked: hidden when the mouse is away, shown while hovering."),
+            dict(asked="Deep Drift should be a home button; remove Restart. Home should go to the start screen with the Begin button, and "
+                       "the start screen should explain the hover panel.",
+                 found="Restart jumped straight back to the surface without the start screen.",
+                 did="Clicking Deep Drift at the top goes back to the start screen (the dive fades back to the surface behind it), and Begin "
+                     "starts a new dive. The Restart button is gone. The end of the dive now also returns to the start screen. The start "
+                     "screen has a new line: move the mouse to the left edge (or tap its handle) for Pause, Music and Zoom; click Deep Drift "
+                     "to come back and start a new dive.",
+                 result="Checked: home shows the start screen with the dive reset; Begin starts again."),
+            dict(asked="However many times I restart, the animals should be different, but deep-ocean animals must never be seen near the surface.",
+                 found="In v1.4 each scripted animal only moved a few seconds and metres from its fixed place, so it was always met at about the "
+                       "same spot.",
+                 did="Each dive now picks where each scripted animal meets you: anywhere the dive is within the depths where that animal really "
+                     "lives, from one shared list (for example the turtle from the surface to 90 m, the whale shark 10 to 300 m, the sperm "
+                     "whale 300 to 1,500 m, snailfish 6,000 to 8,300 m). Animals that sink along with you stay within their depths for the "
+                     "whole time they are beside you. About one in five is absent in a given dive, and random visitors add more.",
+                 result="Measured over 6 dives: 39 scripted animals with a depth range, none met outside its depths; for example the whale "
+                        "shark was met at about 40, 80, 160 and 180 m, the sperm whale at 440 to 960 m, the giant squid at 310 to 840 m."),
+        ],
+        tests=[
+            ("Zoom, turning, side panel, home, depths (tests/controls.py, new)", "All pass (numbers above); no animal met outside its depths or above the water"),
+            ("Opening on this laptop's graphics (tests/startup.py --gpu)", "First 8 s of the dive at 60 pictures a second, no hitch over 17 ms"),
+            ("Solid world and no pops (tests/solid.py)", "0 inside something solid, 0 overlaps, 0 pops, 0 jumps, contact checks pass"),
+            ("Pause, variety, keys, schools (tests/life.py)", "All pass; 0 animal paths through rock"),
+            ("Swimming, menus, live play (glide.py, ui.py, live.py)", "Pass; live play now opens the side panel and uses the home button"),
+        ],
+        pictures=[("v1.5-controls.jpg", "On Hasib's laptop: the start screen with the new hint; the dive with the side panel closed (only its "
+                   "handle on the left edge); the mouse over the edge opens Pause, Music and Zoom; zoomed in to 2.5x.")],
+        limits=[
+            "Also found and fixed while testing: near the surface, the dolphins and the turtle could drift up out of the water with the new meeting moments (all animals now stay in the water); swimming into the lip of the reef shelf from the side could lift you 3 m at once (the lip now stops you like a wall); a big animal could shove you 3 m in one moment (big animals now nudge you gently before they touch).",
+            "On Hasib's laptop the reef is still drawn a little softer (about 0.86 to 1.0 of full sharpness) to stay smooth.",
+            "Animals are kept off rock and the floor but not off corals; beyond 50 m from the dive path a straight-swimming animal can still meet rock (hidden by the water and the rock).",
+            "Deep scenes are lit only by your torch and lamp; animals right in front of the torch look paler than they should.",
+            "Nothing has been tried on a real phone yet (the side panel's handle is made for touch, but untested).",
+        ],
+        next=[
+            ("v1.6", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton, animals steering around corals."),
+            ("any time", "Phone check", "Try the dive on a real phone (speed, the side panel, motion look, the glide). Needs your phone."),
+            ("any time", "Lighter reef", "Draw far corals with simpler shapes so laptops like this one can use full sharpness."),
+            ("after testing", "Publish", "First public version on GitHub Pages (free). Needs a GitHub account."),
+            ("v1.7+", "Real 3D models", "In small batches from Sketchfab, each with your OK on its licence and a credit on the page."),
         ],
     ),
 }

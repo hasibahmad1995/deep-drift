@@ -4,34 +4,24 @@ import { LEGS, pathAt } from '../dive/route.js';
 import { depthAt } from '../dive/depth.js';
 import { state } from '../dive/state.js';
 import { updateGlide } from './glide.js';
+import { updateZoom } from './zoom.js';
 import { gyro, look, swim, zee, updateKeys } from './input.js';
 import { REDUCED } from '../engine/device.js';
 import { camera } from '../engine/renderer.js';
 import { U } from '../engine/uniforms.js';
 import { $ } from '../util/dom.js';
 import { clamp, rand } from '../util/math.js';
-import { UP } from '../world/layout.js';
 
-const qBase = new THREE.Quaternion(), qDrag = new THREE.Quaternion(), qRoll = new THREE.Quaternion(), qJolt = new THREE.Quaternion(), eD = new THREE.Euler(0, 0, 0, 'YXZ'), lookM = new THREE.Matrix4(), ZERO = new THREE.Vector3();
-const fov = { base: 74 };   // wider on tall screens (set by main.js)
-
-// Zoom is limited by how far you can see in the water.
-function updateZoom(dt) {
-  const vis = 1 / Math.max(U.absorb.value.z, 0.012), zoomCap = clamp(vis / 20, 1.2, 2.5);
-  swim.zoomTarget = clamp(swim.zoomTarget, 1, zoomCap);
-  const z0 = swim.zoom; swim.zoom += (swim.zoomTarget - swim.zoom) * (1 - Math.exp(-dt * 7));
-  if (Math.abs(swim.zoom - z0) > 0.0005) { applyFov(); const lab = 'Zoom: ' + swim.zoomTarget.toFixed(1) + 'x'; if ($('btnZoom').textContent !== lab) $('btnZoom').textContent = lab; }
-}
+const qRoll = new THREE.Quaternion(), qJolt = new THREE.Quaternion(), eD = new THREE.Euler(0, 0, 0, 'YXZ');
 
 function updateCamera(dt) {
   const p = pathAt(state.t);
   updateKeys(dt);   // smooth turning with the arrow keys
-  // the route's suggested direction, then your own looking around on top
-  const basePitch = Math.asin(clamp(p.fwd.y, -1, 1));
-  look.pitch = clamp(look.pitch, -1.55 - basePitch, 1.55 - basePitch);
-  lookM.lookAt(ZERO, p.fwd, UP); qBase.setFromRotationMatrix(lookM);
-  eD.set(look.pitch, look.yaw, 0); qDrag.setFromEuler(eD);
-  camera.quaternion.copy(qBase).multiply(qDrag);
+  // the route's suggested direction, then your own looking around on top. Turning left and right is always around the
+  // true vertical and the horizon stays level (like turning your head), even where the dive heads steeply down.
+  const baseYaw = Math.atan2(-p.fwd.x, -p.fwd.z), basePitch = Math.asin(clamp(p.fwd.y, -1, 1));
+  look.pitch = clamp(look.pitch, -1.5 - basePitch, 1.5 - basePitch);
+  eD.set(basePitch + look.pitch, baseYaw + look.yaw, 0); camera.quaternion.setFromEuler(eD);
   if (gyro.on) camera.quaternion.multiply(gyro.q);
   // a gentle sway (and bob, below) that goes on while you hover
   if (!REDUCED) { qRoll.setFromAxisAngle(zee, 0.025 * Math.sin(U.time.value * 0.9)); camera.quaternion.multiply(qRoll); }
@@ -44,6 +34,5 @@ function updateCamera(dt) {
   state.D = depthAt(pos.y); state.stage = p.si;   // the depth where you really are, not where the route is
   return p;
 }
-function applyFov() { camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov.base) / 2) / swim.zoom)); camera.updateProjectionMatrix(); }
 
-export { updateCamera, applyFov, fov };
+export { updateCamera };

@@ -3,7 +3,6 @@ import * as THREE from './lib/three.js';
 import { SETTINGS } from './config.js';
 import { $ } from './util/dom.js';
 import { clamp } from './util/math.js';
-import { REDUCED } from './engine/device.js';
 import { renderer, scene, camera } from './engine/renderer.js';
 import { U } from './engine/uniforms.js';
 import { applyEnvironment } from './engine/environment.js';
@@ -27,12 +26,14 @@ import { buildDeepCast } from './life/cast-deep.js';
 import { runPassers } from './life/passers.js';
 import { TOUCH, HIT, reactActor } from './life/touch.js';
 import { updateBubbles } from './diver/bubbles.js';
-import { recenter, cycleZoom, toggleMotion } from './diver/input.js';
-import { updateCamera, applyFov, fov } from './diver/camera.js';
+import { recenter, toggleMotion } from './diver/input.js';
+import { updateCamera } from './diver/camera.js';
+import { applyFov, fov } from './diver/zoom.js';
 import { layoutMask, drawHose } from './ui/mask.js';
 import { updateHud } from './ui/hud.js';
 import './ui/touch-feedback.js';
-import { togglePause, restart } from './ui/playback.js';
+import { togglePause, beginDive, goHome } from './ui/playback.js';
+import { wireDock } from './ui/dock.js';
 import { layoutControls, wirePanels, buildJournal } from './ui/panels.js';
 import { toggleMusic } from './audio/music.js';
 import { exposeForTesting } from './debug.js';
@@ -40,7 +41,6 @@ import { runSteps, STARTUP } from './util/steps.js';
 import { warmUp } from './engine/warmup.js';
 import { trackFrame } from './engine/quality.js';
 import { chooseSharpness } from './engine/benchmark.js';
-import { reshuffle } from './life/variety.js';
 
 const tmpV = new THREE.Vector3();
 let last = performance.now();
@@ -57,7 +57,7 @@ function frame(now) {
 function step(dt) {
   clock.dt = dt; U.time.value += dt;
   if (state.started) state.life += dt;   // the sea's own time runs on even while the diver hovers (paused)
-  if (state.playing) { state.t += dt; if (state.t >= TOTAL) { state.t = 0; state.fadeT = 0; } }
+  if (state.playing) { state.t += dt; if (state.t >= TOTAL) goHome(); }   // the end of the dive: back to the start screen
   if (state.fadeT != null) { state.fadeT += dt; if (state.fadeT > 1.6) state.fadeT = null; }
   const p = updateCamera(dt);
   camera.getWorldDirection(tmpV); TOUCH.point.copy(camera.position).addScaledVector(tmpV, 0.3);
@@ -99,14 +99,12 @@ function boot() {
   STARTUP.bootAt = Math.round(performance.now());   // when our code started (after the files arrived)
   document.title = SETTINGS.siteName; $('brand').textContent = SETTINGS.siteName; $('siteName').textContent = SETTINGS.siteName; $('tagline').textContent = SETTINGS.tagline;
   resize(); window.addEventListener('resize', resize); layoutControls(); buildJournal();
-  $('btnPause').addEventListener('click', togglePause); $('btnMusic').addEventListener('click', toggleMusic); $('btnRestart').addEventListener('click', restart); $('btnRecenter').addEventListener('click', recenter); $('btnZoom').addEventListener('click', cycleZoom); $('btnMotion').addEventListener('click', toggleMotion);
+  $('btnPause').addEventListener('click', togglePause); $('btnMusic').addEventListener('click', toggleMusic); $('btnRecenter').addEventListener('click', recenter); $('btnMotion').addEventListener('click', toggleMotion);
+  wireDock();
   if (window.matchMedia('(pointer: coarse)').matches && 'DeviceOrientationEvent' in window) $('btnMotion').hidden = false;
   wirePanels();
-  $('btnBegin').addEventListener('click', () => {
-    const intro = $('intro'); intro.classList.add('leaving'); setTimeout(() => { intro.hidden = true; }, 800);   // the card fades away over the live picture
-    reshuffle(); state.started = true; state.playing = !REDUCED; $('btnPause').textContent = state.playing ? 'Pause' : 'Play';
-    if (REDUCED) $('live').textContent = 'The dive is paused because your device asks for less motion. Press Play to start.';
-  });
+  $('btnBegin').addEventListener('click', beginDive);
+  $('brand').addEventListener('click', goHome);   // Deep Drift at the top: back to the start screen
   exposeForTesting({ step, STARTUP });
   requestAnimationFrame(t => { last = t; frame(t); });
   runSteps([

@@ -10,6 +10,7 @@ import { SHIP_L2, shipBeam, shipDeckY, shipKeelY } from '../world/ship.js';
 import { pushOutOfSolids } from '../world/solids.js';
 
 const CLEAR = 1.6;   // how close the diver may come to the ground (m)
+const SHELF_EDGE = -24;   // x where the reef shelf map begins (its lip)
 const BODY = 0.45;   // the diver's size for everything else: head, shoulders and tank (m, radius)
 const local = new THREE.Vector3();
 
@@ -45,10 +46,15 @@ function reef(pos) {
     const m = smoothMap(B.wallSmooth, 100, -pos.y / 2 - 0.5, v);
     if (m > -1e8) pos.x = Math.max(pos.x, m + 2 + clamp((pos.y + 70) / 8));   // 3 m off the wall, 2 m in the deep reef (which has fewer corals)
   }
-  if (pos.x < -24) {
+  if (pos.x < SHELF_EDGE) {
     const m = smoothMap(B.shelfSmooth, 60, -pos.x / 2 - 0.5, v);
-    // only right at the shelf: far below its edge you are beside the wall (handled above), not under the shelf
-    if (m > -1e8 && pos.y > m - 6) pos.y = Math.max(pos.y, m + CLEAR);
+    // only right at the shelf: far below its edge you are beside the wall (handled above), not under the shelf.
+    // Coming at its edge from the side (more than a small lift needed), the lip stops you like a wall; otherwise you
+    // glide up over it a little at a time. Never a big jump up.
+    if (m > -1e8 && pos.y > m - 6 && pos.y < m + CLEAR) {
+      if (m + CLEAR - pos.y > 0.3 && pos.x > SHELF_EDGE - 1.5) pos.x = SHELF_EDGE;
+      else pos.y = m + CLEAR;
+    }
   }
 }
 
