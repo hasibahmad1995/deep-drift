@@ -15,10 +15,13 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
 - Publish folder: `python tools/build.py` copies only the site files into `dist/` (ignored by git). Never edit `dist/` by hand.
 - three.js lives in `vendor/three/` (copied by `python tools/vendor_three.py` from `node_modules/three`; add-on imports are rewritten to relative paths, so no import map or inline script is needed). The full `npm install` fails on Windows (sharp, only used by the old fish tools), so fetch three alone (currently 0.186.1): `cd node_modules && npm pack three@<version> && tar -xzf three-<version>.tgz && mv package three`.
 - Tests: `python -m pip install playwright pillow && python -m playwright install chromium`, then
-  `python tests/shot.py 3 30 90` (stills at those dive times into `tests/out/`), `python tests/ui.py` (phone and desktop menus), `python tests/live.py` (live play).
+  `python tests/shot.py 3 30 90` (stills at those dive times into `tests/out/`), `python tests/ui.py` (phone and desktop menus), `python tests/live.py` (live play),
+  `python tests/glide.py` (the swim), `python tests/solid.py` (nothing passes through the diver, no pops, no jumps; runs the whole dive without drawing via `window.__noRender`),
+  `python tests/startup.py` (opening time, freezes, shaders built after the warm-up).
   The tests serve the project from a made-up https address with a strict page policy (only the site's own files may run or load). Keep it strict.
 - Software WebGL is slow. The tests use `?still` and `window.__hold` so the page stops its own loop and you call `step(0.03)` yourself.
-- Handy in the page console (set up by `src/debug.js`): `state.t = 120` jumps in time, `step(0.03)` draws a frame, `look`, `swim`, `ACTORS`, `groups`, `pathAt(t)`, `display.pixelRatio`.
+- Handy in the page console (set up by `src/debug.js`): `state.t = 120` jumps in time, `step(0.03)` draws a frame, `look`, `swim`, `ACTORS`, `groups`, `pathAt(t)`, `display.pixelRatio`,
+  `SOLIDS`, `constrain(p)`, `PASSERS`, `inSight(p, r)`, `STARTUP` (how long each loading step took).
 
 ## Versions and git
 - Branch `main` holds released versions, tagged `v1.0`, `v1.1`, ... Each new version is built on a branch like `feature/v1.2-continuous-dive`, then merged and tagged. Docs and test-only commits get no version number.
@@ -31,9 +34,9 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
 | `index.html`, `styles/` | Page shell (buttons, panels) and CSS. `styles/fonts.css` loads the included fonts. |
 | `src/main.js` | Starts everything; the frame loop `step(dt)`; window resize. |
 | `src/config.js` | Easy settings and the water colour and light absorption per depth (`ENV`). |
-| `src/engine/` | Renderer, scene and camera; lights; `wet()` underwater materials; environment per depth; sky, surface and sun rays; drifting specks and backscatter. |
+| `src/engine/` | Renderer, scene and camera; lights; `wet()` underwater materials; environment per depth; sky, surface and sun rays; drifting specks and backscatter; `warmup.js` (shaders ready before Begin); `quality.js` (pixel count adapts to speed). |
 | `src/dive/` | `state` and `clock`; `depth.js` (real depth to world height); `route.js` (the parts of the dive `LEGS`, `tu`, `pathAt(t)`: where the current carries you). |
-| `src/world/` | `sites.js` (the plan: floor profile, vents, wreck, trench), `terrain.js` (the one continuous sea floor `seafloorY`), reef and corals, boat, vents, ship and wreck, trench, sea-floor life (`benthos.js`), floors and effects; `layout.js` (`groups`, `addPlace`); `culling.js` (skip far parts). |
+| `src/world/` | `sites.js` (the plan: floor profile, vents, wreck, trench), `terrain.js` (the one continuous sea floor `seafloorY`), reef and corals, boat, vents, ship and wreck, trench, sea-floor life (`benthos.js`), floors and effects; `layout.js` (`groups`, `addPlace`); `solids.js` (what the diver cannot pass through); `tiles.js` and `culling.js` (draw only what can be seen). |
 | `src/life/` | Animals: recipes (`species.js`, `species-deep.js`), builder (`creature.js`), skins, schools, turtle, jellyfish, the real barramundi, touch reactions, motion helpers, the main cast (`cast.js`, `cast-deep.js`), extras, random passers (by real depth range). |
 | `src/diver/` | Input (look, gyro), `glide.js` (how you move), camera, collision with rock (`groundAt`), breathing bubbles. |
 | `src/ui/` | Mask and hose drawing, depth meter and zone/place names, touch feedback, pause and restart, menus, blog and credits. |
@@ -51,24 +54,31 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
 - **Water:** `wet(material, opts)` (engine/wet.js) patches any MeshStandardMaterial: per-colour fog (red fades first), caustics, rock grain, and swimming bends (modes 1 to 4). All scene materials must go through `wet()` or fog will not apply. We do our own fog before tone mapping and blank the stock `fog_fragment`.
   Options: `detail` = rock grain painted from three directions (triplanar, `GLSL_ROCK`) that also tilts the normal like real bumps (screen-space bump), `bump` = strength, `rust` = rust streaks (wreck), `strata` = rock layers (trench).
 - **Light in the deep:** deep water in `ENV` is clear (low absorption); it is dark only because no light reaches it. The diver carries `torch` (spot) and `lamp` (soft point light, like submersible work lights). Lights are physically based (three.js r186); torch and lamp use decay 1 (gentler than real inverse-square) and intensities carry a factor PI. A strong torch still washes out pale animals close up; keep pale animals not pure white. Our fog uses `U.water` (linear), never three.js `fogColor` (that one is already converted for the screen).
-- **Only nearby parts are drawn:** `culling.js` hides places and floor chunks more than ~260 m away (anything with `userData.cull`).
+- **Only what can be seen is drawn (v1.3):** `culling.js` hides places, floor chunks and tiles once they have fully faded into the water (5 / absorption, up to 300 m; anything with `userData.cull`, with 15 m of slack so nothing flickers).
+  Many copies of one thing (corals, sea-floor life, rocks, tube worms) are split into tiles by `addTiled` (tiles.js), so tiles behind you or far away are skipped. Small corals also shrink away smoothly with distance (`wet()` option `shrink`) and their tiles get a shorter `far` limit.
+- **Opening (v1.3):** `runSteps` (util/steps.js) builds the world in steps with a progress message and draws nothing meanwhile; `warmUp` (engine/warmup.js) builds every shader and copies every shape to the graphics card before Begin.
+  Rule: never hide a light or add one later (the light count is built into every shader, so three.js would rebuild them all: a freeze). Switch a light off with intensity 0 (see the anglerfish lure in cast.js). `tests/startup.py` lists any shader built too late.
+- **Solid world (v1.3):** `solids.js` keeps balls and pills (lines with a thickness) in an 8 m grid. Builders add them: `addSolidsFor(instancedMesh, thick)` for corals and sea-floor life (thickness from the shape's `userData.thick`), `addBall` for rocks, `addGrowth` for clumps, `addSolid` for wreck parts and bones. `constrain()` pushes the diver (a 0.45 m ball, `BODY`) out of them; the wreck hull has its own shaped check.
 - **Backscatter:** a dense 12 m cloud of tiny specks around the camera (`backscatter` in particles.js) lights up only inside the torch cone, like real deep-sea footage.
 - **Fog colour:** fully fogged rock fades to the same colours as the background (`U.waterUp`/`U.waterDown`, by view direction), so far shapes have no outline.
 - **Animals:** `buildCreature(spec)` (life/creature.js, rings + flat fins + painted skin). `SPECIES` holds the recipes. The real fish model loads via `loadBarramundi` (fetches `assets/`).
-- **Touch:** `TOUCH.point` is a small ball in front of the mask. `School.update` makes touched fish dart away; `reactActor` does it for single animals using the `HIT` table (life/touch.js).
+- **Touch and giving way (v1.3):** `TOUCH.point` is a small ball in front of the mask (touching gives a jolt and a caption). Animals sense the diver's whole body: `reactActor` (life/touch.js) uses the `HIT` table (length, thickness, `shy` distance, `heavy`).
+  Too close: the animal speeds up smoothly and swims aside. Still touching: a light animal is pushed aside, a heavy one (whales, whale shark, manta) pushes the diver (`shoveDiver`, glide.js). School fish keep about 1.4 m away and part around the diver.
 - **Passers:** `initPassers` and `spawnPasser` send random animals and schools past the diver every 5 to 11 seconds, each kind only within its real depth range (`minD`, `maxD`, optional `near`).
-  `passBy(..., follow)` makes a scripted animal sink with the diver for 10 s around the meeting (the anglerfish and trench snailfish), because in the deep the camera sinks about 12 m/s and a still animal flashes past.
+  No pops (v1.3): each starts out of sight (`inSight`: off screen, or faded), crosses, and leaves only once out of sight again; its path is checked against rock (`inRock`).
+  `passBy(..., follow)` makes a scripted animal sink with the diver around the meeting and then ease to a stop (the anglerfish and trench snailfish), because in the deep the camera sinks about 12 m/s and a still animal flashes past.
+  Animals more than 300 m away are hidden and moved on only twice a second.
 - **Mask and hose:** 2D canvases (`#mask`, `#hose`) drawn in ui/mask.js.
 - **Controls:** desktop shows a button row; phones and tablets (`pointer: coarse` or width under 900) move the row into a bottom sheet opened by a Menu button (ui/panels.js).
 
 ## Known weak spots (good next tasks)
-1. Animal behaviour (planned for v1.3): curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, flounder, scorpionfish, garden eels), deep-sea light displays, feeding at vents and the whale fall.
+1. Animal behaviour (planned for v1.4): curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, flounder, scorpionfish, garden eels), deep-sea light displays, feeding at vents and the whale fall.
 2. Animals right in front of the torch look paler than they should (tone mapping of strong light); deep scenes are lit only by torch and lamp, so rock far from the route is dark.
 3. The reef wall still turns teal beyond ~10 m; the deckhouse of the wreck is plain boxes; glass sponges look like plain white cones.
 4. Performance on phones is untested. `DETAIL` (engine/device.js) halves counts on small screens; pixel ratio adapts automatically. The tests' 900x540 window counts as a small screen.
 5. Motion look (phone gyro) and the look-to-swim glide were never tested on a real device.
-6. Corals are not solid: the diver is kept off the reef wall but can clip a tall coral crown.
-7. Only one real 3D asset (the CC0 barramundi). Real models are planned (v1.4+, Sketchfab, with Hasib's OK on each licence and a credit).
+6. Solids are simple balls and pills, so the diver stops a little before thin, airy shapes (fans, branches). Animals do not avoid corals and rocks yet, only the floor and the diver.
+7. Only one real 3D asset (the CC0 barramundi). Real models are planned (v1.5+, Sketchfab, with Hasib's OK on each licence and a credit).
 
 ## Rules kept from the user
 - Be honest in the page: say what is real (the barramundi model) and what is built by code, that the places are moved closer together, and that the descent is sped up. Do not show "something is missing" messages to visitors; fall back quietly.

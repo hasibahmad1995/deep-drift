@@ -26,7 +26,7 @@ This writes `dist/` with only the files a visitor needs. Upload that folder to a
 | `src/config.js` | Easy settings, water colour per depth |
 | `src/engine/` | Renderer, lights, underwater materials, sky and surface, drifting specks |
 | `src/dive/` | Dive state, real depth vs world height, the route and the parts of the dive |
-| `src/world/` | The one continuous world: its plan (`sites.js`), the sea floor, reef, vents, shipwreck, trench and sea-floor life |
+| `src/world/` | The one continuous world: its plan (`sites.js`), the sea floor, reef, vents, shipwreck, trench and sea-floor life; what is solid (`solids.js`); drawing only what can be seen (`tiles.js`, `culling.js`) |
 | `src/life/` | The animals: recipes, schools, the real barramundi, touching, who appears where |
 | `src/diver/` | Looking around, the gliding swim, camera, collisions, breathing bubbles |
 | `src/ui/` | Mask and hose, depth meter, menus, blog and credits panels |
@@ -46,6 +46,8 @@ python tests/shot.py 3 30 90      # screenshots at those dive times, into tests/
 python tests/ui.py                # phone and desktop menus
 python tests/live.py              # live play: pause, restart, music
 python tests/glide.py             # the gliding swim: steering, never rising, the roaming limit
+python tests/solid.py             # nothing passes through the diver, nothing pops in or out, no jumps
+python tests/startup.py           # how fast the page opens, freezes, shaders built too late
 ```
 
 ## Credits
