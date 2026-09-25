@@ -49,6 +49,7 @@ python tests/glide.py             # the gliding swim: steering, never rising, th
 python tests/solid.py             # nothing passes through the diver, nothing pops in or out, no jumps
 python tests/startup.py           # how fast the page opens, freezes, shaders built too late (--gpu: real graphics card)
 python tests/life.py              # pause keeps the sea moving, a new dive each time, smooth keys, school surges
+python tests/controls.py          # zoom, level turning, the side panel, the home button, animals only at their depths
 ```
 
 ## Credits
