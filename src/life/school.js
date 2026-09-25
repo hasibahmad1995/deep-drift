@@ -1,6 +1,8 @@
 /* Schools of fish: many copies of one shape moving together. */
 import * as THREE from '../lib/three.js';
 import { clock } from '../dive/state.js';
+import { camera } from '../engine/renderer.js';
+import { sightRange } from '../world/culling.js';
 import { TOUCH } from './touch.js';
 import { col } from '../util/color.js';
 import { TAU, clamp, rand } from '../util/math.js';
@@ -19,7 +21,8 @@ class School {
       if (cfg.colors) this.mesh.setColorAt(i, col(cfg.colors[Math.floor(Math.random() * cfg.colors.length)]).multiplyScalar(rand(0.8, 1.1)));
     }
     geo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1));
-    this.mesh.frustumCulled = false;
+    // the computer skips the school when it is off screen or faded into the distance; the sphere around it moves with it
+    this.mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(), cfg.spread * 1.8 + 4); this.away = false;
     this.m = new THREE.Matrix4(); this.q = new THREE.Quaternion(); this.p = new THREE.Vector3(); this.sc = new THREE.Vector3();
     this.up = new THREE.Vector3(0, 1, 0); this.fw = new THREE.Vector3(); this.eu = new THREE.Euler(0, 0, 0, 'YZX');
   }
@@ -36,7 +39,12 @@ class School {
     return out.set(-Math.sin(a) * d, 0, Math.cos(a) * d);
   }
   update(t) {
-    if (!this.mesh.visible) return;
+    if (!this.mesh.visible && !this.away) return;
+    // far beyond sight (fully faded in the water): hide it and skip the work until it comes back
+    const bs = this.mesh.boundingSphere; this.centre(t, bs.center);
+    const away = bs.center.distanceTo(camera.position) - bs.radius > sightRange();
+    if (away !== this.away) { this.away = away; this.mesh.visible = !away; }
+    if (away) return;
     const c = this.cfg, spread = c.spread, dt = clock.dt, TP = TOUCH.point, reach2 = (TOUCH.r + 0.12) * (TOUCH.r + 0.12);
     for (let i = 0; i < this.n; i++) {
       const f = this.fish[i], tt = t - f.lag * 0.5;

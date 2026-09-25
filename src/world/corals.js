@@ -7,6 +7,7 @@ import { mergeGeo, paintGeo, place, sphereAt } from '../util/geometry.js';
 import { TAU, clamp, lerp, seeded } from '../util/math.js';
 import { canvasTexture } from '../util/textures.js';
 import { UP } from './layout.js';
+import { addTiled } from './tiles.js';
 
 /* ---- coral shapes (each is one merged shape, so thousands cost little) ---- */
 function branchGeo(seed, depth = 3) {
@@ -26,7 +27,7 @@ function branchGeo(seed, depth = 3) {
   return paintGeo(g, p => mixc('#8b8b8b', '#ffffff', clamp(p.y / 1.0)));
 }
 function brainGeo() {
-  const g = new THREE.SphereGeometry(1, 34, 20, 0, TAU, 0, Math.PI / 2), p = g.attributes.position;
+  const g = new THREE.SphereGeometry(1, 26, 12, 0, TAU, 0, Math.PI / 2), p = g.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i), z = p.getZ(i), d = 1 + 0.05 * Math.sin(x * 22 + Math.sin(y * 11 + z * 7) * 2.2) + 0.03 * Math.sin(z * 19 + Math.sin(x * 9) * 2);
     p.setXYZ(i, x * d, y * d * 0.72, z * d);
@@ -48,11 +49,11 @@ function fanGeo() {
 }
 function softGeo() {
   const R = seeded(77), parts = [];
-  for (let i = 0; i < 46; i++) {
+  for (let i = 0; i < 34; i++) {
     const a = R() * TAU, h = R() * 0.85, rr = Math.sqrt(R()) * 0.32 * (0.4 + h);
-    parts.push(sphereAt(0.05 + R() * 0.05, Math.cos(a) * rr, 0.1 + h, Math.sin(a) * rr, 5));   // small, so a simple ball is enough
+    parts.push(sphereAt(0.05 + R() * 0.05, Math.cos(a) * rr, 0.1 + h, Math.sin(a) * rr, 4));   // small, so a very simple ball (8 faces) is enough
   }
-  const g = mergeGeo(parts); g.computeVertexNormals();
+  const g = mergeGeo(parts);   // keeps each ball's round normals, so the few faces still shade smoothly
   return paintGeo(g, p => mixc('#a0a0a0', '#ffffff', clamp(p.y)));
 }
 // Tube sponges: a clump of lumpy tubes with open, darker mouths.
@@ -72,8 +73,8 @@ function spongeGeo() {
 }
 function anemoneGeo() {
   const parts = [], R = seeded(41);
-  for (let i = 0; i < 60; i++) {
-    const g = new THREE.CylinderGeometry(0.004, 0.022, 0.5, 5); g.translate(0, 0.25, 0);
+  for (let i = 0; i < 44; i++) {
+    const g = new THREE.CylinderGeometry(0.004, 0.022, 0.5, 4, 1, true); g.translate(0, 0.25, 0);
     parts.push(place(g, (R() - 0.5) * 0.14, 0, (R() - 0.5) * 0.14, (R() - 0.5) * 1.6, R() * TAU, (R() - 0.5) * 1.6));
   }
   const g = mergeGeo(parts); g.computeVertexNormals();
@@ -148,9 +149,12 @@ function scatterCorals(group, surf, sets = CORAL_SETS, upDefault = 0.35, seed = 
   sets.forEach(set => {
     if (!surf.candidates.length) return;
     const n = Math.max(6, Math.round(set.n * DETAIL));
+    const geo = set.geo(); geo.computeBoundingSphere();
+    // small corals shrink away where they would be only a few dots across (about 8 pixels), bigger ones stay out to where the water hides them
+    const far = clamp(geo.boundingSphere.radius * 2 * set.s[1] * 66, 40, 260);
     const mat = new THREE.MeshStandardMaterial({ vertexColors: !set.fan, roughness: set.rough, side: THREE.DoubleSide, map: set.fan ? fanTexture : null, alphaTest: set.fan ? 0.5 : 0 });
-    wet(mat, { detail: false });
-    const mesh = new THREE.InstancedMesh(set.geo(), mat, n);
+    wet(mat, { detail: false, shrink: [far * 0.7, far] });
+    const mesh = new THREE.InstancedMesh(geo, mat, n);
     for (let i = 0; i < n; i++) {
       const v = surf.candidates[Math.floor(R() * surf.candidates.length)];
       p.set(surf.pos[v * 3], surf.pos[v * 3 + 1], surf.pos[v * 3 + 2]);
@@ -161,7 +165,7 @@ function scatterCorals(group, surf, sets = CORAL_SETS, upDefault = 0.35, seed = 
       m.compose(p, q, s); mesh.setMatrixAt(i, m);
       mesh.setColorAt(i, col(set.cols[Math.floor(R() * set.cols.length)]).multiplyScalar(0.55 + R() * 0.3));
     }
-    mesh.frustumCulled = false; group.add(mesh);
+    addTiled(group, mesh, 32, far);   // drawn in tiles, so corals behind you or far away are skipped
   });
 }
 

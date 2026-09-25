@@ -11,6 +11,7 @@ import { fbm2 } from '../util/noise.js';
 import { scatterRocks } from './floor.js';
 import { TRENCH } from './sites.js';
 import { seafloorY } from './terrain.js';
+import { addTiled } from './tiles.js';
 
 const FLOOR_Y = worldY(DEEPEST);   // about -1177 in the world
 function trenchFloorY(x, z) { return FLOOR_Y + (fbm2(x * 0.05, z * 0.05) - 0.4) * 3; }
@@ -68,7 +69,7 @@ function seaCucumbers(n) {
     pp.set(x, trenchFloorY(x, z) + 0.03, z); q.setFromEuler(new THREE.Euler(0, Rs() * TAU, 0)); s.setScalar(0.7 + Rs() * 0.9);
     m.compose(pp, q, s); mesh.setMatrixAt(i, m); mesh.setColorAt(i, col(['#ffffff', '#f0d8e8', '#ffd8d0'][i % 3]));
   }
-  mesh.frustumCulled = false; return mesh;
+  return mesh;
 }
 
 function buildTrench() {
@@ -78,7 +79,7 @@ function buildTrench() {
   scatterRocks(G, 80, 0, trenchFloorY, '#2f2b27', R => [lerp(TRENCH.landFoot, TRENCH.farFoot, R()), -60 + R() * 140]);
   // fallen boulders piled at the foot of each wall
   scatterRocks(G, SMALL ? 90 : 180, 0, trenchFloorY, '#3a342e', R => { const side = R() < 0.5 ? -1 : 1; return [mid + side * ((TRENCH.farFoot - TRENCH.landFoot) / 2 - Math.pow(R(), 0.6) * 12), -70 + R() * 170]; });
-  G.add(seaCucumbers(SMALL ? 40 : 90));
+  addTiled(G, seaCucumbers(SMALL ? 40 : 90), 25);
   G.userData.cull = { center: new THREE.Vector3(mid, (FLOOR_Y + topY(-1, 0)) / 2, 0), radius: 220 };
   return G;
 }

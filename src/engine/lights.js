@@ -1,7 +1,10 @@
 /* Sunlight, the light of the water all around, and the diver's torch and lamp.
    Lights are physically based: the torch and lamp fade with distance. A real lamp fades with the square of the
    distance (decay 2); we use a gentler fade (decay 1) so things 20 m away still show while close animals are not
-   burned out. Brightness values are set for each depth in environment.js. */
+   burned out. Brightness values are set for each depth in environment.js.
+   Rule: never hide a light, and add every light while the page loads. The number of lights is built into every
+   shader, so showing or hiding one makes three.js rebuild the shaders of everything on screen (a freeze).
+   To switch a light off, set its intensity to 0. */
 import * as THREE from '../lib/three.js';
 import { camera, scene } from './renderer.js';
 

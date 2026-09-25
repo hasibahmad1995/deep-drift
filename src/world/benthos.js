@@ -10,6 +10,7 @@ import { loft, mergeGeo, paintGeo, place } from '../util/geometry.js';
 import { TAU, clamp, lerp, seeded } from '../util/math.js';
 import { branchGeo, vaseGeo } from './corals.js';
 import { TRENCH } from './sites.js';
+import { addTiled } from './tiles.js';
 import { seafloorY } from './terrain.js';
 import { trenchFloorY } from './trench.js';
 
@@ -54,7 +55,7 @@ function xenoGeo() {
 function glassSpongeGeo() { const g = vaseGeo(); g.scale(0.45, 1.7, 0.45); return g; }
 
 // ---- placing many copies on the floor ----
-// area = { where(R) -> [x, z], ground(x, z) -> floor height, cull }; size(R) -> scale; cols = colours to pick from.
+// area = { where(R) -> [x, z], ground(x, z) -> floor height }; size(R) -> scale; cols = colours to pick from.
 function plant(G, geo, mat, n, area, size, cols, seed, lean = 0.15) {
   const { where, ground } = area;
   const mesh = new THREE.InstancedMesh(geo, mat, n), R = seeded(seed), m = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3();
@@ -63,7 +64,7 @@ function plant(G, geo, mat, n, area, size, cols, seed, lean = 0.15) {
     p.set(x, ground(x, z) - 0.02, z); q.setFromEuler(new THREE.Euler((R() - 0.5) * lean, R() * TAU, (R() - 0.5) * lean)); s.setScalar(sc);
     m.compose(p, q, s); mesh.setMatrixAt(i, m); mesh.setColorAt(i, col(cols[Math.floor(R() * cols.length)]).multiplyScalar(0.8 + R() * 0.3));
   }
-  mesh.frustumCulled = false; mesh.userData.cull = area.cull; G.add(mesh); return mesh;
+  return addTiled(G, mesh);   // small tiles, so only the ones near you are drawn
 }
 const matte = (opts = {}) => wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, side: THREE.DoubleSide, ...opts }), { caust: false });
 const n = k => Math.max(8, Math.round(k * Math.max(DETAIL, 0.5)));
@@ -71,8 +72,7 @@ const n = k => Math.max(8, Math.round(k * Math.max(DETAIL, 0.5)));
 function buildBenthos() {
   const G = new THREE.Group(); G.name = 'benthos';
   // near the route across the slope and plain (the route wanders between z = -12 and z = 6)
-  const area = (x0, x1, z0, z1, ground) => ({ where: R => [lerp(x0, x1, R()), lerp(z0, z1, R())], ground,
-    cull: { center: new THREE.Vector3((x0 + x1) / 2, ground((x0 + x1) / 2, 0), (z0 + z1) / 2), radius: Math.hypot(x1 - x0, z1 - z0) / 2 } });
+  const area = (x0, x1, z0, z1, ground) => ({ where: R => [lerp(x0, x1, R()), lerp(z0, z1, R())], ground });
   const slope = area(215, 345, -16, 14, seafloorY), plain = area(345, 552, -30, 30, seafloorY);   // close to the route (which runs near z = 0)
   const deep = area(TRENCH.landFoot + 3, TRENCH.farFoot - 3, -20, 70, trenchFloorY);
   // volcano slope

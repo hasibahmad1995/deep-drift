@@ -4,6 +4,7 @@ import { wet } from '../engine/wet.js';
 import { col } from '../util/color.js';
 import { seeded } from '../util/math.js';
 import { fbm2 } from '../util/noise.js';
+import { addTiled } from './tiles.js';
 
 // Rocks on a floor. where(R) can return [x, z] to choose each spot; otherwise they spread over a square of size area.
 function scatterRocks(group, n, area, hFn, tone, where) {
@@ -17,7 +18,7 @@ function scatterRocks(group, n, area, hFn, tone, where) {
     pp.set(x, hFn(x, z) + sc * 0.2, z); q.setFromEuler(new THREE.Euler(R() * 3, R() * 3, R() * 3)); s.set(sc * (0.8 + R() * 0.6), sc * 0.7, sc * (0.8 + R() * 0.6));
     m.compose(pp, q, s); mesh.setMatrixAt(i, m); mesh.setColorAt(i, col(tone).multiplyScalar(0.7 + R() * 0.6));
   }
-  mesh.frustumCulled = false; group.add(mesh);
+  addTiled(group, mesh, 30);
 }
 
 export { scatterRocks };

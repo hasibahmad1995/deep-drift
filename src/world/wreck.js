@@ -10,6 +10,7 @@ import { fbm2 } from '../util/noise.js';
 import { WRECK, WHALE } from './sites.js';
 import { seafloorY } from './terrain.js';
 import { addRusticles, buildShip } from './ship.js';
+import { addTiled } from './tiles.js';
 
 // The debris field: a funnel that fell off, a boiler, and torn, bent plates around the ship.
 function debris() {
@@ -54,7 +55,7 @@ function nodules(n) {
     pp.set(x, seafloorY(x, z) + sc * 0.2, z); q.setFromEuler(new THREE.Euler(R() * 3, R() * 3, R() * 3)); s.setScalar(sc);
     m.compose(pp, q, s); mesh.setMatrixAt(i, m); mesh.setColorAt(i, col(['#1c1712', '#2a2019', '#15120f'][i % 3]));
   }
-  mesh.frustumCulled = false; return mesh;
+  return mesh;
 }
 
 function buildWreck() {
@@ -65,7 +66,7 @@ function buildWreck() {
   G.add(ship); G.userData.ship = ship;
   ship.updateMatrixWorld(true);
   addRusticles(ship);
-  G.add(debris(), whaleSkeleton(), nodules(Math.round(1400 * Math.max(DETAIL, 0.5))));
+  G.add(debris(), whaleSkeleton()); addTiled(G, nodules(Math.round(1400 * Math.max(DETAIL, 0.5))), 25);
   G.userData.cull = { center: new THREE.Vector3(450, seafloorY(450, 0), 0), radius: 130 };
   return G;
 }

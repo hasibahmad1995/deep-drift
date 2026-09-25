@@ -11,6 +11,7 @@ import { glowSprite, makeDroplets, makeSmoke } from './effects.js';
 import { scatterRocks } from './floor.js';
 import { VENTS } from './sites.js';
 import { seafloorY } from './terrain.js';
+import { addTiled } from './tiles.js';
 
 function chimney(i, h) {
   const prof = [];
@@ -43,7 +44,7 @@ function tubeWorms() {
     pp.set(x, seafloorY(x, z) - 0.08, z); q.setFromEuler(new THREE.Euler(Math.sin(a) * r * 0.35 + (R() - 0.5) * 0.15, R() * TAU, -Math.cos(a) * r * 0.35 + (R() - 0.5) * 0.15)); s.setScalar(0.6 + R() * 0.8);
     m.compose(pp, q, s); tm.setMatrixAt(i, m); ph[i] = R() * TAU;
   }
-  tg.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1)); tm.frustumCulled = false;
+  tg.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1));
   return tm;
 }
 
@@ -55,7 +56,7 @@ function buildVents() {
     const gl2 = glowSprite(24, 0xff5a10); gl2.material.opacity = 0.35; gl2.position.copy(gl.position); G.add(gl2);
     G.add(makeSmoke(x, fy + h, z));
   });
-  G.add(tubeWorms());
+  addTiled(G, tubeWorms(), 12);
   // streams of liquid CO2 droplets from cracks between the chimneys
   [[126, 2], [150, -6], [178, 10]].forEach(([x, z]) => G.add(makeDroplets(x, seafloorY(x, z) + 0.1, z)));
   // broken lava rock over the terrace
