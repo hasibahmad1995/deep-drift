@@ -223,10 +223,116 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="perf: open faster and stop freezes early in the dive",
+        version="", lane="feature",
+        title="Open faster; no freezes at the start of the dive",
+        what="Hasib noticed lag when the page opens. Measured first (a new test, <code>tests/startup.py</code>), then fixed four causes. "
+             "<b>1. Too much drawn:</b> each kind of coral was one big batch covering the whole reef, so all 3.9 million reef "
+             "triangles were drawn every frame, even behind you. Corals, sea-floor life, rocks, tube worms, nodules and sea "
+             "cucumbers are now split into tiles, and only tiles on screen and within sight are drawn. Small corals shrink away "
+             "smoothly with distance (when they are a few pixels across and already faded) instead of being drawn out to 250 m. "
+             "Schools of fish are skipped when off screen or far away. The first view went from 4.7 million to 0.34 million triangles. "
+             "<b>2. Drawing while loading:</b> the page drew the half-built world between loading steps. Now it builds in steps "
+             "with a progress message (for example: Loading the coral reef... 11%) and draws nothing until it is ready. "
+             "<b>3. Shaders built during the dive:</b> the first time a material is drawn, the browser builds its shader, a "
+             "freeze each time. All are now built before Begin (<code>warmup.js</code>). "
+             "<b>4. A hidden light:</b> the anglerfish carries a light; hiding and showing it made three.js rebuild the shaders "
+             "of everything on screen. The light now stays and just goes dark. "
+             "Also: picture sharpness now drops quickly when frames are slow and rises back slowly (<code>quality.js</code>), "
+             "and tiny point sprites keep their size when it changes (an old bug).",
+        files=["New: <code>src/util/steps.js</code>, <code>src/engine/warmup.js</code>, <code>src/engine/quality.js</code>, "
+               "<code>src/world/tiles.js</code>, <code>tests/startup.py</code>",
+               "Changed: <code>main.js</code>, <code>culling.js</code>, <code>corals.js</code>, <code>benthos.js</code>, <code>floor.js</code>, "
+               "<code>vents.js</code>, <code>wreck.js</code>, <code>trench.js</code>, <code>school.js</code>, <code>cast.js</code>, "
+               "<code>wet.js</code> (new option <code>shrink</code>), <code>lights.js</code>, particles, bubbles, effects"],
+        state="Same dive, lighter to draw. See the chart in section 7.",
+        checks="In the test browser: Begin ready after 2.5 s (v1.2: 5.4 s); 26 pictures in the first 6 s of the dive (v1.2: 9); "
+               "no shader built after the warm-up. Screenshots looked the same as v1.2.",
+        status="Kept",
+    ),
+    dict(
+        subject="feat: a solid world, animals that give way, nothing pops in or out",
+        version="", lane="feature",
+        title="Nothing passes through the diver; nothing pops in or out",
+        what="Hasib's two rules: you cannot pass through anything (animals move away, or you are stopped), and nothing "
+             "appears or vanishes suddenly. <b>Solid world:</b> corals, sponges, bamboo corals, sea lilies, big rocks, tube "
+             "worm clumps, the wreck's masts, railings, winches, funnel and boiler, and the whale bones are now solid "
+             "(7,794 simple shapes kept in a grid, <code>solids.js</code>). The diver is a 0.45 m ball and slides around them. "
+             "The wreck is checked with its real hull shape instead of one big box. "
+             "<b>Animals give way:</b> each animal senses the diver's body and has its own comfort distance. Too close, it "
+             "speeds up smoothly and swims aside. If it still touches you, a light animal is pushed aside, and a heavy one "
+             "(whales, the whale shark, the manta) pushes you aside instead. School fish keep about 1.4 m away and part "
+             "around you. <b>No pops:</b> passing animals start where you cannot see them (off screen or lost in the water), "
+             "swim across, and leave only once out of sight again; their path never goes through rock. Glows (vents, "
+             "anglerfish lure) fade with distance. Deep animals that sink with you slow down gently instead of stopping dead. "
+             "<b>Bugs found by the new test and fixed:</b> animals more than 300 m away stopped moving for good (so after the "
+             "dive restarted they were frozen and hidden); near the top of the reef wall the diver could be lifted 58 m in one "
+             "frame; past the look-up limit the diver was pulled down 6 m in one frame; the reef collision stepped up to 2 m at "
+             "once; the lifeboat arms on the wreck were never added (their code was inside a comment).",
+        files=["New: <code>src/world/solids.js</code>, <code>tests/solid.py</code>",
+               "Changed: <code>collision.js</code>, <code>glide.js</code>, <code>touch.js</code>, <code>school.js</code>, "
+               "<code>passers.js</code>, <code>motion.js</code>, <code>main.js</code>, <code>ship.js</code>, <code>wreck.js</code>, "
+               "<code>corals.js</code>, <code>benthos.js</code>, <code>floor.js</code>, <code>vents.js</code>, <code>effects.js</code>, "
+               "<code>debug.js</code>"],
+        state="The world is solid, animals give way, nothing pops. See the whale skeleton pictures in section 7.",
+        checks="<code>tests/solid.py</code> simulates the whole dive plus a reef run and a wreck run (10,900 steps): 0 times inside "
+               "something solid, 0 animal or fish overlaps, 0 pops, 0 jumps. Direct contact: a whale shark pushed the diver "
+               "1.9 m aside; a jellyfish was nudged 0.7 m away. Glide, menu and live tests pass.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: describe v1.3 in CLAUDE.md and README",
+        version="", lane="feature",
+        title="Describe v1.3 for the next person (and for Claude)",
+        what="How the solid world, tiles, warm-up, sharpness control, giving way and passers work; the rule never to hide "
+             "a light; the two new tests; the plan moved on (animal behaviour is now v1.4, real models v1.5 and later).",
+        files=["<code>CLAUDE.md</code>, <code>README.md</code>"],
+        state="Same as the commit before.",
+        checks="Read through; no em dashes.",
+        status="Kept",
+    ),
+    dict(
+        subject="release: set the version to 1.3.0",
+        version="", lane="feature",
+        title="Set the version number to 1.3.0",
+        what="The last step on the branch before merging: <code>package.json</code> says 1.3.0.",
+        files=["<code>package.json</code>"],
+        state="Same as the commit before.",
+        checks="None needed.",
+        status="Kept",
+    ),
+    dict(
+        subject="v1.3: a solid world, smooth arrivals and a faster start",
+        version="v1.3", merge=True,
+        title="Release v1.3: merge the branch into main",
+        what="The merge commit that brings the four commits of <code>feature/v1.3-solid-and-smooth</code> into <code>main</code>, "
+             "tagged <code>v1.3</code>. Why 1.3 and not 2.0: it is the same dive, it just behaves more like the real thing "
+             "and opens faster. A 2.0 would mean a big change in what the dive is (for example real 3D models everywhere).",
+        files=["Everything changed on the branch (the four rows above it)."],
+        state="v1.3: nothing passes through the diver, nothing pops in or out, faster opening.",
+        checks="All tests passed on the branch before merging.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: update the tracking guide for v1.3",
+        version="",
+        title="Update this guide for v1.3",
+        what="New rows, the whale skeleton before and after pictures, the opening chart, and the plan for v1.4 and later.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>",
+               "New: <code>docs/img/solid-v1.3.jpg</code>, <code>docs/img/opening-v1.3.jpg</code>"],
+        state="Same as v1.3.",
+        checks="PDF opened and read through.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)
 PICTURES = [
+    ("solid-v1.3.jpg", "v1.3, solid world. The diver is sent straight into the whale skeleton on the abyssal plain. "
+     "Left, v1.2: the camera ends up inside the rib cage. Right, v1.3: the diver is stopped just above the bones."),
+    ("opening-v1.3.jpg", "v1.3, opening the page, measured in the test browser (software graphics, so all numbers are slower "
+     "than on a real computer; compare the bars, not the numbers)."),
     ("before-v1.2.jpg", "v1.1 (before v1.2): six separate places, with a fade to black between the vents, the wreck and the trench."),
     ("after-v1.2.jpg", "v1.2: one continuous dive. Left to right, top to bottom: reef 11 m and 54 m, reef drop-off 155 m, "
      "twilight 560 m (hatchetfish), midnight 1,120 m (vampire squid) and 1,450 m (anglerfish), vents 1,580 m, volcano slope "
@@ -239,12 +345,12 @@ PICTURES = [
 
 # Planned work, shown in its own table so it is never confused with saved versions.
 PLANNED = [
-    ("v1.3", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
-     "flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton."),
-    ("v1.4+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
+    ("v1.4", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
+     "flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton. "
+     "Also: animals steer around corals and rocks (today they only avoid the floor and the diver)."),
+    ("v1.5+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
     ("", "Phone check", "Try the dive on a real phone: speed, motion look (gyro), and the look-to-swim glide. Needs Hasib's phone."),
     ("", "Publish", "First public version on GitHub Pages (free), after local testing. Needs a GitHub account."),
-    ("", "Solid corals", "The diver can no longer swim through tall corals."),
 ]
 
 
@@ -385,7 +491,7 @@ def chain_svg():
                        f'<line x1="{x:.0f}" y1="{y + r}" x2="{x:.0f}" y2="{y + r + 10}" stroke="#1d6b3a" stroke-width="2"/>')
     xl = X[n - 2]
     out.append(f'<rect x="{xl - 34:.0f}" y="{Y["main"] + r + 32}" width="68" height="17" rx="3" fill="#0b3954"/><text x="{xl:.0f}" y="{Y["main"] + r + 44}" text-anchor="middle" fill="#fff" font-size="9.5">main (HEAD)</text>')
-    out.append(f'<text x="30" y="30" fill="#7a5a10" font-size="11">side branch: feature/v1.2-continuous-dive</text><text x="30" y="{Y["main"] + r + 72}" fill="#0b3954" font-size="11">main: released versions</text>')
+    out.append(f'<text x="30" y="30" fill="#7a5a10" font-size="11">side branches: feature/... (one per version, where it was built)</text><text x="30" y="{Y["main"] + r + 72}" fill="#0b3954" font-size="11">main: released versions</text>')
     return ('<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial">' + "".join(out) + '</svg>')
 
 
@@ -431,6 +537,7 @@ def build_html():
                     f'<td>{desc}</td><td><span class="pill {pill}">{esc(c["status"])}</span></td></tr>')
     plan_rows = "".join(f'<tr><td class="v">{v or "<span class=muted>none</span>"}</td><td><b>{esc(t)}</b></td><td>{esc(d)}</td></tr>' for v, t, d in PLANNED)
 
+    features = ", ".join(f"<code>{esc(b)}</code>" for b in git("branch", "--format=%(refname:short)").splitlines() if b.startswith("feature/")) or "none"
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>Deep Drift: git tracking</title><style>{CSS}</style></head><body>
 
 <h1>Deep Drift: saved versions and how git works</h1>
@@ -451,7 +558,7 @@ copy to return to.</div>
 inside it (packed and compressed). <b>Never edit or delete it:</b> deleting it deletes all history. Your normal files are not affected.</td></tr>
 <tr><td>Settings for this project</td><td><code>.git\\config</code>. Name <code>{esc(name)}</code>, email <code>{esc(email)}</code>.
 These are set for this project only. Git on this computer has no global name or email.</td></tr>
-<tr><td>Branches</td><td><code>main</code>: released versions. <code>feature/v1.2-continuous-dive</code>: where v1.2 was built (kept for the record). You are on <code>{esc(branch)}</code>. See section 4.</td></tr>
+<tr><td>Branches</td><td><code>main</code>: released versions. {features}: where each version was built (kept for the record). You are on <code>{esc(branch)}</code>. See section 4.</td></tr>
 <tr><td>Run it locally</td><td>In the project folder: <code>node tools/serve.mjs</code>, then open <code>http://localhost:8080</code>. Stop it with Ctrl+C.</td></tr>
 <tr><td>Tags (named versions)</td><td>{", ".join("<code>" + esc(t) + "</code>" for t in tags) or "none"}</td></tr>
 <tr><td>Online copy</td><td>{"<code>" + esc(remote) + "</code>" if remote else "None. The history exists only on this computer. If the project folder is lost, the history is lost too. Putting a copy on GitHub (private) would fix that; ask when you want it."}</td></tr>
@@ -508,12 +615,12 @@ the file is saved. That row is filled in at the next update.</p>
 <h2>4. Branches, testing and releases (how each version is made)</h2>
 <p>Since v1.2 each version is built the way software teams do it (a simple "SDLC": build, test, release):</p>
 <ol>
-<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.3-behaviour</code>. <code>main</code> is not touched,
+<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.4-behaviour</code>. <code>main</code> is not touched,
 so the last released version is always safe there.</li>
 <li><b>Build in small steps,</b> each saved as its own commit on the branch (for v1.2: refactor, engine upgrade, the continuous dive).
 The code is split into small files, one job each, so every part can be found and changed later.</li>
 <li><b>Test locally</b> after every step: <code>node tools/serve.mjs</code> to play it at http://localhost:8080, and the test scripts
-(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>).</li>
+(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>, <code>solid.py</code>, <code>startup.py</code>).</li>
 <li><b>Show Hasib</b> before and after. Only if it looks better and nothing broke:</li>
 <li><b>Release.</b> Set the version in <code>package.json</code>, merge the branch into <code>main</code> with a merge commit
 (<code>git switch main</code> then <code>git merge --no-ff feature/...</code>), and tag it (<code>git tag -a v1.3 -m "..."</code>).</li>
@@ -553,7 +660,7 @@ and every commit after it</b> (tagged versions can still be recovered, others ar
 </table>
 
 <h3>Planned (not saved yet)</h3>
-<p class="muted">v1.1 (the realism work) and v1.2 (the continuous dive) are done. What is left is below. Rows move into the table above when they are committed.</p>
+<p class="muted">v1.1 (the realism work), v1.2 (the continuous dive) and v1.3 (the solid world and faster start) are done. What is left is below. Rows move into the table above when they are committed.</p>
 <table class="log plan">
 <thead><tr><th style="width:16mm">Version</th><th style="width:30mm">Change</th><th>What it will do</th></tr></thead>
 {plan_rows}
