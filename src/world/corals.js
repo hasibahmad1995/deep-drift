@@ -7,9 +7,12 @@ import { mergeGeo, paintGeo, place, sphereAt } from '../util/geometry.js';
 import { TAU, clamp, lerp, seeded } from '../util/math.js';
 import { canvasTexture } from '../util/textures.js';
 import { UP } from './layout.js';
+import { addSolidsFor } from './solids.js';
 import { addTiled } from './tiles.js';
 
 /* ---- coral shapes (each is one merged shape, so thousands cost little) ---- */
+// How solid a shape is for the diver (0 to 1 of its widest part): low for airy branches and flat fans. See solids.js.
+const firm = (g, thick) => { g.userData.thick = thick; return g; };
 function branchGeo(seed, depth = 3) {
   const R = seeded(seed), parts = [];
   const grow = (m, len, r, d) => {
@@ -24,7 +27,7 @@ function branchGeo(seed, depth = 3) {
   };
   grow(new THREE.Matrix4(), 0.36, 0.075, depth);
   const g = mergeGeo(parts); g.computeVertexNormals();
-  return paintGeo(g, p => mixc('#8b8b8b', '#ffffff', clamp(p.y / 1.0)));
+  return firm(paintGeo(g, p => mixc('#8b8b8b', '#ffffff', clamp(p.y / 1.0))), 0.55);
 }
 function brainGeo() {
   const g = new THREE.SphereGeometry(1, 26, 12, 0, TAU, 0, Math.PI / 2), p = g.attributes.position;
@@ -33,19 +36,19 @@ function brainGeo() {
     p.setXYZ(i, x * d, y * d * 0.72, z * d);
   }
   g.computeVertexNormals();
-  return paintGeo(g, p => mixc('#8a8a8a', '#ffffff', clamp((Math.sin(p.x * 22 + Math.sin(p.y * 11 + p.z * 7) * 2.2) + 1) / 2 * 0.8 + 0.2)));
+  return firm(paintGeo(g, p => mixc('#8a8a8a', '#ffffff', clamp((Math.sin(p.x * 22 + Math.sin(p.y * 11 + p.z * 7) * 2.2) + 1) / 2 * 0.8 + 0.2))), 0.9);
 }
 function tableGeo() {
   const plate = new THREE.CylinderGeometry(1.25, 1.0, 0.1, 30, 2), p = plate.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z); p.setY(i, p.getY(i) + Math.sin(Math.atan2(z, x) * 7) * 0.05 * r + (r > 1 ? -0.07 : 0)); }
   plate.translate(0, 0.55, 0); const stalk = new THREE.CylinderGeometry(0.12, 0.22, 0.55, 10); stalk.translate(0, 0.27, 0);
   plate.computeVertexNormals();
-  return paintGeo(mergeGeo([plate, stalk]), (p, n) => mixc('#8a8a8a', '#ffffff', clamp(0.5 + n.y * 0.5)));
+  return firm(paintGeo(mergeGeo([plate, stalk]), (p, n) => mixc('#8a8a8a', '#ffffff', clamp(0.5 + n.y * 0.5))), 0.8);
 }
 function fanGeo() {
   const g = new THREE.PlaneGeometry(1.5, 1.7, 10, 12), p = g.attributes.position;
   for (let i = 0; i < p.count; i++) p.setZ(i, 0.18 * Math.sin(p.getX(i) * 2.2) + 0.06 * Math.sin(p.getY(i) * 5));
-  g.translate(0, 0.95, 0); g.computeVertexNormals(); return g;
+  g.translate(0, 0.95, 0); g.computeVertexNormals(); return firm(g, 0.35);
 }
 function softGeo() {
   const R = seeded(77), parts = [];
@@ -54,7 +57,7 @@ function softGeo() {
     parts.push(sphereAt(0.05 + R() * 0.05, Math.cos(a) * rr, 0.1 + h, Math.sin(a) * rr, 4));   // small, so a very simple ball (8 faces) is enough
   }
   const g = mergeGeo(parts);   // keeps each ball's round normals, so the few faces still shade smoothly
-  return paintGeo(g, p => mixc('#a0a0a0', '#ffffff', clamp(p.y)));
+  return firm(paintGeo(g, p => mixc('#a0a0a0', '#ffffff', clamp(p.y))), 0.7);
 }
 // Tube sponges: a clump of lumpy tubes with open, darker mouths.
 function spongeGeo() {
@@ -69,7 +72,7 @@ function spongeGeo() {
     paintGeo(g, p => mixc('#6a6a6a', '#ffffff', clamp(0.35 + p.y * 0.5)).multiplyScalar(Math.hypot(p.x, p.z) < r * 0.9 ? 0.35 : 1));   // dark inside
     g.rotateZ(lean); g.translate((R() - 0.5) * 0.45, 0, (R() - 0.5) * 0.45); parts.push(g);
   }
-  return mergeGeo(parts);   // keeps the smooth normals of each tube
+  return firm(mergeGeo(parts), 0.6);   // keeps the smooth normals of each tube
 }
 function anemoneGeo() {
   const parts = [], R = seeded(41);
@@ -78,7 +81,7 @@ function anemoneGeo() {
     parts.push(place(g, (R() - 0.5) * 0.14, 0, (R() - 0.5) * 0.14, (R() - 0.5) * 1.6, R() * TAU, (R() - 0.5) * 1.6));
   }
   const g = mergeGeo(parts); g.computeVertexNormals();
-  return paintGeo(g, p => mixc('#b0b0b0', '#ffffff', clamp(p.y / 0.5)));
+  return firm(paintGeo(g, p => mixc('#b0b0b0', '#ffffff', clamp(p.y / 0.5))), 0.5);
 }
 const fanTexture = canvasTexture(256, 256, (c, w, h) => {
   c.clearRect(0, 0, w, h); c.strokeStyle = '#fff'; c.lineCap = 'round';
@@ -106,7 +109,7 @@ function vaseGeo() {
   const g = new THREE.LatheGeometry(prof, 16), p = g.attributes.position;
   for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), y = p.getY(i), k = 1 + 0.06 * Math.sin(Math.atan2(z, x) * 8) * clamp(y); p.setX(i, x * k); p.setZ(i, z * k); }
   g.computeVertexNormals();
-  return paintGeo(g, (q, n) => mixc('#7a7a7a', '#ffffff', clamp(0.35 + q.y * 0.5 + (Math.hypot(q.x, q.z) < 0.1 + 0.3 * q.y ? -0.3 : 0))));
+  return firm(paintGeo(g, (q, n) => mixc('#7a7a7a', '#ffffff', clamp(0.35 + q.y * 0.5 + (Math.hypot(q.x, q.z) < 0.1 + 0.3 * q.y ? -0.3 : 0)))), 0.8);
 }
 // Sea whips: a few long thin bendy rods.
 function whipGeo() {
@@ -117,7 +120,7 @@ function whipGeo() {
     parts.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.018, 5));
   }
   const g = mergeGeo(parts); g.computeVertexNormals();
-  return paintGeo(g, p => mixc('#9a9a9a', '#ffffff', clamp(p.y / 2)));
+  return firm(paintGeo(g, p => mixc('#9a9a9a', '#ffffff', clamp(p.y / 2))), 0.3);
 }
 
 // Corals and sponges that grow out from the steep wall (up = how much they turn to grow upward).
@@ -165,6 +168,7 @@ function scatterCorals(group, surf, sets = CORAL_SETS, upDefault = 0.35, seed = 
       m.compose(p, q, s); mesh.setMatrixAt(i, m);
       mesh.setColorAt(i, col(set.cols[Math.floor(R() * set.cols.length)]).multiplyScalar(0.55 + R() * 0.3));
     }
+    addSolidsFor(mesh, geo.userData.thick);   // the diver cannot pass through them
     addTiled(group, mesh, 32, far);   // drawn in tiles, so corals behind you or far away are skipped
   });
 }

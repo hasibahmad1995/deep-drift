@@ -3,13 +3,18 @@ import * as THREE from '../lib/three.js';
 import { clock } from '../dive/state.js';
 import { camera } from '../engine/renderer.js';
 import { sightRange } from '../world/culling.js';
+import { BODY } from '../diver/collision.js';
 import { TOUCH } from './touch.js';
 import { col } from '../util/color.js';
 import { TAU, clamp, rand } from '../util/math.js';
 
 /* ---- schools of fish: many copies of one shape, moving together ----
    A school either circles a point (cfg.omega) or swims along a straight line (cfg.line).
-   If the diver touches a fish, that fish darts away and then slowly comes back to the school. */
+   Fish keep a little space around the diver (COMFORT): closer than that, a fish turns and speeds away (quickly, the way
+   startled fish do, but not in a single jump), so the school parts around the diver and closes again behind.
+   No fish ever passes through the diver. */
+const COMFORT = 1.4;   // metres from the diver's body
+
 class School {
   constructor(geo, mat, n, cfg) {
     this.cfg = cfg; this.n = n; this.name = cfg.name || null;
@@ -42,20 +47,24 @@ class School {
     if (!this.mesh.visible && !this.away) return;
     // far beyond sight (fully faded in the water): hide it and skip the work until it comes back
     const bs = this.mesh.boundingSphere; this.centre(t, bs.center);
-    const away = bs.center.distanceTo(camera.position) - bs.radius > sightRange();
+    const away = bs.center.distanceTo(camera.position) - bs.radius > sightRange() + (this.away ? 0 : 10);   // 10 m of slack so it never flickers
     if (away !== this.away) { this.away = away; this.mesh.visible = !away; }
     if (away) return;
-    const c = this.cfg, spread = c.spread, dt = clock.dt, TP = TOUCH.point, reach2 = (TOUCH.r + 0.12) * (TOUCH.r + 0.12);
+    const c = this.cfg, spread = c.spread, dt = clock.dt, TP = TOUCH.point, reach2 = (TOUCH.r + 0.12) * (TOUCH.r + 0.12), E = camera.position;
+    const near = BODY + COMFORT, hard = BODY + 0.12 * c.scale, turn = 1 - Math.exp(-dt * 9);
     for (let i = 0; i < this.n; i++) {
       const f = this.fish[i], tt = t - f.lag * 0.5;
       this.centre(tt, this.p);
       this.p.x += f.o.x * spread + Math.sin(t * 0.8 + f.w) * 0.25; this.p.y += f.o.y * spread * 0.6 + Math.sin(t * 1.1 + f.w) * 0.15; this.p.z += f.o.z * spread;
       this.p.add(f.off);
-      const dx = this.p.x - TP.x, dy = this.p.y - TP.y, dz = this.p.z - TP.z, d2 = dx * dx + dy * dy + dz * dz;
-      if (d2 < reach2) {   // touched: dart away from the diver
-        const l = Math.sqrt(d2) || 1, sp = rand(3, 5);
-        f.vel.set(dx / l * sp, (dy / l * 0.6 + rand(-0.2, 0.4)) * sp, dz / l * sp);
-        TOUCH.hit(this.name || 'a fish');
+      const tx = this.p.x - TP.x, ty = this.p.y - TP.y, tz = this.p.z - TP.z;
+      if (tx * tx + ty * ty + tz * tz < reach2) TOUCH.hit(this.name || 'a fish');   // the hand touched it
+      const dx = this.p.x - E.x, dy = this.p.y - E.y, dz = this.p.z - E.z, d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 < near * near) {   // too close to the diver: turn and speed away
+        const l = Math.sqrt(d2) || 1, sp = (2.5 + f.s * 1.5) * (1 - Math.max(0, l - BODY) / COMFORT) + 0.5;
+        const vx = dx / l * sp, vy = dy / l * sp * 0.6, vz = dz / l * sp;
+        if (f.vel.x * vx + f.vel.y * vy + f.vel.z * vz < sp * sp) { f.vel.x += (vx - f.vel.x) * turn; f.vel.y += (vy - f.vel.y) * turn; f.vel.z += (vz - f.vel.z) * turn; }
+        if (l < hard) { const k = (hard - l) / l; f.off.x += dx * k; f.off.y += dy * k; f.off.z += dz * k; this.p.x += dx * k; this.p.y += dy * k; this.p.z += dz * k; }   // never inside the diver
       }
       if (f.vel.lengthSq() > 0.01) { f.off.addScaledVector(f.vel, dt); f.vel.multiplyScalar(Math.exp(-dt * 1.6)); }
       f.off.multiplyScalar(Math.exp(-dt * 0.22));   // slowly swim back to the school

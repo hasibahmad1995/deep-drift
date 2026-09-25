@@ -9,8 +9,10 @@ import { TAU, clamp, lerp, seeded } from '../util/math.js';
 import { fbm2, hash2 } from '../util/noise.js';
 import { glowSprite, makeDroplets, makeSmoke } from './effects.js';
 import { scatterRocks } from './floor.js';
+import { UP } from './layout.js';
 import { VENTS } from './sites.js';
 import { seafloorY } from './terrain.js';
+import { addGrowth } from './solids.js';
 import { addTiled } from './tiles.js';
 
 function chimney(i, h) {
@@ -35,6 +37,7 @@ function tubeWorms() {
   const tg = mergeGeo([tube, plume]);
   const clumps = [], R = seeded(11);
   VENTS.forEach(([vx, vz]) => { const nc = 4 + Math.floor(R() * 3); for (let c = 0; c < nc; c++) { const a = R() * TAU, r = 2.2 + R() * 3.2; clumps.push([vx + Math.cos(a) * r, vz + Math.sin(a) * r]); } });
+  clumps.forEach(([x, z]) => addGrowth(new THREE.Vector3(x, seafloorY(x, z), z), UP, 2.6, 1.0));   // each clump is solid
   const N = Math.round(clumps.length * 26 * Math.max(DETAIL, 0.5));
   const tm = new THREE.InstancedMesh(tg, wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, emissive: new THREE.Color(0.1, 0.03, 0.03), side: THREE.DoubleSide }), { caust: false, bend: { mode: 4, amp: 0.05, speed: 1.2, wave: 0, len: 2.0 } }), N);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), pp = new THREE.Vector3(), s = new THREE.Vector3(), ph = new Float32Array(N);

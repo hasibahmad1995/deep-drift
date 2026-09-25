@@ -63,15 +63,23 @@ function step(dt) {
   snow.material.uniforms.uCam.value.copy(camera.position); glowSpecks.material.uniforms.uCam.value.copy(camera.position); backscatter.material.uniforms.uCam.value.copy(camera.position);
   for (let i = 0; i < ACTORS.length; i++) {
     const a = ACTORS[i];
-    if (a.obj) { const far = a.obj.position.distanceToSquared(camera.position) > 90000; a.obj.visible = !far && a.active !== false; if (far || a.active === false) continue; }
+    if (a.obj) {
+      if (a.active === false) { a.obj.visible = false; continue; }
+      // more than 300 m away (far beyond sight): hidden, and moved on only twice a second to save work
+      if (a.obj.position.distanceToSquared(camera.position) > 90000 && (a.farWait = (a.farWait || 0) + dt) < 0.5) { a.obj.visible = false; continue; }
+      a.farWait = 0;
+    }
     a.update(state.t);
-    if (a.obj) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
+    if (a.obj) {
+      a.obj.visible = a.obj.position.distanceToSquared(camera.position) <= 90000 && a.active !== false;
+      if (a.obj.visible) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
+    }
   }
   updateBubbles(dt); drawHose(dt);
   // the one continuous dive only fades in at the start and out at the very end
   $('fade').style.opacity = clamp(Math.max(1 - state.t / 1.6, 1 - (TOTAL - state.t) / 1.6));
   updateHud(state.D, p.si);
-  renderer.render(scene, camera);
+  if (!window.__noRender) renderer.render(scene, camera);   // __noRender: only the tests use it, to run the dive fast
 }
 
 function resize() {

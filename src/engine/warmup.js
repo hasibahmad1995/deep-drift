@@ -21,7 +21,9 @@ async function withAllShown(job) {
 async function warmUp() {
   await withAllShown(async () => {
     let t0 = performance.now();
-    await renderer.compileAsync(scene, camera);   // build every shader program (in the background where the browser can)
+    // build every shader program: in the background where the browser can, otherwise all at once right here
+    if (renderer.extensions.has('KHR_parallel_shader_compile')) await renderer.compileAsync(scene, camera);
+    else renderer.compile(scene, camera);
     STARTUP.steps.push(['  shaders', Math.round(performance.now() - t0)]);
     t0 = performance.now();
     // draw everything once onto the real screen, but clipped to a single pixel: this copies every shape to the card

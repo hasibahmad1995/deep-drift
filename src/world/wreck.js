@@ -10,6 +10,7 @@ import { fbm2 } from '../util/noise.js';
 import { WRECK, WHALE } from './sites.js';
 import { seafloorY } from './terrain.js';
 import { addRusticles, buildShip } from './ship.js';
+import { addSolid } from './solids.js';
 import { addTiled } from './tiles.js';
 
 // The debris field: a funnel that fell off, a boiler, and torn, bent plates around the ship.
@@ -20,6 +21,8 @@ function debris() {
   fun.rotateZ(Math.PI / 2 - 0.12); fun.rotateY(1.1); fun.translate(...at(-14, 16, 0.65)); parts.push(fun);
   const boiler = new THREE.CylinderGeometry(1.4, 1.4, 3.2, 18); boiler.rotateZ(Math.PI / 2); boiler.rotateY(-0.4); boiler.translate(...at(13, -15, 0.65));
   boiler.computeVertexNormals(); paintGeo(boiler, p => mixc('#3a2418', '#6a3a1e', fbm2(p.x, p.z))); parts.push(boiler);
+  const lying = (c, axis, half, r) => { const v = new THREE.Vector3(...c), a = new THREE.Vector3(...axis).normalize().multiplyScalar(half); addSolid(v.clone().sub(a), v.clone().add(a), r); };
+  lying(at(-14, 16, 0.65), [-0.45, 0.12, 0.885], 3.25, 1.3); lying(at(13, -15, 0.65), [-0.921, 0, -0.389], 1.6, 1.4);   // solid
   for (let i = 0; i < 26; i++) {
     const w = 0.8 + R() * 2.6, g = new THREE.BoxGeometry(w, 0.08, 0.6 + R() * 1.6, 3, 1, 2), p = g.attributes.position;
     for (let k = 0; k < p.count; k++) p.setY(k, p.getY(k) + Math.sin(p.getX(k) * 2.1 + i) * 0.12);   // bent plates
@@ -40,6 +43,8 @@ function whaleSkeleton() {
   const bg = mergeGeo(parts); paintGeo(bg, p => mixc('#b3ab95', '#e6dfcc', fbm2(p.x * 2, p.z * 2)));
   const bones = new THREE.Mesh(bg, wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide }), { detail: true, caust: false }));
   bones.position.set(WHALE.x, seafloorY(WHALE.x, WHALE.z) + 0.2, WHALE.z); bones.rotation.y = WHALE.yaw;
+  bones.updateMatrixWorld(true); const w = (x, y, z) => bones.localToWorld(new THREE.Vector3(x, y, z));
+  addSolid(w(3, 0.5, 0), w(11.5, 0.5, 0), 1.7); addSolid(w(-4.6, 0.6, 0), w(-0.6, 0.6, 0), 0.9);   // the rib cage and the skull are solid
   return bones;
 }
 
@@ -66,6 +71,7 @@ function buildWreck() {
   G.add(ship); G.userData.ship = ship;
   ship.updateMatrixWorld(true);
   addRusticles(ship);
+  ship.userData.pills.forEach(([a, b, r]) => addSolid(a.clone().applyMatrix4(ship.matrixWorld), b.clone().applyMatrix4(ship.matrixWorld), r));   // masts, railings, winches
   G.add(debris(), whaleSkeleton()); addTiled(G, nodules(Math.round(1400 * Math.max(DETAIL, 0.5))), 25);
   G.userData.cull = { center: new THREE.Vector3(450, seafloorY(450, 0), 0), radius: 130 };
   return G;

@@ -10,6 +10,7 @@ import { loft, mergeGeo, paintGeo, place } from '../util/geometry.js';
 import { TAU, clamp, lerp, seeded } from '../util/math.js';
 import { branchGeo, vaseGeo } from './corals.js';
 import { TRENCH } from './sites.js';
+import { addSolidsFor } from './solids.js';
 import { addTiled } from './tiles.js';
 import { seafloorY } from './terrain.js';
 import { trenchFloorY } from './trench.js';
@@ -64,6 +65,7 @@ function plant(G, geo, mat, n, area, size, cols, seed, lean = 0.15) {
     p.set(x, ground(x, z) - 0.02, z); q.setFromEuler(new THREE.Euler((R() - 0.5) * lean, R() * TAU, (R() - 0.5) * lean)); s.setScalar(sc);
     m.compose(p, q, s); mesh.setMatrixAt(i, m); mesh.setColorAt(i, col(cols[Math.floor(R() * cols.length)]).multiplyScalar(0.8 + R() * 0.3));
   }
+  addSolidsFor(mesh, geo.userData.thick ?? 0.5, 0.8);   // the taller ones are solid (low ones sit below the diver anyway)
   return addTiled(G, mesh);   // small tiles, so only the ones near you are drawn
 }
 const matte = (opts = {}) => wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, side: THREE.DoubleSide, ...opts }), { caust: false });

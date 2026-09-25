@@ -28,6 +28,9 @@ const DECKHOUSE = { x0: -6, x1: 5, hw: 3.3, h: 2.6 };
 
 function buildShip() {
   const ship = new THREE.Group(), parts = [], dark = [], R = seeded(47);
+  // the solid parts, in ship space, for the diver (the hull itself is checked with its own shape in collision.js)
+  const pills = ship.userData.pills = [], boxes = ship.userData.boxes = [];
+  const solidBox = (w, h, d, x, y, z) => boxes.push([new THREE.Vector3(x - w / 2, y - h / 2, z - d / 2), new THREE.Vector3(x + w / 2, y + h / 2, z + d / 2)]);
   const NX = SMALL ? 70 : 120, NP = SMALL ? 28 : 44;
   const fromArrays = (pos, idx) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g; };
   const seam = (v, step, w) => { const f = ((v / step) % 1 + 1) % 1; return Math.min(f, 1 - f) * step < w; };
@@ -96,6 +99,7 @@ function buildShip() {
         top.push(V(x + bend * 0.3, y + 1.0, z + side * bend)); mid.push(V(x, y + 0.55, z));
       }
       [top, mid].forEach(pts => { if (pts.length > 1) parts.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), pts.length * 3, 0.03, 5)); });
+      for (let k = 1; k < top.length; k++) pills.push([top[k - 1].clone().setY(top[k - 1].y - 0.5), top[k], 0.06]);
     }
   });
 
@@ -105,12 +109,15 @@ function buildShip() {
     const house = box(L, D.h, D.hw * 2, cx, y0 + D.h / 2, 0), bridge = box(6, 2.2, 5.6, 1, y0 + D.h + 1.1, 0);
     [house, bridge].forEach(g => paintGeo(g, p => mixc('#6f6a60', '#3e3028', clamp(fbm2(p.x * 0.5, p.y * 0.9 + p.z * 0.3) * 1.6 - 0.3))));
     parts.push(house, bridge);
+    solidBox(L, D.h, D.hw * 2, cx, y0 + D.h / 2, 0); solidBox(6, 2.2, 5.6, 1, y0 + D.h + 1.1, 0);
     for (let x = D.x0 + 0.7; x < D.x1 - 0.4; x += 1.2) [-1, 1].forEach(sd => dark.push(box(0.55, 0.75, 0.08, x, y0 + 1.5, sd * (D.hw + 0.03))));
     for (let z = -2.3; z <= 2.31; z += 0.92) dark.push(box(0.08, 0.8, 0.62, 4.03, y0 + D.h + 1.3, z));
     // davits: curved arms that once held the lifeboats
     [-1, 1].forEach(sd => [-5, -2, 1, 4].forEach(x => {
       const g = new THREE.TorusGeometry(0.9, 0.07, 6, 10, Math.PI / 2); g.rotateY(sd * Math.PI / 2);
-      g.translate(x, shipDeckY(x) + 0.05, sd * shipBeam(x));   // foot on deck, arm reaching out over the side paintGeo(g, () => '#3a2a20'); parts.push(g);
+      g.translate(x, shipDeckY(x) + 0.05, sd * shipBeam(x));   // foot on deck, arm reaching out over the side
+      paintGeo(g, () => '#3a2a20'); parts.push(g);
+      pills.push([V(x, shipDeckY(x), sd * shipBeam(x)), V(x, shipDeckY(x) + 0.9, sd * (shipBeam(x) + 0.9)), 0.1]);
     }));
   }
 
@@ -124,16 +131,22 @@ function buildShip() {
     const main = new THREE.CylinderGeometry(0.2, 0.28, 11, 10); main.translate(0, 5.5, 0); main.rotateZ(0.12); main.translate(-15, shipDeckY(-15), 0); parts.push(main);
     const yard = new THREE.CylinderGeometry(0.09, 0.09, 5, 8); yard.rotateX(Math.PI / 2); yard.translate(-15 - 0.95, shipDeckY(-15) + 8, 0); parts.push(yard);
     [stub, top, main, yard].forEach(g => paintGeo(g, p => mixc('#2e2620', '#5a3a26', fbm2(p.x * 2, p.y * 2))));
+    const topAxis = V(-0.85, 0.08, 0.52).normalize().multiplyScalar(6), topMid = V(9.5, shipDeckY(9) + 1.1, 3.2), mainFoot = V(-15, shipDeckY(-15), 0);
+    pills.push([V(13, shipDeckY(13), 0), V(13, shipDeckY(13) + 3.4, 0), 0.3], [topMid.clone().sub(topAxis), topMid.clone().add(topAxis), 0.24],
+      [mainFoot, V(-15 - 11 * Math.sin(0.12), shipDeckY(-15) + 11 * Math.cos(0.12), 0), 0.28], [V(-15.95, shipDeckY(-15) + 8, -2.5), V(-15.95, shipDeckY(-15) + 8, 2.5), 0.1]);
+    pills.push([V(-9, fy, 0), V(-9, fy + 0.6, 0), 1.3]);   // funnel collar
     [[15.5, 3.0, 2.6], [-12.5, 3.4, 3.0]].forEach(([x, lx, lz]) => {   // cargo hatches: a raised frame around a dark opening
       const y = shipDeckY(x) + 0.2, t = 0.15, h = 0.7;
       const ring = [box(lx, h, t, x, y + h / 2, lz / 2), box(lx, h, t, x, y + h / 2, -lz / 2), box(t, h, lz, x + lx / 2, y + h / 2, 0), box(t, h, lz, x - lx / 2, y + h / 2, 0)];
       ring.forEach(g => { paintGeo(g, () => '#3a2e26'); parts.push(g); });
+      solidBox(lx, h, lz, x, y + h / 2, 0);
       dark.push(box(lx - 0.2, 0.05, lz - 0.2, x, y + 0.05, 0));
     });
     [19, 17.6, -19, -20.4].forEach(x => [-1, 1].forEach(sd => [0, 0.5].forEach(o => {
       const g = new THREE.CylinderGeometry(0.17, 0.2, 0.5, 10); g.translate(x + o, shipDeckY(x) + 0.45, sd * (shipBeam(x) - 0.7)); paintGeo(g, () => '#2c2622'); parts.push(g);
     })));
-    [12, -17.2].forEach(x => { const g = new THREE.CylinderGeometry(0.35, 0.35, 1.5, 12); g.rotateX(Math.PI / 2); g.translate(x, shipDeckY(x) + 0.65, 0); paintGeo(g, () => '#3a2c24'); parts.push(g); });
+    [12, -17.2].forEach(x => { const g = new THREE.CylinderGeometry(0.35, 0.35, 1.5, 12); g.rotateX(Math.PI / 2); g.translate(x, shipDeckY(x) + 0.65, 0); paintGeo(g, () => '#3a2c24'); parts.push(g);
+      pills.push([V(x, shipDeckY(x) + 0.65, -0.75), V(x, shipDeckY(x) + 0.65, 0.75), 0.35]); });
   }
 
   parts.forEach(g => { if (!g.attributes.color) paintGeo(g, () => '#3a2c22'); });   // railings and rods

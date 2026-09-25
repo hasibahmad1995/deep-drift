@@ -3,7 +3,6 @@ import * as THREE from '../lib/three.js';
 import { pathAt } from '../dive/route.js';
 import { scene } from '../engine/renderer.js';
 import { ACTORS } from './actors.js';
-import { clamp } from '../util/math.js';
 import { UP } from '../world/layout.js';
 
 function orient(obj, vx, vy, vz) {
@@ -17,8 +16,9 @@ function passBy(obj, tMeet, offset, vel, name, range, tick, follow) {
   if (follow) vel = vel.clone().add(pathAt(tMeet + 0.5).pos.sub(pathAt(tMeet - 0.5).pos));
   scene.add(obj); orient(obj, swimVel.x, swimVel.y, swimVel.z);
   ACTORS.push({ obj, name, range: range || 22, update(t) {
-    // a following animal only moves within 10 s of the meeting, so it never drifts far from the dive path
-    obj.position.copy(meet).addScaledVector(vel, follow ? clamp(t - tMeet, -10, 10) : t - tMeet);
+    // a following animal keeps pace with the diver around the meeting, then slows down gently (no sudden stop),
+    // so it never drifts far from the dive path
+    obj.position.copy(meet).addScaledVector(vel, follow ? 10 * Math.tanh((t - tMeet) / 10) : t - tMeet);
     orient(obj, swimVel.x, swimVel.y, swimVel.z); if (tick) tick(t);
   } });
 }

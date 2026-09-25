@@ -44,7 +44,15 @@ function makeDroplets(x, y, z) {
 }
 function glowSprite(size, color) {
   const tex = canvasTexture(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.3, 'rgba(255,255,255,.5)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: color, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true }));
+  const m = new THREE.SpriteMaterial({ map: tex, color: color, blending: THREE.AdditiveBlending, depthWrite: false, fog: true, transparent: true });
+  // the glow fades with distance through the water like everything else (each colour at its own rate), so a far glow
+  // melts away instead of shining at full strength until its place stops being drawn
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uAbsorb = U.absorb;
+    sh.fragmentShader = 'uniform vec3 uAbsorb;\n' + sh.fragmentShader.replace('#include <tonemapping_fragment>', 'gl_FragColor.rgb *= exp(-uAbsorb * vFogDepth);\n#include <tonemapping_fragment>');
+  };
+  m.customProgramCacheKey = () => 'glow';
+  const s = new THREE.Sprite(m);
   s.scale.set(size, size, 1); return s;
 }
 
