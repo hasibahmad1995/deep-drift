@@ -417,10 +417,92 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="feat: smooth zoom, level turning, a side panel, a home button, animals at new depths each dive",
+        version="", lane="feature",
+        title="Smooth zoom, level turning, side panel, home button, animals at new depths",
+        what="Hasib's five points after trying v1.4. <b>Zoom:</b> each press now steps smoothly 1x, 1.3x, 1.6x, 2x, 2.5x and back down "
+             "(no jump from the top to 1x); holding zooms smoothly; in deep water the limit was 1.2x (a press often did nothing), now "
+             "1.5x to 2.5x; small corals stay drawn when zoomed. <b>Turning:</b> on steep parts of the dive the arrow keys spun the view "
+             "in a circle, because turning followed the dive path's tilt; it is now always around the true vertical with a level "
+             "horizon. <b>Side panel:</b> Pause/Play, Music and Zoom moved to a panel on the left edge, hidden until you hover (a "
+             "handle opens it on phones). <b>Home:</b> Deep Drift at the top goes back to the start screen; the Restart button is gone; "
+             "the end of the dive also returns there; the start screen explains the panel. <b>Variety:</b> each scripted animal now "
+             "meets you anywhere within the depths where it really lives (one shared list), so a deep animal is never near the "
+             "surface. Found while testing: swimming into the reef shelf's lip could lift you 3 m at once (the lip now stops you), and a big animal could shove you 3 m "
+             "(big animals now nudge you gently first).",
+        files=["New: <code>src/diver/zoom.js</code>, <code>src/ui/dock.js</code>, <code>src/life/depths.js</code>, <code>tests/controls.py</code>",
+               "Changed: <code>index.html</code>, <code>styles/main.css</code>, <code>main.js</code>, <code>camera.js</code>, <code>input.js</code>, "
+               "<code>collision.js</code>, <code>playback.js</code>, <code>panels.js</code>, <code>motion.js</code>, <code>variety.js</code>, "
+               "<code>passers.js</code>, <code>school.js</code>, <code>touch.js</code>, <code>cast.js</code>, <code>extras.js</code>, "
+               "<code>culling.js</code>, <code>wet.js</code>, <code>uniforms.js</code>, <code>debug.js</code>, tests"],
+        state="New controls layout, home button, smooth zoom, level turning, animals met at new depths each dive.",
+        checks="<code>tests/controls.py</code>: zoom 1.3, 1.6, 2, 2.5, 2, 1.6, 1.3, 1; horizon level after turning on a 43-degree slope; "
+               "panel hidden until hover; home works; 39 animals never met outside their depths over 6 dives. Solid, life, glide, "
+               "menu, live and real-graphics startup tests pass.",
+        status="Kept",
+    ),
+    dict(
+        subject="fix: animals and fish stay in the water; a faster controls test",
+        version="", lane="feature",
+        title="Animals and fish stay in the water",
+        what="Found by checking each animal's own depth (not the diver's): with the new meeting moments near the surface, the "
+             "dolphins and the turtle could drift up out of the water, up to 10 m above it. Scripted animals, visitors and school "
+             "fish are now kept below the surface. The controls test now judges each animal by its own depth and runs its zoom and "
+             "turning checks without drawing (much faster).",
+        files=["<code>motion.js</code>, <code>passers.js</code>, <code>school.js</code>, <code>debug.js</code>, <code>tests/controls.py</code>"],
+        state="Same as the commit before, with every animal in the water.",
+        checks="controls.py: 0 animals met outside their depths (and none above the water) over 6 dives; solid, life and live tests pass.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: describe v1.5, report and notes",
+        version="", lane="feature",
+        title="Describe v1.5; report v1.5; notes",
+        what="CLAUDE.md and README describe the new controls, zoom, level turning and depth list; <code>docs/reports/report-v1.5.pdf</code> "
+             "shows what is on the website now and what is next; Claude's notes updated.",
+        files=["<code>CLAUDE.md</code>, <code>README.md</code>, <code>docs/claude-notes.md</code>, <code>docs/make_report.py</code>, "
+               "<code>docs/reports/report-v1.5.pdf</code>, <code>docs/reports/img/v1.5-controls.jpg</code>"],
+        state="Same as the commit before.",
+        checks="Report opened and read through; no em dashes.",
+        status="Kept",
+    ),
+    dict(
+        subject="release: set the version to 1.5.0",
+        version="", lane="feature",
+        title="Set the version number to 1.5.0",
+        what="The last step on the branch before merging: <code>package.json</code> says 1.5.0.",
+        files=["<code>package.json</code>"],
+        state="Same as the commit before.",
+        checks="None needed.",
+        status="Kept",
+    ),
+    dict(
+        subject="v1.5: smooth zoom, level turning, a side panel and a home button",
+        version="v1.5", merge=True,
+        title="Release v1.5: merge the branch into main",
+        what="The merge commit that brings the four commits of <code>feature/v1.5-controls</code> into <code>main</code>, tagged "
+             "<code>v1.5</code>. Animal behaviour moves to v1.6 and real models to v1.7 or later.",
+        files=["Everything changed on the branch (the four rows above it)."],
+        state="v1.5: new controls and home button, smooth zoom, level turning, animals at new depths each dive.",
+        checks="All tests passed on the branch before merging.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: update the tracking guide for v1.5",
+        version="",
+        title="Update this guide for v1.5",
+        what="New rows and the plan for v1.6 and later.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>"],
+        state="Same as v1.5.",
+        checks="PDF opened and read through.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)
 PICTURES = [
+    ("../reports/img/v1.5-controls.jpg", "v1.5 on Hasib's laptop: the start screen with the new hint, the side panel closed and open, zoomed in to 2.5x."),
     ("../reports/img/v1.4-start.jpg", "v1.4, the start of the dive on Hasib's laptop (Intel UHD graphics, 1536x864 at 125%): v1.3 and v1.4."),
     ("solid-v1.3.jpg", "v1.3, solid world. The diver is sent straight into the whale skeleton on the abyssal plain. "
      "Left, v1.2: the camera ends up inside the rib cage. Right, v1.3: the diver is stopped just above the bones."),
@@ -438,12 +520,12 @@ PICTURES = [
 
 # Planned work, shown in its own table so it is never confused with saved versions.
 PLANNED = [
-    ("v1.5", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
+    ("v1.6", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
      "flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton, animals steering "
      "around corals."),
-    ("v1.6+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
+    ("v1.7+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
     ("", "Lighter reef", "Simpler far corals, so laptops like Hasib's can draw the reef at full sharpness."),
-    ("", "Phone check", "Try the dive on a real phone: speed, motion look (gyro), and the look-to-swim glide. Needs Hasib's phone."),
+    ("", "Phone check", "Try the dive on a real phone: speed, the side panel, motion look (gyro), and the glide. Needs Hasib's phone."),
     ("", "Publish", "First public version on GitHub Pages (free), after local testing. Needs a GitHub account."),
 ]
 
@@ -512,7 +594,7 @@ def chain_svg():
         lab = c["version"] or ("merge" if c.get("merge") else c["subject"].split(":")[0])
         nodes.append(dict(lab=lab, sub=f[0] if f else "this one", ver=bool(c["version"]), plan=False, lane=c.get("lane", "main"), merge=c.get("merge", False)))
     nodes.append(dict(lab=PLANNED[0][0] or "next", sub="planned", ver=True, plan=True, lane="main", merge=False))
-    PER_ROW, W, r, step = 15, 720, 19, 46
+    PER_ROW, W, r, step = 15, 720, 19, 44
     Y = {"main": 120, "feature": 55}
     # parents: the last node on the same line, or on main when a branch starts
     last = {"main": None, "feature": None}
@@ -521,8 +603,11 @@ def chain_svg():
         nd["merged"] = last["feature"] if nd["merge"] else None
         last[nd["lane"]] = k
     rows = []
-    for r0 in range(0, len(nodes), PER_ROW):
-        ids = range(r0, min(len(nodes), r0 + PER_ROW)); X = {k: 30 + (k - r0) * step for k in ids}; out = []
+    starts = list(range(0, len(nodes), PER_ROW))
+    if len(starts) > 1 and len(nodes) - starts[-1] == 1: starts.pop()   # a lone last circle joins the row before
+    for n_row, r0 in enumerate(starts):
+        r1 = starts[n_row + 1] if n_row + 1 < len(starts) else len(nodes)
+        ids = range(r0, r1); X = {k: 30 + (k - r0) * step for k in ids}; out = []
         def line(a, b, col, dash=""):
             ya, yb = Y[nodes[a]["lane"]] if a is not None else 0, Y[nodes[b]["lane"]]
             xa = X[a] if a in X else 0   # the parent is on the row above: the line comes in from the left edge
@@ -671,12 +756,12 @@ the file is saved. That row is filled in at the next update.</p>
 <h2>4. Branches, testing and releases (how each version is made)</h2>
 <p>Since v1.2 each version is built the way software teams do it (a simple "SDLC": build, test, release):</p>
 <ol>
-<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.5-behaviour</code>. <code>main</code> is not touched,
+<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.6-behaviour</code>. <code>main</code> is not touched,
 so the last released version is always safe there.</li>
 <li><b>Build in small steps,</b> each saved as its own commit on the branch (for v1.2: refactor, engine upgrade, the continuous dive).
 The code is split into small files, one job each, so every part can be found and changed later.</li>
 <li><b>Test locally</b> after every step: <code>node tools/serve.mjs</code> to play it at http://localhost:8080, and the test scripts
-(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>, <code>solid.py</code>, <code>startup.py</code>, <code>life.py</code>).</li>
+(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>, <code>solid.py</code>, <code>startup.py</code>, <code>life.py</code>, <code>controls.py</code>).</li>
 <li><b>Show Hasib</b> before and after. Only if it looks better and nothing broke:</li>
 <li><b>Release.</b> Set the version in <code>package.json</code>, merge the branch into <code>main</code> with a merge commit
 (<code>git switch main</code> then <code>git merge --no-ff feature/...</code>), and tag it (<code>git tag -a v1.3 -m "..."</code>).</li>
@@ -717,7 +802,7 @@ and every commit after it</b> (tagged versions can still be recovered, others ar
 </table>
 
 <h3>Planned (not saved yet)</h3>
-<p class="muted">v1.1 (the realism work), v1.2 (the continuous dive), v1.3 (the solid world and faster start) and v1.4 (smooth start, living pause, variety) are done. After every fix there is also a report in docs/reports. What is left is below. Rows move into the table above when they are committed.</p>
+<p class="muted">v1.1 (the realism work), v1.2 (the continuous dive), v1.3 (the solid world and faster start) v1.4 (smooth start, living pause, variety) and v1.5 (controls, zoom, level turning, home button) are done. After every fix there is also a report in docs/reports. What is left is below. Rows move into the table above when they are committed.</p>
 <table class="log plan">
 <thead><tr><th style="width:16mm">Version</th><th style="width:30mm">Change</th><th>What it will do</th></tr></thead>
 {plan_rows}
