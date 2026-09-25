@@ -327,10 +327,101 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="perf: a smooth start on laptop graphics, no blink at Begin",
+        version="", lane="feature",
+        title="A smooth start on Hasib's laptop; no blink at Begin",
+        what="Hasib saw the camera blink and lag at the beginning. This time it was measured on his laptop's own graphics card "
+             "(Intel UHD, screen 1536x864 at 125%), not only the slow test graphics. The reef, the start of the dive, took 50 to 70 ms "
+             "per picture; after a few seconds the automatic sharpness dropped, which cleared the picture for a frame (a blink) and "
+             "caused a 170 to 200 ms hitch; and Begin cut the picture to black. Now: before Begin the page draws the reef a few times "
+             "and picks the sharpness for about 30 ms per picture (<code>benchmark.js</code>); sharpness changes only after about a second "
+             "of slow pictures and never between drawing and showing; no edge smoothing on scaled screens (a fifth of the cost there); "
+             "cheaper rock grain; coral shapes share their corners; the warm-up copies shapes a few at a time so loading never freezes "
+             "long; Begin fades the intro card away over the live picture.",
+        files=["New: <code>src/engine/benchmark.js</code>, <code>src/lib/geometry-utils.js</code>",
+               "Changed: <code>renderer.js</code>, <code>quality.js</code>, <code>warmup.js</code>, <code>wet.js</code>, <code>corals.js</code>, "
+               "<code>styles/main.css</code>, <code>tests/startup.py</code> (new options <code>--gpu</code>, <code>--screen</code>, <code>--freeze</code>)"],
+        state="Smooth from the first second on Hasib's laptop, a little softer picture there.",
+        checks="On the real graphics card at Hasib's size: first 8 to 12 s of the dive at 60 pictures a second, no hitch over 33 ms "
+               "(v1.3: 200 ms), no sharpness change during the dive, longest loading freeze 0.37 s (v1.3: 1.85 s).",
+        status="Kept",
+    ),
+    dict(
+        subject="feat: hover while the sea lives on, a new dive every time, smooth keys, lively schools",
+        version="", lane="feature",
+        title="Living pause, a new dive every time, smooth arrow keys, real fish speeds",
+        what="<b>Pause:</b> it now stops only the diver; the sea has its own clock, so schools, sharks and jellyfish keep swimming, "
+             "passing animals swim on, and new visitors still come. <b>Variety:</b> at Begin and every restart each scripted animal "
+             "rolls its version: earlier or later, nearer or farther, either side, faster or slower, and about one dive in seven "
+             "not there; circling animals and schools start anywhere and may circle the other way; the dolphins stay one pod. Every "
+             "version is checked against rock with a new honest 0.5 m check; if none is clear the animal stays away. This found older "
+             "mistakes: the three reef sharks circled through the reef wall and the manta met you inside the wall (it now glides over "
+             "you). <b>Keys:</b> arrow keys speed up to a smooth turn and ease to a stop instead of 7-degree jumps. <b>Fish:</b> each "
+             "tail beat moves a fish about 0.7 of its length (Bainbridge 1958), so small school fish now beat their tails about 8 "
+             "times a second instead of 2; schools surge (speed up and slow down by about 40%); each fish faces its real movement.",
+        files=["New: <code>src/life/variety.js</code>, <code>tests/life.py</code>",
+               "Changed: <code>main.js</code>, <code>state.js</code>, <code>camera.js</code>, <code>input.js</code>, <code>collision.js</code> "
+               "(new <code>inRock</code> for animals), <code>motion.js</code>, <code>school.js</code>, <code>passers.js</code>, <code>touch.js</code>, "
+               "<code>cast.js</code>, <code>cast-deep.js</code>, <code>extras.js</code>, <code>small-shapes.js</code>, <code>barramundi.js</code>, "
+               "<code>hud.js</code>, <code>playback.js</code>, <code>debug.js</code>, <code>tests/solid.py</code>"],
+        state="Pause hovers while the sea lives on; every dive differs; smooth keys; lively schools.",
+        checks="<code>tests/life.py</code>: 3 s of pause, the diver moved 0.08 m (breathing) and all 8 schools and 12 animals nearby kept "
+               "moving; 73 of 74 animals change between dives, 1 to 7 absent, 0 paths through rock; keys turn with no jump over 0.14 "
+               "degrees per picture; a school's speed ranged from half to twice its average. <code>tests/solid.py</code> still 0 problems.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: describe v1.4; a report after every fix; Claude's notes",
+        version="", lane="feature",
+        title="Describe v1.4; start the report after every fix",
+        what="Hasib's new rule: after every fix, a PDF report of what is on the website and what to do next, and a notes file Claude "
+             "keeps for itself. <code>docs/make_report.py</code> writes <code>docs/reports/report-v1.4.pdf</code>; "
+             "<code>docs/claude-notes.md</code> holds Claude's notes; the page style and PDF printing moved into "
+             "<code>docs/pdf_tools.py</code>, shared by both PDF scripts. CLAUDE.md and README describe the v1.4 parts.",
+        files=["New: <code>docs/make_report.py</code>, <code>docs/pdf_tools.py</code>, <code>docs/claude-notes.md</code>, "
+               "<code>docs/reports/report-v1.4.pdf</code>, <code>docs/reports/img/</code>",
+               "Changed: <code>CLAUDE.md</code>, <code>README.md</code>, <code>docs/make_git_tracking.py</code>"],
+        state="Same as the commit before.",
+        checks="Report opened and read through; no em dashes.",
+        status="Kept",
+    ),
+    dict(
+        subject="release: set the version to 1.4.0",
+        version="", lane="feature",
+        title="Set the version number to 1.4.0",
+        what="The last step on the branch before merging: <code>package.json</code> says 1.4.0.",
+        files=["<code>package.json</code>"],
+        state="Same as the commit before.",
+        checks="None needed.",
+        status="Kept",
+    ),
+    dict(
+        subject="v1.4: a smooth start, a living pause, a new dive every time",
+        version="v1.4", merge=True,
+        title="Release v1.4: merge the branch into main",
+        what="The merge commit that brings the four commits of <code>feature/v1.4-feel</code> into <code>main</code>, tagged "
+             "<code>v1.4</code>. The planned animal behaviour moves to v1.5, because these fixes came first (a number always means one thing).",
+        files=["Everything changed on the branch (the four rows above it)."],
+        state="v1.4: smooth start, living pause, a new dive every time, smooth keys, real fish speeds.",
+        checks="All tests passed on the branch before merging.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: update the tracking guide for v1.4",
+        version="",
+        title="Update this guide for v1.4",
+        what="New rows, the start-of-dive chart, and the plan for v1.5 and later.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>"],
+        state="Same as v1.4.",
+        checks="PDF opened and read through.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)
 PICTURES = [
+    ("../reports/img/v1.4-start.jpg", "v1.4, the start of the dive on Hasib's laptop (Intel UHD graphics, 1536x864 at 125%): v1.3 and v1.4."),
     ("solid-v1.3.jpg", "v1.3, solid world. The diver is sent straight into the whale skeleton on the abyssal plain. "
      "Left, v1.2: the camera ends up inside the rib cage. Right, v1.3: the diver is stopped just above the bones."),
     ("opening-v1.3.jpg", "v1.3, opening the page, measured in the test browser (software graphics, so all numbers are slower "
@@ -347,10 +438,11 @@ PICTURES = [
 
 # Planned work, shown in its own table so it is never confused with saved versions.
 PLANNED = [
-    ("v1.4", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
-     "flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton. "
-     "Also: animals steer around corals and rocks (today they only avoid the floor and the diver)."),
-    ("v1.5+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
+    ("v1.5", "Animal behaviour", "Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, "
+     "flounder, scorpionfish, garden eels), deep-sea light displays, feeding at the vents and the whale skeleton, animals steering "
+     "around corals."),
+    ("v1.6+", "Real 3D models", "In small batches from Sketchfab, each with Hasib's OK on its licence and a credit in the page."),
+    ("", "Lighter reef", "Simpler far corals, so laptops like Hasib's can draw the reef at full sharpness."),
     ("", "Phone check", "Try the dive on a real phone: speed, motion look (gyro), and the look-to-swim glide. Needs Hasib's phone."),
     ("", "Publish", "First public version on GitHub Pages (free), after local testing. Needs a GitHub account."),
 ]
@@ -411,39 +503,52 @@ AREAS_SVG = """
 </svg>"""
 
 def chain_svg():
-    """The history as circles: main along the bottom row, a side branch (lane "feature") on the row above,
-    with the fork and the merge drawn as slanted lines. Drawn from COMMITS plus the next planned version."""
+    """The history as circles: main along the lower line, side branches (lane "feature") on the upper line, with forks
+    and merges as slanted lines. Wraps onto several rows of up to PER_ROW commits so circles never overlap.
+    Drawn from COMMITS plus the next planned version."""
     nodes = []
     for c in COMMITS:
         f = lookup(c["subject"])
         lab = c["version"] or ("merge" if c.get("merge") else c["subject"].split(":")[0])
         nodes.append(dict(lab=lab, sub=f[0] if f else "this one", ver=bool(c["version"]), plan=False, lane=c.get("lane", "main"), merge=c.get("merge", False)))
     nodes.append(dict(lab=PLANNED[0][0] or "next", sub="planned", ver=True, plan=True, lane="main", merge=False))
-    n, W, r = len(nodes), 720, 19
-    step = (W - 60) / (n - 1); Y = {"main": 120, "feature": 55}; out = []
-    X = [30 + k * step for k in range(n)]
+    PER_ROW, W, r, step = 15, 720, 19, 46
+    Y = {"main": 120, "feature": 55}
+    # parents: the last node on the same line, or on main when a branch starts
     last = {"main": None, "feature": None}
-    for k, nd in enumerate(nodes):   # lines to the parent(s) first, so circles sit on top
-        y, parent = Y[nd["lane"]], last[nd["lane"]] if last[nd["lane"]] is not None else last["main"]
-        dash = ' stroke-dasharray="4 3"' if nd["plan"] else ""
-        col = "#aab7c2" if nd["plan"] else "#6f9bb8"
-        if parent is not None: out.append(f'<line x1="{X[parent]:.0f}" y1="{Y[nodes[parent]["lane"]]}" x2="{X[k]:.0f}" y2="{y}" stroke="{col}" stroke-width="2"{dash}/>')
-        if nd["merge"] and last["feature"] is not None: out.append(f'<line x1="{X[last["feature"]]:.0f}" y1="{Y["feature"]}" x2="{X[k]:.0f}" y2="{y}" stroke="#c9a24a" stroke-width="2"/>')
-        last[nd["lane"]] = k
     for k, nd in enumerate(nodes):
-        x, y = X[k], Y[nd["lane"]]
-        stroke, fill, tc = ("#aab7c2", "#fff", "#8a97a3") if nd["plan"] else (("#5aa377", "#e9f6ee", "#1d6b3a") if nd["ver"] else (("#c9a24a", "#fff8e8", "#7a5a10") if nd["lane"] == "feature" else ("#6f9bb8", "#f4f9fc", "#0b3954")))
-        dash = ' stroke-dasharray="4 3"' if nd["plan"] else ""
-        out.append(f'<circle cx="{x:.0f}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="2"{dash}/>'
-                   f'<text x="{x:.0f}" y="{y - 2}" text-anchor="middle" font-weight="700" font-size="9.5" fill="{tc}">{html.escape(nd["lab"])}</text>'
-                   f'<text x="{x:.0f}" y="{y + 10}" text-anchor="middle" font-size="8" fill="#555">{html.escape(nd["sub"])}</text>')
-        if nd["ver"] and not nd["plan"]:
-            out.append(f'<rect x="{x - 26:.0f}" y="{y + r + 10}" width="52" height="17" rx="3" fill="#1d6b3a"/><text x="{x:.0f}" y="{y + r + 22}" text-anchor="middle" fill="#fff" font-size="9.5">tag {html.escape(nd["lab"])}</text>'
-                       f'<line x1="{x:.0f}" y1="{y + r}" x2="{x:.0f}" y2="{y + r + 10}" stroke="#1d6b3a" stroke-width="2"/>')
-    xl = X[n - 2]
-    out.append(f'<rect x="{xl - 34:.0f}" y="{Y["main"] + r + 32}" width="68" height="17" rx="3" fill="#0b3954"/><text x="{xl:.0f}" y="{Y["main"] + r + 44}" text-anchor="middle" fill="#fff" font-size="9.5">main (HEAD)</text>')
-    out.append(f'<text x="30" y="30" fill="#7a5a10" font-size="11">side branches: feature/... (one per version, where it was built)</text><text x="30" y="{Y["main"] + r + 72}" fill="#0b3954" font-size="11">main: released versions</text>')
-    return ('<svg viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial">' + "".join(out) + '</svg>')
+        nd["parent"] = last[nd["lane"]] if last[nd["lane"]] is not None else last["main"]
+        nd["merged"] = last["feature"] if nd["merge"] else None
+        last[nd["lane"]] = k
+    rows = []
+    for r0 in range(0, len(nodes), PER_ROW):
+        ids = range(r0, min(len(nodes), r0 + PER_ROW)); X = {k: 30 + (k - r0) * step for k in ids}; out = []
+        def line(a, b, col, dash=""):
+            ya, yb = Y[nodes[a]["lane"]] if a is not None else 0, Y[nodes[b]["lane"]]
+            xa = X[a] if a in X else 0   # the parent is on the row above: the line comes in from the left edge
+            if a is not None and a not in X: ya = Y[nodes[a]["lane"]]
+            out.append(f'<line x1="{xa:.0f}" y1="{ya}" x2="{X[b]:.0f}" y2="{yb}" stroke="{col}" stroke-width="2"{dash}/>')
+        for k in ids:
+            nd = nodes[k]; dash = ' stroke-dasharray="4 3"' if nd["plan"] else ""
+            if nd["parent"] is not None: line(nd["parent"], k, "#aab7c2" if nd["plan"] else "#6f9bb8", dash)
+            if nd["merged"] is not None: line(nd["merged"], k, "#c9a24a")
+        for k in ids:
+            nd = nodes[k]; x, y = X[k], Y[nd["lane"]]
+            stroke, fill, tc = ("#aab7c2", "#fff", "#8a97a3") if nd["plan"] else (("#5aa377", "#e9f6ee", "#1d6b3a") if nd["ver"] else (("#c9a24a", "#fff8e8", "#7a5a10") if nd["lane"] == "feature" else ("#6f9bb8", "#f4f9fc", "#0b3954")))
+            dash = ' stroke-dasharray="4 3"' if nd["plan"] else ""
+            out.append(f'<circle cx="{x:.0f}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="2"{dash}/>'
+                       f'<text x="{x:.0f}" y="{y - 2}" text-anchor="middle" font-weight="700" font-size="9.5" fill="{tc}">{html.escape(nd["lab"])}</text>'
+                       f'<text x="{x:.0f}" y="{y + 10}" text-anchor="middle" font-size="8" fill="#555">{html.escape(nd["sub"])}</text>')
+            if nd["ver"] and not nd["plan"]:
+                out.append(f'<rect x="{x - 26:.0f}" y="{y + r + 10}" width="52" height="17" rx="3" fill="#1d6b3a"/><text x="{x:.0f}" y="{y + r + 22}" text-anchor="middle" fill="#fff" font-size="9.5">tag {html.escape(nd["lab"])}</text>'
+                           f'<line x1="{x:.0f}" y1="{y + r}" x2="{x:.0f}" y2="{y + r + 10}" stroke="#1d6b3a" stroke-width="2"/>')
+            if k == len(nodes) - 2:
+                out.append(f'<rect x="{x - 34:.0f}" y="{Y["main"] + r + 32}" width="68" height="17" rx="3" fill="#0b3954"/><text x="{x:.0f}" y="{Y["main"] + r + 44}" text-anchor="middle" fill="#fff" font-size="9.5">main (HEAD)</text>')
+        if r0 == 0:
+            out.append('<text x="30" y="24" fill="#7a5a10" font-size="11">side branches: feature/... (one per version, where it was built)</text>')
+        rows.append('<svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial">' + "".join(out) + '</svg>')
+    rows.append('<div class="cap">Read left to right, row after row. Lower line: main (released versions). Upper line: side branches.</div>')
+    return "".join(rows)
 
 
 def picture(name):
@@ -566,15 +671,16 @@ the file is saved. That row is filled in at the next update.</p>
 <h2>4. Branches, testing and releases (how each version is made)</h2>
 <p>Since v1.2 each version is built the way software teams do it (a simple "SDLC": build, test, release):</p>
 <ol>
-<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.4-behaviour</code>. <code>main</code> is not touched,
+<li><b>Branch.</b> Start a side branch for the version, for example <code>git switch -c feature/v1.5-behaviour</code>. <code>main</code> is not touched,
 so the last released version is always safe there.</li>
 <li><b>Build in small steps,</b> each saved as its own commit on the branch (for v1.2: refactor, engine upgrade, the continuous dive).
 The code is split into small files, one job each, so every part can be found and changed later.</li>
 <li><b>Test locally</b> after every step: <code>node tools/serve.mjs</code> to play it at http://localhost:8080, and the test scripts
-(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>, <code>solid.py</code>, <code>startup.py</code>).</li>
+(<code>tests\\shot.py</code>, <code>ui.py</code>, <code>live.py</code>, <code>glide.py</code>, <code>solid.py</code>, <code>startup.py</code>, <code>life.py</code>).</li>
 <li><b>Show Hasib</b> before and after. Only if it looks better and nothing broke:</li>
 <li><b>Release.</b> Set the version in <code>package.json</code>, merge the branch into <code>main</code> with a merge commit
 (<code>git switch main</code> then <code>git merge --no-ff feature/...</code>), and tag it (<code>git tag -a v1.3 -m "..."</code>).</li>
+<li><b>Report:</b> after every fix, a PDF report of what is on the website and what to do next (<code>python docs/make_report.py</code>, into <code>docs/reports</code>).</li>
 <li><b>Record it:</b> add rows to <code>COMMITS</code> in <code>docs\\make_git_tracking.py</code>, run it, and commit the new PDF.</li>
 <li><b>Publish</b> (later): <code>python tools\\build.py</code> makes <code>dist\\</code> with only the files a visitor needs; that folder goes to the host.</li>
 </ol>
@@ -611,7 +717,7 @@ and every commit after it</b> (tagged versions can still be recovered, others ar
 </table>
 
 <h3>Planned (not saved yet)</h3>
-<p class="muted">v1.1 (the realism work), v1.2 (the continuous dive) and v1.3 (the solid world and faster start) are done. What is left is below. Rows move into the table above when they are committed.</p>
+<p class="muted">v1.1 (the realism work), v1.2 (the continuous dive), v1.3 (the solid world and faster start) and v1.4 (smooth start, living pause, variety) are done. After every fix there is also a report in docs/reports. What is left is below. Rows move into the table above when they are committed.</p>
 <table class="log plan">
 <thead><tr><th style="width:16mm">Version</th><th style="width:30mm">Change</th><th>What it will do</th></tr></thead>
 {plan_rows}
