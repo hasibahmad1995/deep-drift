@@ -57,7 +57,8 @@ function initPassers(M) {
       const a = Object.assign({ obj, name, speed, size, active: false, start: V(), vel: V(), t0: 0, meetIn: 0, range: 10, tick: obj.userData.update || null }, lim || {});
       a.update = t => {
         if (!a.active) return;
-        obj.position.copy(a.start).addScaledVector(a.vel, t - a.t0); orient(obj, a.vel.x, a.vel.y, a.vel.z); if (a.tick) a.tick(t);
+        obj.position.copy(a.start).addScaledVector(a.vel, t - a.t0); if (obj.position.y > -1) obj.position.y = -1;   // stays in the water
+        orient(obj, a.vel.x, a.vel.y, a.vel.z); if (a.tick) a.tick(t);
         // gone past the diver and out of sight: now it can quietly leave
         here.copy(obj.position); if (a.react) here.add(a.react.off);   // where it really is, including any dodge
         if (t - a.t0 > a.meetIn + 2 && !inSight(here, size)) { a.active = false; obj.visible = false; }

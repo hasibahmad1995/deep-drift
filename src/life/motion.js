@@ -20,6 +20,7 @@ const probe = new THREE.Vector3();
    within SEEN metres of the dive path. where(t, out) puts the animal's position at time t into out.
    (Farther away the water hides it, and an animal inside rock is hidden by the rock.) */
 const SEEN = 50;
+const CEILING = -1;   // world height an animal's middle stays below: just under the surface
 // gap = how far from rock it must stay (more for animals that wobble about their path, like jellyfish)
 function clearPath(where, t0, t1, step = 1, gap = 0.5) {
   for (let t = t0; t <= t1; t += step) {
@@ -56,9 +57,10 @@ function passBy(obj, tMeet, offset, vel, name, range, tick, follow, pod) {
     // so it never drifts far from the dive path
     obj.position.copy(cur.meet).addScaledVector(cur.vel, follow ? 10 * Math.tanh((t - cur.tMeet) / 10) : t - cur.tMeet);
     const floor = groundAt(obj.position.x, obj.position.z) + 1; if (obj.position.y < floor) obj.position.y = floor;   // glides over the sea floor, never into it
+    if (obj.position.y > CEILING) obj.position.y = CEILING;   // and stays in the water
     orient(obj, cur.swim.x, cur.swim.y, cur.swim.z); if (tick) tick(t);
   } };
-  const where = (t, out) => { out.copy(cur.meet).addScaledVector(cur.vel, follow ? 10 * Math.tanh((t - cur.tMeet) / 10) : t - cur.tMeet); out.y = Math.max(out.y, groundAt(out.x, out.z) + 1); return out; };
+  const where = (t, out) => { out.copy(cur.meet).addScaledVector(cur.vel, follow ? 10 * Math.tanh((t - cur.tMeet) / 10) : t - cur.tMeet); out.y = Math.min(CEILING, Math.max(out.y, groundAt(out.x, out.z) + 1)); return out; };
   const clear = () => clearPath(where, cur.tMeet - 60, cur.tMeet + 60);   // a minute either side of the meeting
   const right = new THREE.Vector3();
   // tm = the moment it meets you; the offset and swimming direction are worked out from the dive path at that moment

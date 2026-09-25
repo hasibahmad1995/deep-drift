@@ -25,8 +25,9 @@ DEPTHS = r"""() => {
     reshuffle();
     for (const a of named) { if (a.active === false) continue; const L = LIVES[a.name];
       for (let t = 0; t < TOTAL; t += 2) { a.update(t); const p = pathAt(t);
-        if (a.obj.position.distanceTo(p.pos) < 25) { (seenAt[a.name] = seenAt[a.name] || new Set()).add(Math.round(p.D / 10) * 10);
-          if (p.D < L.minD * 0.8 - 15 || p.D > L.maxD * 1.25 + 40) { if (wrong.length < 8) wrong.push(a.name + ' at ' + Math.round(p.D) + ' m'); } break; } } } }
+        if (a.obj.position.distanceTo(p.pos) < 25) { const D = depthAt(a.obj.position.y);   // the animal's own real depth where you meet it
+          (seenAt[a.name] = seenAt[a.name] || new Set()).add(Math.round(D / 10) * 10);
+          if (D < L.minD * 0.95 - 10 || D > L.maxD * 1.05 + 20) { if (wrong.length < 8) wrong.push(a.name + ' at ' + Math.round(D) + ' m'); } break; } } } }
   window.__noRender = false;
   const spread = Object.fromEntries(Object.entries(seenAt).map(([n, s]) => [n, [...s].sort((a, b) => a - b).slice(0, 8).join(',')]));
   return { animals: named.length, wrong, spread };
@@ -36,7 +37,8 @@ def main():
     bad = []
     with sync_playwright() as p:
         b, pg, errs = shot.open_page(p, 1300, 800)
-        # 1. zoom steps (only the step logic; the smooth motion is checked by the label and zoom value)
+        # 1. zoom steps (simulated without drawing, which the software graphics would make very slow)
+        pg.evaluate("window.__noRender = true")
         seq = []
         for _ in range(9):
             pg.evaluate("document.getElementById('btnZoom').dispatchEvent(new PointerEvent('pointerdown', {pointerId: 1})); document.getElementById('btnZoom').dispatchEvent(new PointerEvent('pointerup', {pointerId: 1}))")
@@ -53,7 +55,7 @@ def main():
         for t in [30, 100, 150, 250]:
             r = pg.evaluate(f"({LEVEL})({t})"); print(f"2. turned 90 degrees at {t} s:", r)
             if r["horizonTiltDeg"] > 1.6: bad.append(f"horizon tilted at {t} s")   # up to 1.4 degrees is the diver's gentle sway
-        pg.evaluate("look.yaw = 0; look.pitch = 0")
+        pg.evaluate("look.yaw = 0; look.pitch = 0; window.__noRender = false")
         # 3. side panel hidden until hover
         pg.mouse.move(700, 400); pg.wait_for_timeout(400)
         hidden = pg.evaluate("getComputedStyle(document.getElementById('dockBody')).visibility")
