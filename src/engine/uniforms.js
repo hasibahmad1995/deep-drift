@@ -12,6 +12,7 @@ const U = {   // values shared by every material
   waterUp: { value: new THREE.Color() },
   waterDown: { value: new THREE.Color() },
   caust: { value: 1 },
+  zoom: { value: 1 },   // the lens zoom (set by diver/zoom.js): small things are kept drawn farther out when zoomed
   pix: { value: 1 }   // screen pixels per page pixel right now (set by quality.js), so point sprites keep their size
 };
 

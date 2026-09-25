@@ -36,8 +36,8 @@ function wet(mat, o = {}) {
   const bend = o.bend || null;
   mat.customProgramCacheKey = () => JSON.stringify(o);
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uWaterUp = U.waterUp; sh.uniforms.uWaterDown = U.waterDown; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
-    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\nuniform vec3 uWaterUp;\nuniform vec3 uWaterDown;\n' + GLSL_NOISE + GLSL_ROCK;
+    sh.uniforms.uAbsorb = U.absorb; sh.uniforms.uZoom = U.zoom; sh.uniforms.uWaterUp = U.waterUp; sh.uniforms.uWaterDown = U.waterDown; sh.uniforms.uTime = U.time; sh.uniforms.uCaust = U.caust;
+    let vs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uZoom;\nattribute float aPhase;\n', fs = 'varying vec3 vWP;\nvarying vec3 vWN;\nuniform float uTime;\nuniform float uCaust;\nuniform vec3 uAbsorb;\nuniform vec3 uWaterUp;\nuniform vec3 uWaterDown;\n' + GLSL_NOISE + GLSL_ROCK;
     if (bend) {
       sh.uniforms.uBend = { value: new THREE.Vector4(bend.amp, bend.speed, bend.wave, bend.len) };
       vs += 'uniform vec4 uBend;\n';
@@ -49,7 +49,7 @@ function wet(mat, o = {}) {
       sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + code);
     }
     if (o.shrink) sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n'
-      + '{ vec3 io = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; transformed *= smoothstep(' + o.shrink[1].toFixed(1) + ', ' + o.shrink[0].toFixed(1) + ', distance(io, cameraPosition)); }\n#endif');
+      + '{ vec3 io = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; transformed *= smoothstep(' + o.shrink[1].toFixed(1) + ' * uZoom, ' + o.shrink[0].toFixed(1) + ' * uZoom, distance(io, cameraPosition)); }\n#endif');
     sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>',
       '#include <project_vertex>\nvec4 wp4 = vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\nwp4 = instanceMatrix * wp4;\n#endif\nvWP = (modelMatrix * wp4).xyz;');
     sh.vertexShader = sh.vertexShader.replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\nvWN = normalize((vec4(transformedNormal, 0.0) * viewMatrix).xyz);');

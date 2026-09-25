@@ -56,7 +56,6 @@ function updateKeys(dt) {
   look.yaw += turn.yaw * dt; look.pitch += turn.pitch * dt;
 }
 function recenter() { look.yaw = 0; look.pitch = 0; gyro.ref = null; }
-function cycleZoom() { const t = swim.zoomTarget; swim.zoomTarget = t < 1.3 ? 1.6 : t < 2 ? 2.4 : 1; }
 
 // Turning your phone turns the diver's head (optional, needs a button press).
 const gyro = { on: false, ref: null, q: new THREE.Quaternion(), raw: new THREE.Quaternion() };
@@ -78,4 +77,4 @@ async function toggleMotion() {
   gyro.ref = null; window.addEventListener('deviceorientation', onOrient); gyro.on = true; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Motion look: on';
 }
 
-export { look, swim, gyro, zee, recenter, cycleZoom, toggleMotion, updateKeys };
+export { look, swim, gyro, zee, recenter, toggleMotion, updateKeys };

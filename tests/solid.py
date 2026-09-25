@@ -13,7 +13,12 @@ SIM = r"""(o) => {
   const prev = new THREE.Vector3(); let first = true;
   const tmp = new THREE.Vector3(), q = new THREE.Vector3(), m = new THREE.Matrix4(), box = new THREE.Box3(), sph = new THREE.Sphere();
   const size = new Map(), was = new Map(), wasW = new Map();
-  const sizeOf = obj => { if (!size.has(obj)) size.set(obj, obj.userData.reach || box.setFromObject(obj).getBoundingSphere(sph).radius); return size.get(obj); };
+  // how far the animal reaches from its centre whichever way it turns (its box measured unturned: a box around a turned
+  // body would be too big and count it as on screen when it is not)
+  const sizeOf = obj => { if (!size.has(obj)) { const q = obj.quaternion.clone(); obj.quaternion.identity(); obj.updateMatrixWorld(true); box.setFromObject(obj);
+    const c = obj.position;
+    size.set(obj, Math.hypot(Math.max(Math.abs(box.min.x - c.x), Math.abs(box.max.x - c.x)), Math.max(Math.abs(box.min.y - c.y), Math.abs(box.max.y - c.y)), Math.max(Math.abs(box.min.z - c.z), Math.abs(box.max.z - c.z))));
+    obj.quaternion.copy(q); obj.updateMatrixWorld(true); } return size.get(obj); };
   const schools = scene.children.filter(c => c.isInstancedMesh && c.boundingSphere && c.geometry.attributes.aPhase);
   const world = []; Object.values(groups).forEach(g => { if (g.userData.cull) world.push(g); (g.userData.cullKids || []).forEach(k => world.push(k)); });
   window.__noRender = true; state.t = o.t0; state.playing = true;
@@ -46,7 +51,7 @@ SIM = r"""(o) => {
       if (inSight(pos, r) && pos.distanceTo(E) - r < sightRange() - 3 && out.pops.length < 30) out.pops.push([t, name, vis ? 'appeared' : 'vanished', +pos.distanceTo(E).toFixed(1)]);
     };
     // (a hidden animal was not moved by its dodge this frame, so its dodge is added back to know where it really is)
-    for (const a of ACTORS) if (a.obj) { const now = a.obj.position.clone(); if (!a.obj.visible && a.react) now.add(a.react.off); check(a.obj, a.obj, a.obj.visible, now, sizeOf(a.obj), a.name); }
+    for (const a of ACTORS) if (a.obj && (a.obj.isMesh || a.obj.children.length)) { const now = a.obj.position.clone(); if (!a.obj.visible && a.react) now.add(a.react.off); check(a.obj, a.obj, a.obj.visible, now, sizeOf(a.obj), a.name); }
     for (const s of schools) check(s, s, s.visible, s.boundingSphere.center, s.boundingSphere.radius, s.name || 'school');
     const see = sightRange();
     for (const w of world) {

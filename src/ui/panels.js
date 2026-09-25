@@ -24,7 +24,7 @@ function wirePanels() {
   $('sheetBackdrop').addEventListener('click', closeSheet);
   compactQuery.addEventListener('change', layoutControls);
   $('controls').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (b && ['btnRecenter', 'btnRestart', 'btnBlog', 'btnCredits'].includes(b.id)) closeSheet();
+    const b = e.target.closest('button'); if (b && ['btnRecenter', 'btnBlog', 'btnCredits'].includes(b.id)) closeSheet();
   });
   $('btnBlog').addEventListener('click', openJournal); $('linkBlog').addEventListener('click', e => { e.preventDefault(); openJournal(); });
   $('btnCloseJournal').addEventListener('click', closeJournal);
