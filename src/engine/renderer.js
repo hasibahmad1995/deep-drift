@@ -5,7 +5,10 @@ import { SMALL } from './device.js';
 import { $ } from '../util/dom.js';
 
 const canvas = $('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: !SMALL, powerPreference: 'high-performance', preserveDrawingBuffer: /still/.test(location.search) });
+// Edge smoothing (antialias) only on screens with big pixels: on scaled screens (125% and up) edges are already fine,
+// and it costs about a fifth of each frame on a laptop's built-in graphics.
+const SHARP_SCREEN = (window.devicePixelRatio || 1) >= 1.25;
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !SMALL && !SHARP_SCREEN, powerPreference: 'high-performance', preserveDrawingBuffer: /still/.test(location.search) });
 const display = { pixelRatio: Math.min(window.devicePixelRatio || 1, SMALL ? 1.5 : SETTINGS.maxPixelRatio) };   // changed by quality.js to keep the dive smooth
 renderer.setPixelRatio(display.pixelRatio);
 renderer.outputColorSpace = THREE.SRGBColorSpace;

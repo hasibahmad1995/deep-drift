@@ -50,7 +50,8 @@ a { color: var(--accent); }
 #fact { display: block; font-size: 0.86rem; color: var(--ink-soft); max-width: 30rem; margin-top: 2px; }
 
 #intro { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
-  background: radial-gradient(ellipse at 50% 40%, rgba(2, 30, 55, 0.35), rgba(0, 6, 14, 0.82)); }
+  background: radial-gradient(ellipse at 50% 40%, rgba(2, 30, 55, 0.35), rgba(0, 6, 14, 0.82)); transition: opacity 0.8s ease; }
+#intro.leaving { opacity: 0; pointer-events: none; }
 #intro > div { max-width: 34rem; }
 #intro h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.8rem, 10vw, 5.4rem); line-height: 1; margin: 0 0 0.6rem; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6); }
 #intro p { margin: 0.5rem 0; line-height: 1.55; }

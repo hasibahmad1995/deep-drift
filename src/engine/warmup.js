@@ -3,7 +3,7 @@
    to the graphics card. Done during the dive, that shows up as a freeze each time a new place comes into view.
    Here we do all of it once while the loading message is showing. */
 import { renderer, scene, camera } from './renderer.js';
-import { STARTUP } from '../util/steps.js';
+import { STARTUP, nextFrame } from '../util/steps.js';
 
 // Shows every hidden part for a moment, runs job, then puts everything back as it was.
 async function withAllShown(job) {
@@ -28,8 +28,16 @@ async function warmUp() {
     t0 = performance.now();
     // draw everything once onto the real screen, but clipped to a single pixel: this copies every shape to the card
     // and builds the exact shader versions the screen needs (an off-screen picture would need different ones)
+    // a few parts at a time, with a pause between, so the page stays responsive (lights always stay, see lights.js)
+    const parts = scene.children.filter(o => !o.isLight && !o.isCamera);
     renderer.setScissor(0, 0, 1, 1); renderer.setScissorTest(true);
-    renderer.render(scene, camera);
+    for (let i = 0; i < parts.length; i += 6) {
+      const batch = parts.slice(i, i + 6);
+      parts.forEach(o => { o.visible = batch.includes(o); });
+      renderer.render(scene, camera);
+      await nextFrame();
+    }
+    parts.forEach(o => { o.visible = true; });
     renderer.setScissorTest(false);
     STARTUP.steps.push(['  shapes', Math.round(performance.now() - t0)]);
     STARTUP.warmPrograms = renderer.info.programs.map(p => p.id);   // tests compare this with later, to catch shaders built too late
