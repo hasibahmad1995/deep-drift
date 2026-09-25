@@ -36,13 +36,25 @@ const endDrag = e => {
 canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
 canvas.addEventListener('wheel', e => { e.preventDefault(); swim.zoomTarget = clamp(swim.zoomTarget * Math.exp(-e.deltaY * 0.0015), 1, 2.5); }, { passive: false });
 canvas.addEventListener('dblclick', () => recenter());
+/* Arrow keys turn the head smoothly: while a key is held the turn speeds up to a steady rate, and when it is let go
+   it slows to a stop (like turning your head, not jumping in steps). The keyboard's own repeat is not used. */
+const KEY_TURN = { ArrowLeft: [1, 0], ArrowRight: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
+const held = new Set(), turn = { yaw: 0, pitch: 0 };
+const YAW_RATE = 1.3, PITCH_RATE = 0.9, EASE = 7;   // radians per second, and how quickly the turn speeds up or slows down
+const typing = () => { const el = document.activeElement; return el && el !== document.body && el !== canvas && !el.classList.contains('btn'); };
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') look.yaw += 0.12;
-  if (e.key === 'ArrowRight') look.yaw -= 0.12;
-  if (e.key === 'ArrowUp') look.pitch += 0.1;
-  if (e.key === 'ArrowDown') look.pitch -= 0.1;
+  if (KEY_TURN[e.key] && !typing()) { held.add(e.key); e.preventDefault(); }
   if (e.key === ' ' && state.started && document.activeElement === document.body) { e.preventDefault(); togglePause(); }
 });
+document.addEventListener('keyup', e => held.delete(e.key));
+window.addEventListener('blur', () => held.clear());   // a key let go while the window was not in focus
+function updateKeys(dt) {
+  let wy = 0, wp = 0;
+  held.forEach(k => { wy += KEY_TURN[k][0]; wp += KEY_TURN[k][1]; });
+  const k = 1 - Math.exp(-dt * EASE);
+  turn.yaw += (wy * YAW_RATE - turn.yaw) * k; turn.pitch += (wp * PITCH_RATE - turn.pitch) * k;
+  look.yaw += turn.yaw * dt; look.pitch += turn.pitch * dt;
+}
 function recenter() { look.yaw = 0; look.pitch = 0; gyro.ref = null; }
 function cycleZoom() { const t = swim.zoomTarget; swim.zoomTarget = t < 1.3 ? 1.6 : t < 2 ? 2.4 : 1; }
 
@@ -66,4 +78,4 @@ async function toggleMotion() {
   gyro.ref = null; window.addEventListener('deviceorientation', onOrient); gyro.on = true; b.setAttribute('aria-pressed', 'true'); b.textContent = 'Motion look: on';
 }
 
-export { look, swim, gyro, zee, recenter, cycleZoom, toggleMotion };
+export { look, swim, gyro, zee, recenter, cycleZoom, toggleMotion, updateKeys };

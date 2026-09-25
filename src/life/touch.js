@@ -41,6 +41,19 @@ function bodyGap(o, h, sc, p, out) {
   return rel.length() - h.rad * sc;
 }
 
+/* The smallest move of the diver's centre p (world space, into out) that brings the diver's body just onto the
+   animal's surface. c = the closest point on the animal's body line (from bodyGap). For a flat, wide animal the move
+   is worked out in its own squashed frame, so a manta's wide wings push as far as they reach. */
+const sq = new THREE.Vector3();
+function separation(o, h, sc, p, c, out) {
+  inv.copy(o.quaternion).invert(); rel.copy(p).sub(c).applyQuaternion(inv);
+  const k = h.wide ? h.rad / h.wide : 1;
+  sq.set(rel.x, rel.y, rel.z * k); let len = sq.length();
+  if (len < 1e-4) { sq.set(0, 1, 0); len = 1; }
+  sq.multiplyScalar((h.rad * sc + BODY) / len); sq.z /= k;   // onto the (grown) surface, back to the real shape
+  return out.copy(sq).sub(rel).applyQuaternion(o.quaternion);
+}
+
 function reactActor(a, dt) {
   const o = a.obj, h = a.hit, r = a.react || (a.react = { off: new THREE.Vector3(), vel: new THREE.Vector3() }), sc = o.scale.x || 1;
   o.position.add(r.off);
@@ -62,8 +75,9 @@ function reactActor(a, dt) {
   // still touching the diver: something has to give
   const still = bodyGap(o, h, sc, camera.position, rN) - BODY;
   if (still < 0) {
-    if (h.heavy) { shoveDiver(shove.copy(away).multiplyScalar(still)); TOUCH.hit(a.name); }   // the diver is pushed back, away from it
-    else { r.off.addScaledVector(away, -still); o.position.addScaledVector(away, -still); }     // it is pushed aside
+    separation(o, h, sc, camera.position, rN, shove);   // how far the diver must move (from the animal) to just touch it
+    if (h.heavy) { shoveDiver(shove); TOUCH.hit(a.name); }   // the diver is pushed back, away from it
+    else { r.off.sub(shove); o.position.sub(shove); }      // it is pushed aside
   }
   // never pushed into the sea floor
   const floor = groundAt(o.position.x, o.position.z) + h.rad * sc;

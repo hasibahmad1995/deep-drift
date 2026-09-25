@@ -39,6 +39,8 @@ import { exposeForTesting } from './debug.js';
 import { runSteps, STARTUP } from './util/steps.js';
 import { warmUp } from './engine/warmup.js';
 import { trackFrame } from './engine/quality.js';
+import { chooseSharpness } from './engine/benchmark.js';
+import { reshuffle } from './life/variety.js';
 
 const tmpV = new THREE.Vector3();
 let last = performance.now();
@@ -46,14 +48,17 @@ let last = performance.now();
 function frame(now) {
   const ms = now - last, dt = Math.min(0.05, ms / 1000); last = now;
   if (window.__hold || STARTUP.busy) { requestAnimationFrame(frame); return; }   // __hold: used only by the test scripts
-  step(dt); trackFrame(ms, resize);   // fewer pixels if the pictures come too slowly
+  trackFrame(ms);   // fewer pixels if the pictures come too slowly (done before drawing, so a change never shows a blank frame)
+  step(dt);
   requestAnimationFrame(frame);
 }
 
 // Moves everything on by dt seconds and draws one picture.
 function step(dt) {
   clock.dt = dt; U.time.value += dt;
-  if (state.playing) { state.t += dt; if (state.t >= TOTAL) state.t = 0; }
+  if (state.started) state.life += dt;   // the sea's own time runs on even while the diver hovers (paused)
+  if (state.playing) { state.t += dt; if (state.t >= TOTAL) { state.t = 0; state.fadeT = 0; } }
+  if (state.fadeT != null) { state.fadeT += dt; if (state.fadeT > 1.6) state.fadeT = null; }
   const p = updateCamera(dt);
   camera.getWorldDirection(tmpV); TOUCH.point.copy(camera.position).addScaledVector(tmpV, 0.3);
   applyEnvironment(state.D);   // light and water colour for the depth where you really are
@@ -69,15 +74,18 @@ function step(dt) {
       if (a.obj.position.distanceToSquared(camera.position) > 90000 && (a.farWait = (a.farWait || 0) + dt) < 0.5) { a.obj.visible = false; continue; }
       a.farWait = 0;
     }
-    a.update(state.t);
+    // While the dive is paused (or not begun) the diver hovers but the sea lives on: an animal's own clock runs ahead of
+    // the dive time by a.lag. Animals that circle or drift (cyclic) always keep moving; others only once the dive has begun.
+    if ((!state.playing || !state.started) && (a.cyclic || !a.obj || state.started)) a.lag = (a.lag || 0) + dt;
+    a.update(state.t + (a.lag || 0));
     if (a.obj) {
       a.obj.visible = a.obj.position.distanceToSquared(camera.position) <= 90000 && a.active !== false;
       if (a.obj.visible) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
     }
   }
   updateBubbles(dt); drawHose(dt);
-  // the one continuous dive only fades in at the start and out at the very end
-  $('fade').style.opacity = clamp(Math.max(1 - state.t / 1.6, 1 - (TOTAL - state.t) / 1.6));
+  // the one continuous dive only fades out at the very end, and in again after a restart (Begin fades the intro card instead)
+  $('fade').style.opacity = clamp(Math.max(state.fadeT == null ? 0 : 1 - state.fadeT / 1.6, 1 - (TOTAL - state.t) / 1.6));
   updateHud(state.D, p.si);
   if (!window.__noRender) renderer.render(scene, camera);   // __noRender: only the tests use it, to run the dive fast
 }
@@ -95,7 +103,8 @@ function boot() {
   if (window.matchMedia('(pointer: coarse)').matches && 'DeviceOrientationEvent' in window) $('btnMotion').hidden = false;
   wirePanels();
   $('btnBegin').addEventListener('click', () => {
-    $('intro').hidden = true; state.started = true; state.playing = !REDUCED; $('btnPause').textContent = state.playing ? 'Pause' : 'Play';
+    const intro = $('intro'); intro.classList.add('leaving'); setTimeout(() => { intro.hidden = true; }, 800);   // the card fades away over the live picture
+    reshuffle(); state.started = true; state.playing = !REDUCED; $('btnPause').textContent = state.playing ? 'Pause' : 'Play';
     if (REDUCED) $('live').textContent = 'The dive is paused because your device asks for less motion. Press Play to start.';
   });
   exposeForTesting({ step, STARTUP });
@@ -110,6 +119,7 @@ function boot() {
     ['life on the sea floor', () => addPlace('benthos', buildBenthos())],
     ['the animals', () => { buildLife(); buildExtras(); buildDeepCast(); }],
     ['the lights and colours', warmUp],
+    ['the picture for your screen', chooseSharpness],
   ], (label, done) => { $('loadMsg').textContent = label ? `Loading ${label}... ${Math.round(done * 100)}%` : ''; })
     .then(() => { $('btnBegin').disabled = false; $('btnBegin').focus(); });
 }

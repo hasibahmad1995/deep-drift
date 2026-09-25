@@ -12,7 +12,7 @@ SIM = r"""(o) => {
   const out = { steps: 0, solids: SOLIDS.count, inside: [], animals: {}, fish: 0, fishWorst: 0, pops: [], worldPops: [], near: {}, jumps: [] };
   const prev = new THREE.Vector3(); let first = true;
   const tmp = new THREE.Vector3(), q = new THREE.Vector3(), m = new THREE.Matrix4(), box = new THREE.Box3(), sph = new THREE.Sphere();
-  const size = new Map(), was = new Map();
+  const size = new Map(), was = new Map(), wasW = new Map();
   const sizeOf = obj => { if (!size.has(obj)) size.set(obj, obj.userData.reach || box.setFromObject(obj).getBoundingSphere(sph).radius); return size.get(obj); };
   const schools = scene.children.filter(c => c.isInstancedMesh && c.boundingSphere && c.geometry.attributes.aPhase);
   const world = []; Object.values(groups).forEach(g => { if (g.userData.cull) world.push(g); (g.userData.cullKids || []).forEach(k => world.push(k)); });
@@ -38,17 +38,19 @@ SIM = r"""(o) => {
       for (let i = 0; i < s.count; i++) { s.getMatrixAt(i, m); q.setFromMatrixPosition(m); const d = q.distanceTo(E); if (d < BODY - 0.05) { out.fish++; out.fishWorst = Math.min(out.fishWorst, +(d - BODY).toFixed(2)); } }
     }
     // 3. pops: something switched on or off while it could be seen
-    const check = (key, obj, vis, pos, r, name) => {
-      const before = was.get(key); was.set(key, vis);
-      if (before === undefined || before === vis || state.t < o.t0 + 1) return;   // the first second after the test jumps the clock does not count
+    const check = (key, obj, vis, now, r, name) => {
+      const before = was.get(key); was.set(key, { vis, pos: now.clone() });
+      if (before === undefined || before.vis === vis || state.t < o.t0 + 1) return;   // the first second after the test jumps the clock does not count
+      const pos = now;   // judge where it is now: hiding something that is already off screen this frame cannot be seen
       // (at the very edge of sight it has already faded, so switching there is fine)
       if (inSight(pos, r) && pos.distanceTo(E) - r < sightRange() - 3 && out.pops.length < 30) out.pops.push([t, name, vis ? 'appeared' : 'vanished', +pos.distanceTo(E).toFixed(1)]);
     };
-    for (const a of ACTORS) if (a.obj) check(a.obj, a.obj, a.obj.visible, a.obj.position, sizeOf(a.obj), a.name);
+    // (a hidden animal was not moved by its dodge this frame, so its dodge is added back to know where it really is)
+    for (const a of ACTORS) if (a.obj) { const now = a.obj.position.clone(); if (!a.obj.visible && a.react) now.add(a.react.off); check(a.obj, a.obj, a.obj.visible, now, sizeOf(a.obj), a.name); }
     for (const s of schools) check(s, s, s.visible, s.boundingSphere.center, s.boundingSphere.radius, s.name || 'school');
     const see = sightRange();
     for (const w of world) {
-      const before = was.get(w); was.set(w, w.visible);
+      const before = wasW.get(w); wasW.set(w, w.visible);
       if (before === undefined || before === w.visible) continue;
       const c = w.userData.cull, gap = E.distanceTo(c.center) - c.radius, lim = c.far ? Math.min(see, c.far) : see;
       if (gap < lim - 1 && out.worldPops.length < 30) out.worldPops.push([t, w.name || w.type, w.visible ? 'shown' : 'hidden', +gap.toFixed(1), +lim.toFixed(1)]);

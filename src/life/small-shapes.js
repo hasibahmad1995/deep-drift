@@ -32,4 +32,9 @@ function smallFishGeo() {
   return g;
 }
 
-export { shrimpGeo, smallFishGeo };
+/* How small schooling fish beat their tails (for wet() bend). Each tail beat moves a fish about 0.7 of its length
+   (Bainbridge 1958), so an 18 cm fish cruising at 1 to 1.5 m/s beats its tail about 8 to 12 times a second:
+   speed 50 is about 8 beats a second. Smaller swings than a slow fish, as in real fast swimming. */
+const SMALL_FISH_SWIM = { mode: 1, amp: 0.1, speed: 50, wave: 6, len: 0.18 };
+
+export { shrimpGeo, smallFishGeo, SMALL_FISH_SWIM };
