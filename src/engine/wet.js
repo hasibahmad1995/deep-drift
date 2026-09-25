@@ -23,6 +23,8 @@ float tri(vec3 p, vec3 w, float s){ return w.x * vnoise(p.yz * s) + w.y * vnoise
    rock grain, and swimming movement.
    detail: rock grain, painted from three directions and bending the light like real bumps.
    bump: how strong those bumps are (default 1).  rust: rust streaks and plates (wreck).  strata: layers of rock (trench).
+   shrink: [near, far] metres, for many small copies (corals): each copy shrinks smoothly to nothing between near and far,
+     where it is only a few dots across and nearly faded, so it never pops out of view.
    bend = { mode, amp, speed, wave, len }
      mode 1 = swims side to side (fish, sharks, squid arms)
      mode 2 = swims up and down (whales)
@@ -44,6 +46,8 @@ function wet(mat, o = {}) {
       if (bend.mode === 4) code = 'float bt = clamp(position.y/uBend.w, 0.0, 1.4); transformed.x += sin(uBend.y*uTime + aPhase)*uBend.x*uBend.w*bt*bt; transformed.z += cos(uBend.y*uTime*0.8 + aPhase)*uBend.x*uBend.w*bt*bt*0.6;';
       sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + code);
     }
+    if (o.shrink) sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n'
+      + '{ vec3 io = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; transformed *= smoothstep(' + o.shrink[1].toFixed(1) + ', ' + o.shrink[0].toFixed(1) + ', distance(io, cameraPosition)); }\n#endif');
     sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>',
       '#include <project_vertex>\nvec4 wp4 = vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\nwp4 = instanceMatrix * wp4;\n#endif\nvWP = (modelMatrix * wp4).xyz;');
     sh.vertexShader = sh.vertexShader.replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\nvWN = normalize((vec4(transformedNormal, 0.0) * viewMatrix).xyz);');

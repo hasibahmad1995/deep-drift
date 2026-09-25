@@ -2,7 +2,7 @@
    the bright flecks you see in real deep-sea footage where the light beam catches particles right in front of the camera. */
 import * as THREE from '../lib/three.js';
 import { SMALL } from './device.js';
-import { display, scene } from './renderer.js';
+import { scene } from './renderer.js';
 import { U } from './uniforms.js';
 import { seeded } from '../util/math.js';
 
@@ -18,7 +18,7 @@ function makeSnow(count, size, additive, box = 60, beam = false) {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1)); g.setAttribute('aCol', new THREE.BufferAttribute(colr, 3));
   const m = new THREE.ShaderMaterial({
-    uniforms: { uCam: { value: new THREE.Vector3() }, uTime: U.time, uSize: { value: size }, uAlpha: { value: 0.6 }, uAbs: U.absorb, uPix: { value: display.pixelRatio },
+    uniforms: { uCam: { value: new THREE.Vector3() }, uTime: U.time, uSize: { value: size }, uAlpha: { value: 0.6 }, uAbs: U.absorb, uPix: U.pix,
       uBox: { value: box }, uBeam: { value: 0 } },
     transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, fog: false,
     vertexShader: `attribute float aSeed; attribute vec3 aCol; uniform vec3 uCam; uniform float uTime; uniform float uSize; uniform float uPix; uniform float uBox; uniform float uBeam;

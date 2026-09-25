@@ -1,7 +1,8 @@
 /* Breathing: the bubbles that leave the regulator every few seconds. */
 import * as THREE from '../lib/three.js';
 import { REDUCED } from '../engine/device.js';
-import { camera, display, scene } from '../engine/renderer.js';
+import { camera, scene } from '../engine/renderer.js';
+import { U } from '../engine/uniforms.js';
 import { TAU, rand } from '../util/math.js';
 import { canvasTexture } from '../util/textures.js';
 
@@ -14,7 +15,7 @@ const bubbleTex = canvasTexture(64, 64, c => {
 const NB = 70, bubblePos = new Float32Array(NB * 3), bubbleSize = new Float32Array(NB), bubbleLife = new Float32Array(NB).fill(-1), bubbleVel = new Float32Array(NB);
 const bubbleGeo = new THREE.BufferGeometry(); bubbleGeo.setAttribute('position', new THREE.BufferAttribute(bubblePos, 3)); bubbleGeo.setAttribute('aSize', new THREE.BufferAttribute(bubbleSize, 1));
 const bubbles = new THREE.Points(bubbleGeo, new THREE.ShaderMaterial({
-  uniforms: { uTex: { value: bubbleTex }, uPix: { value: display.pixelRatio } }, transparent: true, depthWrite: false, fog: false,
+  uniforms: { uTex: { value: bubbleTex }, uPix: U.pix }, transparent: true, depthWrite: false, fog: false,
   vertexShader: 'attribute float aSize; uniform float uPix; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; gl_PointSize = aSize * uPix * (300.0 / max(-mv.z, 0.2)); }',
   fragmentShader: `uniform sampler2D uTex; void main(){ vec4 c = texture2D(uTex, gl_PointCoord); gl_FragColor = vec4(c.rgb, c.a * 0.8);
     #include <colorspace_fragment>

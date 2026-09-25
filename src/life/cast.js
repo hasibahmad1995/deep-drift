@@ -77,10 +77,16 @@ function buildLife() {
   const stalk = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0.42, 0.24, 0), new THREE.Vector3(0.55, 0.42, 0), new THREE.Vector3(0.8, 0.5, 0)]), 12, 0.006, 5), new THREE.MeshStandardMaterial({ color: 0x3a2d28, roughness: 0.6 }));
   const bulb = glowSprite(1.6, 0xa8f4ff); bulb.position.set(0.8, 0.5, 0); lure.add(stalk, bulb);   // the bacteria in the lure give off blue-green light
   const core = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), new THREE.MeshBasicMaterial({ color: 0xe8fcff, fog: false })); core.position.copy(bulb.position); lure.add(core);
-  const lureLight = new THREE.PointLight(0x9fefff, 0.6 * Math.PI, 2.5, 2);   // fades with the square of the distance
-  lureLight.position.copy(bulb.position); lure.add(lureLight);
   ang.add(lure);
-  passBy(ang, tu(3, 0.7), view(tu(3, 0.7), 3.4, 0.7, -0.2), view(tu(3, 0.7), 0.05, -0.32, 0), 'Anglerfish', 16, () => { const k = 0.8 + 0.25 * Math.sin(U.time.value * 3); bulb.scale.setScalar(1.6 * k); lureLight.intensity = 0.6 * Math.PI * k; }, true);
+  // the lure's light fades with the square of the distance. It lives in the scene, not on the fish, and is never hidden:
+  // it just goes dark while the fish is out of sight (see lights.js for why)
+  const lureLight = new THREE.PointLight(0x9fefff, 0, 2.5, 2); scene.add(lureLight);
+  let glow = 1;
+  passBy(ang, tu(3, 0.7), view(tu(3, 0.7), 3.4, 0.7, -0.2), view(tu(3, 0.7), 0.05, -0.32, 0), 'Anglerfish', 16, () => { glow = 0.8 + 0.25 * Math.sin(U.time.value * 3); bulb.scale.setScalar(1.6 * glow); }, true);
+  ACTORS.push({ obj: null, update: () => {
+    lureLight.intensity = ang.visible ? 0.6 * Math.PI * glow : 0;
+    if (ang.visible) bulb.getWorldPosition(lureLight.position);
+  } });
   // dumbo octopuses hover near the wreck on the abyssal plain (they live from about 1,000 to 7,000 m)
   const wc = new THREE.Vector3(WRECK.x - 5, seafloorY(WRECK.x - 5, WRECK.z - 12) + 9, WRECK.z - 12);
   for (let i = 0; i < 3; i++) {

@@ -9,8 +9,11 @@ import { TAU, clamp, lerp, seeded } from '../util/math.js';
 import { fbm2, hash2 } from '../util/noise.js';
 import { glowSprite, makeDroplets, makeSmoke } from './effects.js';
 import { scatterRocks } from './floor.js';
+import { UP } from './layout.js';
 import { VENTS } from './sites.js';
 import { seafloorY } from './terrain.js';
+import { addGrowth } from './solids.js';
+import { addTiled } from './tiles.js';
 
 function chimney(i, h) {
   const prof = [];
@@ -34,6 +37,7 @@ function tubeWorms() {
   const tg = mergeGeo([tube, plume]);
   const clumps = [], R = seeded(11);
   VENTS.forEach(([vx, vz]) => { const nc = 4 + Math.floor(R() * 3); for (let c = 0; c < nc; c++) { const a = R() * TAU, r = 2.2 + R() * 3.2; clumps.push([vx + Math.cos(a) * r, vz + Math.sin(a) * r]); } });
+  clumps.forEach(([x, z]) => addGrowth(new THREE.Vector3(x, seafloorY(x, z), z), UP, 2.6, 1.0));   // each clump is solid
   const N = Math.round(clumps.length * 26 * Math.max(DETAIL, 0.5));
   const tm = new THREE.InstancedMesh(tg, wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, emissive: new THREE.Color(0.1, 0.03, 0.03), side: THREE.DoubleSide }), { caust: false, bend: { mode: 4, amp: 0.05, speed: 1.2, wave: 0, len: 2.0 } }), N);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), pp = new THREE.Vector3(), s = new THREE.Vector3(), ph = new Float32Array(N);
@@ -43,7 +47,7 @@ function tubeWorms() {
     pp.set(x, seafloorY(x, z) - 0.08, z); q.setFromEuler(new THREE.Euler(Math.sin(a) * r * 0.35 + (R() - 0.5) * 0.15, R() * TAU, -Math.cos(a) * r * 0.35 + (R() - 0.5) * 0.15)); s.setScalar(0.6 + R() * 0.8);
     m.compose(pp, q, s); tm.setMatrixAt(i, m); ph[i] = R() * TAU;
   }
-  tg.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1)); tm.frustumCulled = false;
+  tg.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1));
   return tm;
 }
 
@@ -55,7 +59,7 @@ function buildVents() {
     const gl2 = glowSprite(24, 0xff5a10); gl2.material.opacity = 0.35; gl2.position.copy(gl.position); G.add(gl2);
     G.add(makeSmoke(x, fy + h, z));
   });
-  G.add(tubeWorms());
+  addTiled(G, tubeWorms(), 12);
   // streams of liquid CO2 droplets from cracks between the chimneys
   [[126, 2], [150, -6], [178, 10]].forEach(([x, z]) => G.add(makeDroplets(x, seafloorY(x, z) + 0.1, z)));
   // broken lava rock over the terrace

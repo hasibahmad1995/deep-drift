@@ -4,7 +4,7 @@ import { SETTINGS } from './config.js';
 import { $ } from './util/dom.js';
 import { clamp } from './util/math.js';
 import { REDUCED } from './engine/device.js';
-import { renderer, display, scene, camera } from './engine/renderer.js';
+import { renderer, scene, camera } from './engine/renderer.js';
 import { U } from './engine/uniforms.js';
 import { applyEnvironment } from './engine/environment.js';
 import { dome, surface, rayGroup } from './engine/sky.js';
@@ -36,14 +36,17 @@ import { togglePause, restart } from './ui/playback.js';
 import { layoutControls, wirePanels, buildJournal } from './ui/panels.js';
 import { toggleMusic } from './audio/music.js';
 import { exposeForTesting } from './debug.js';
+import { runSteps, STARTUP } from './util/steps.js';
+import { warmUp } from './engine/warmup.js';
+import { trackFrame } from './engine/quality.js';
 
 const tmpV = new THREE.Vector3();
-let frames = 0, slow = 0, last = performance.now();
+let last = performance.now();
 
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  if (window.__hold) { requestAnimationFrame(frame); return; }   // used only by the test scripts
-  step(dt);
+  const ms = now - last, dt = Math.min(0.05, ms / 1000); last = now;
+  if (window.__hold || STARTUP.busy) { requestAnimationFrame(frame); return; }   // __hold: used only by the test scripts
+  step(dt); trackFrame(ms, resize);   // fewer pixels if the pictures come too slowly
   requestAnimationFrame(frame);
 }
 
@@ -60,18 +63,23 @@ function step(dt) {
   snow.material.uniforms.uCam.value.copy(camera.position); glowSpecks.material.uniforms.uCam.value.copy(camera.position); backscatter.material.uniforms.uCam.value.copy(camera.position);
   for (let i = 0; i < ACTORS.length; i++) {
     const a = ACTORS[i];
-    if (a.obj) { const far = a.obj.position.distanceToSquared(camera.position) > 90000; a.obj.visible = !far && a.active !== false; if (far || a.active === false) continue; }
+    if (a.obj) {
+      if (a.active === false) { a.obj.visible = false; continue; }
+      // more than 300 m away (far beyond sight): hidden, and moved on only twice a second to save work
+      if (a.obj.position.distanceToSquared(camera.position) > 90000 && (a.farWait = (a.farWait || 0) + dt) < 0.5) { a.obj.visible = false; continue; }
+      a.farWait = 0;
+    }
     a.update(state.t);
-    if (a.obj) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
+    if (a.obj) {
+      a.obj.visible = a.obj.position.distanceToSquared(camera.position) <= 90000 && a.active !== false;
+      if (a.obj.visible) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
+    }
   }
   updateBubbles(dt); drawHose(dt);
   // the one continuous dive only fades in at the start and out at the very end
   $('fade').style.opacity = clamp(Math.max(1 - state.t / 1.6, 1 - (TOTAL - state.t) / 1.6));
   updateHud(state.D, p.si);
-  renderer.render(scene, camera);
-  // if the picture is slow, draw fewer pixels
-  frames++; if (dt > 0.034) slow++;
-  if (frames >= 90) { if (slow > 55 && display.pixelRatio > 0.65) { display.pixelRatio = Math.max(0.65, display.pixelRatio * 0.8); renderer.setPixelRatio(display.pixelRatio); resize(); } frames = 0; slow = 0; }
+  if (!window.__noRender) renderer.render(scene, camera);   // __noRender: only the tests use it, to run the dive fast
 }
 
 function resize() {
@@ -80,6 +88,7 @@ function resize() {
 }
 
 function boot() {
+  STARTUP.bootAt = Math.round(performance.now());   // when our code started (after the files arrived)
   document.title = SETTINGS.siteName; $('brand').textContent = SETTINGS.siteName; $('siteName').textContent = SETTINGS.siteName; $('tagline').textContent = SETTINGS.tagline;
   resize(); window.addEventListener('resize', resize); layoutControls(); buildJournal();
   $('btnPause').addEventListener('click', togglePause); $('btnMusic').addEventListener('click', toggleMusic); $('btnRestart').addEventListener('click', restart); $('btnRecenter').addEventListener('click', recenter); $('btnZoom').addEventListener('click', cycleZoom); $('btnMotion').addEventListener('click', toggleMotion);
@@ -89,16 +98,19 @@ function boot() {
     $('intro').hidden = true; state.started = true; state.playing = !REDUCED; $('btnPause').textContent = state.playing ? 'Pause' : 'Play';
     if (REDUCED) $('live').textContent = 'The dive is paused because your device asks for less motion. Press Play to start.';
   });
-  exposeForTesting({ step });
+  exposeForTesting({ step, STARTUP });
   requestAnimationFrame(t => { last = t; frame(t); });
-  setTimeout(async () => {
-    await loadBarramundi();
-    addPlace('reef', buildReef()); addPlace('terrain', buildTerrain()); addPlace('vents', buildVents()); addPlace('plain', buildWreck()); addPlace('trench', buildTrench()); addPlace('benthos', buildBenthos());
-    buildLife();
-    buildExtras();
-    buildDeepCast();
-    $('loadMsg').textContent = '';
-    $('btnBegin').disabled = false; $('btnBegin').focus();
-  }, 30);
+  runSteps([
+    ['the fish model', loadBarramundi],
+    ['the coral reef', () => addPlace('reef', buildReef())],
+    ['the sea floor', () => addPlace('terrain', buildTerrain())],
+    ['the hot vents', () => addPlace('vents', buildVents())],
+    ['the wreck', () => addPlace('plain', buildWreck())],
+    ['the trench', () => addPlace('trench', buildTrench())],
+    ['life on the sea floor', () => addPlace('benthos', buildBenthos())],
+    ['the animals', () => { buildLife(); buildExtras(); buildDeepCast(); }],
+    ['the lights and colours', warmUp],
+  ], (label, done) => { $('loadMsg').textContent = label ? `Loading ${label}... ${Math.round(done * 100)}%` : ''; })
+    .then(() => { $('btnBegin').disabled = false; $('btnBegin').focus(); });
 }
 boot();

@@ -37,7 +37,8 @@ function updateGlide(dt, p, legId) {
     // up and down: you sink with the current; looking up slows it, looking down adds your own swimming
     const sinkFactor = 1 - 0.65 * clamp(look.y / 0.6), vy = Math.min(0, baseVel.y) * sinkFactor + Math.min(0, look.y) * SWIM_SPEED;
     swim.off.y += (Math.min(0, vy) - baseVel.y) * dt;   // your own height changes by vy, which is never upward
-    swim.off.y = clamp(swim.off.y, -MAX_BELOW, MAX_LAG_ABOVE);
+    // past a limit (for example lifted high by the reef top): settle back gently, never in one jump
+    swim.off.y = clamp(swim.off.y, Math.min(-MAX_BELOW, swim.off.y + 3 * dt), Math.max(MAX_LAG_ABOVE, swim.off.y - 3 * dt));
     // a gentle current brings you back if you stray too far to the side
     const roam = ROAM[legId] || 20, h = Math.hypot(swim.off.x, swim.off.z);
     if (h > roam) { const k = 1 - Math.max(0, h - roam) * PULL * dt / h; swim.off.x *= k; swim.off.z *= k; }
@@ -53,4 +54,12 @@ function updateGlide(dt, p, legId) {
   return pos;
 }
 
-export { updateGlide, SWIM_SPEED };
+const fix = new THREE.Vector3();
+// Something big (a whale, the whale shark) pushed the diver by v this frame. Moves the diver now and keeps the move,
+// but never into rock or anything solid.
+function shoveDiver(v) {
+  fix.copy(camera.position).add(v); constrain(fix); fix.sub(camera.position);   // the move that is really possible
+  camera.position.add(fix); swim.off.add(fix); camera.updateMatrixWorld();
+}
+
+export { updateGlide, shoveDiver, SWIM_SPEED };

@@ -6,7 +6,7 @@ import { $ } from '../util/dom.js';
 
 const canvas = $('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !SMALL, powerPreference: 'high-performance', preserveDrawingBuffer: /still/.test(location.search) });
-const display = { pixelRatio: Math.min(window.devicePixelRatio || 1, SMALL ? 1.5 : SETTINGS.maxPixelRatio) };   // lowered by main.js if the picture is slow
+const display = { pixelRatio: Math.min(window.devicePixelRatio || 1, SMALL ? 1.5 : SETTINGS.maxPixelRatio) };   // changed by quality.js to keep the dive smooth
 renderer.setPixelRatio(display.pixelRatio);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;

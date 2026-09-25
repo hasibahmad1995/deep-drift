@@ -11,7 +11,8 @@ const U = {   // values shared by every material
   // colours, so far rock melts into the background with no outline. Set in environment.js; the sky dome uses them too.
   waterUp: { value: new THREE.Color() },
   waterDown: { value: new THREE.Color() },
-  caust: { value: 1 }
+  caust: { value: 1 },
+  pix: { value: 1 }   // screen pixels per page pixel right now (set by quality.js), so point sprites keep their size
 };
 
 export { U };
