@@ -9,9 +9,10 @@ import { ACTORS } from './actors.js';
 import { BARRA } from './barramundi.js';
 import { makeCreature } from './creature.js';
 import { makeJelly } from './jelly.js';
-import { orbit, passBy, view } from './motion.js';
+import { clearPath, orbit, passBy, view } from './motion.js';
+import { vary } from './variety.js';
 import { School } from './school.js';
-import { smallFishGeo } from './small-shapes.js';
+import { SMALL_FISH_SWIM, smallFishGeo } from './small-shapes.js';
 import { SPECIES } from './species.js';
 import { makeTurtle } from './turtle.js';
 import { col } from '../util/color.js';
@@ -25,7 +26,7 @@ import { landWallX } from '../world/trench.js';
 function buildLife() {
   const schools = [];
   const addSchool = (school) => { scene.add(school.mesh); schools.push(school); };
-  const fishMat = () => wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide }), { bend: { mode: 1, amp: 0.14, speed: 12, wave: 6, len: 0.18 } });
+  const fishMat = () => wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide }), { bend: SMALL_FISH_SWIM });
   const smallMat = fishMat();
   const nb = Math.max(10, Math.round(34 * DETAIL)), nSmall = Math.max(40, Math.round(140 * DETAIL));
   const cfg = (c, r, om, ph, sp, sc, colors, rise) => ({ center: [-c[0], c[1], c[2]], radius: r, omega: om, phase: ph, spread: sp, scale: sc, colors, rise: rise == null ? 1.2 : rise });
@@ -38,7 +39,7 @@ function buildLife() {
   addSchool(Object.assign(new School(smallFishGeo(), smallMat, Math.round(nSmall * 0.8), cfg([16, -32, 3], 7, -0.18, 3, 3.0, 0.9, teal)), { name: 'Reef fish' }));
   addSchool(Object.assign(new School(smallFishGeo(), smallMat, Math.round(nSmall * 0.4), cfg([15, -39, -3], 6, 0.17, 5, 2.4, 1.3, yellow)), { name: 'Reef fish' }));
   addSchool(Object.assign(new School(smallFishGeo(), smallMat, Math.round(nSmall * 0.7), cfg([17, -52, 2], 8, -0.16, 2, 3.2, 1.0, orange)), { name: 'Reef fish' }));
-  ACTORS.push({ update: t => schools.forEach(s => s.update(t)), obj: null });
+  ACTORS.push({ update: t => schools.forEach(s => s.update(t)), obj: null, cyclic: true });
 
   // sharks, turtle, manta
   [[[19, -30, 0], 12, 0.12, 0], [[17, -41, 8], 10, -0.15, 2], [[20, -21, -7], 13, 0.1, 4.2]].forEach(([c, r, om, ph]) => {
@@ -46,7 +47,7 @@ function buildLife() {
   });
   const turtle = makeTurtle();
   passBy(turtle, tu(0, 0.34), view(tu(0, 0.34), 7, 3, 0.5), view(tu(0, 0.34), 0, -0.75, 0), 'Green sea turtle', 20, turtle.userData.update);
-  passBy(makeCreature(SPECIES.manta), tu(0, 0.9), view(tu(0, 0.9), 14, 0, 5), view(tu(0, 0.9), 0, -1.4, 0), 'Giant manta ray', 34);
+  passBy(makeCreature(SPECIES.manta), tu(0, 0.9), view(tu(0, 0.9), 3, 0, 6), view(tu(0, 0.9), 0, -1.4, 0), 'Giant manta ray', 34);   // glides over you (ahead of you is the reef wall)
   // big animals of the open ocean pass along the reef drop-off (beside you: ahead of you is the wall)
   passBy(makeCreature(SPECIES.whaleshark), tu(1, 0.35), view(tu(1, 0.35), 5, 16, -1), view(tu(1, 0.35), 0, -1.3, 0), 'Whale shark', 40);
   passBy(makeCreature(SPECIES.greatwhite), tu(1, 0.68), view(tu(1, 0.68), 6, -12, -2), view(tu(1, 0.68), -0.2, 1.2, 0), 'Great white shark', 34);
@@ -54,11 +55,12 @@ function buildLife() {
   // jellyfish drift up through the twilight and midnight water
   const jelly = (si, u0, u1, n, hue, glow) => {
     for (let i = 0; i < n; i++) {
-      const j = makeJelly(hue + rand(-0.05, 0.05), glow), s = rand(0.6, 1.5), tm = tu(si, lerp(u0, u1, Math.random()));
+      const j = makeJelly(hue + rand(-0.05, 0.05), glow), s = rand(0.6, 1.5), meet = new THREE.Vector3(); let tm = 0;
       j.scale.setScalar(s);
-      const meet = pathAt(tm).pos.clone().add(view(tm, rand(4, 16), rand(-9, 9), rand(-4, 5)));
+      const drift = (t, out) => out.set(meet.x, meet.y + (t - tm) * 0.18, meet.z), actor = { active: true };
+      vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(si, lerp(u0, u1, Math.random())); meet.copy(pathAt(tm).pos).add(view(tm, rand(4, 16), rand(-9, 9), rand(-4, 5))); actor.active = clearPath(drift, tm - 60, tm + 60); } });   // a new spot each dive, clear of rock (or none)
       scene.add(j);
-      ACTORS.push({ obj: j, name: 'Jellyfish', range: 12, update(t) { j.position.set(meet.x + Math.sin(t * 0.13 + i) * 0.6, meet.y + (t - tm) * 0.18, meet.z + Math.cos(t * 0.11 + i) * 0.6); } });
+      ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 12, cyclic: true, update(t) { j.position.set(meet.x + Math.sin(t * 0.13 + i) * 0.6, meet.y + (t - tm) * 0.18, meet.z + Math.cos(t * 0.11 + i) * 0.6); } }));
     }
   };
   jelly(2, 0.0, 1.0, SMALL ? 9 : 16, 0.85, 0.5);    // twilight zone

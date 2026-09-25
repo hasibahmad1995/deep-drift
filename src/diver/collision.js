@@ -35,10 +35,11 @@ function smoothMap(map, rows, u, v) {
   if (Math.min(c00, c01, c10, c11) < -1e8) return top;   // at the edge of the rock: be careful
   return (c00 * (1 - tb) + c01 * tb) * (1 - ta) + (c10 * (1 - tb) + c11 * tb) * ta;
 }
+function smoothMaps(B) { if (!B.wallSmooth) { B.wallSmooth = widen(B.wallMax, 100); B.shelfSmooth = widen(B.shelfTop, 60); } }
 function reef(pos) {
   const B = groups.reef && groups.reef.userData.bins;
   if (!B || pos.y < -200 || Math.abs(pos.z) >= 66 || pos.x > -15) return;
-  if (!B.wallSmooth) { B.wallSmooth = widen(B.wallMax, 100); B.shelfSmooth = widen(B.shelfTop, 60); }
+  smoothMaps(B);
   const v = (pos.z + 65) / 2 - 0.5;
   if (pos.y < -9.2) {
     const m = smoothMap(B.wallSmooth, 100, -pos.y / 2 - 0.5, v);
@@ -115,12 +116,24 @@ function constrain(pos) {
   for (let i = 0; i < 3 && pushOutOfSolids(pos, BODY); i++) rockAndFloor(pos);
 }
 
-const probe = new THREE.Vector3();
-// True if p is inside rock or the sea floor (or closer to it than the diver may come). Used to keep animals' paths clear.
-function inRock(p) {
-  probe.copy(p); rockAndFloor(probe);
-  if (probe.x > 95 && probe.x < 200) vents(probe);
-  return probe.distanceToSquared(p) > 0.01;
+/* True if p is inside rock or the sea floor, or closer to it than gap metres. For animals (their paths are checked
+   with this), so unlike the diver's checks above it has no extra room built in: gap is the only margin. */
+function inRock(p, gap = 0.5) {
+  const B = groups.reef && groups.reef.userData.bins;
+  if (B && p.y > -200 && Math.abs(p.z) < 66 && p.x < -15) {
+    smoothMaps(B);
+    const v = (p.z + 65) / 2 - 0.5;
+    if (p.y < -9.2) { const m = smoothMap(B.wallSmooth, 100, -p.y / 2 - 0.5, v); if (m > -1e8 && p.x < m + gap) return true; }
+    if (p.x < -24) { const m = smoothMap(B.shelfSmooth, 60, -p.x / 2 - 0.5, v); if (m > -1e8 && p.y > m - 6 && p.y < m + gap) return true; }
+  }
+  if (p.x > TRENCH.landTop && p.x < TRENCH.farTop) {
+    const rim = Math.max(seafloorY(TRENCH.landTop, p.z), seafloorY(TRENCH.farTop, p.z));
+    if (p.y < rim && (p.x < landWallX(p.y, p.z) + gap || p.x > farWallX(p.y, p.z) - gap)) return true;
+    return p.y < trenchFloorY(p.x, p.z) + gap;
+  }
+  if (p.x >= -38 && p.y < seafloorY(p.x, p.z) + gap) return true;
+  if (p.x > 95 && p.x < 200) for (const [vx, vz, h] of VENTS) if (Math.hypot(p.x - vx, p.z - vz) < 2.4 + gap && p.y < seafloorY(vx, vz) + h) return true;   // chimneys are up to 2.2 m wide at the foot
+  return false;
 }
 
 export { constrain, groundAt, inRock, BODY };

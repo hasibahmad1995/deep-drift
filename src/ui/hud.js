@@ -13,7 +13,7 @@ function updateHud(D, si) {
   const z = D < 5 ? zoneName(D) : zoneName(D) + ' · ' + LEGS[si].place;   // e.g. 'Midnight zone · Hydrothermal vents'
   if (z !== hud) { $('zoneName').textContent = z; hud = z; }
   let best = null, bd = 1e9;
-  ACTORS.forEach(a => { if (!a.name || !a.obj) return; const d = a.obj.position.distanceTo(camera.position); if (d < a.range && d < bd) { bd = d; best = a.name; } });
+  ACTORS.forEach(a => { if (!a.name || !a.obj || a.active === false) return; const d = a.obj.position.distanceTo(camera.position); if (d < a.range && d < bd) { bd = d; best = a.name; } });
   const touching = performance.now() < touchMsg.until, want = touching ? touchMsg.text : (best ? 'Nearby: ' + best : '');
   if (want !== capName) { capName = want; $('caption').textContent = want; $('fact').textContent = touching ? '' : (best ? (FACTS[best] || '') : ''); }
 }

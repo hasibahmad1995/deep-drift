@@ -16,7 +16,9 @@ float caust(vec3 p, float t){ vec2 q = vec2(p.x * 0.6 + p.z * 0.5, p.y * 0.5 + p
 
 // Rock grain seen from three directions and blended by which way the surface faces (so it never looks stretched).
 const GLSL_ROCK = `
-float tri(vec3 p, vec3 w, float s){ return w.x * vnoise(p.yz * s) + w.y * vnoise(p.xz * s + 17.3) + w.z * vnoise(p.xy * s + 41.1); }
+float tri(vec3 p, vec3 w, float s){ float r = 0.0, k = 0.0;   // directions that add under 3% are skipped (this runs for every pixel of rock)
+  if (w.x > 0.03) { r += w.x * vnoise(p.yz * s); k += w.x; } if (w.y > 0.03) { r += w.y * vnoise(p.xz * s + 17.3); k += w.y; } if (w.z > 0.03) { r += w.z * vnoise(p.xy * s + 41.1); k += w.z; }
+  return r / max(k, 1e-3); }
 `;
 
 /* Makes an ordinary material feel wet: colour fading with distance, moving light patches (caustics),
@@ -56,8 +58,11 @@ function wet(mat, o = {}) {
     f = f.replace('#include <tonemapping_fragment>', '#ifdef USE_FOG\n vec3 fogT = exp(-uAbsorb * vFogDepth);\n vec3 fogDir = normalize(vWP - cameraPosition);\n vec3 fogCol = mix(uWaterDown, uWaterUp, smoothstep(-0.55, 0.75, fogDir.y));\n gl_FragColor.rgb = gl_FragColor.rgb * fogT + fogCol * (vec3(1.0) - fogT);\n#endif\n#include <tonemapping_fragment>');
     if (o.detail) {
       let c = '#include <color_fragment>\n vec3 tw = pow(abs(normalize(vWN)), vec3(4.0)); tw /= (tw.x + tw.y + tw.z);\n'
-        + ' float rh = tri(vWP, tw, 0.9)*0.5 + tri(vWP, tw, 3.1)*0.3 + tri(vWP, tw, 9.0)*0.14 + tri(vWP, tw, 26.0)*0.06;\n'
-        + ' diffuseColor.rgb *= 0.42 + 1.15*rh * (0.8 + 0.4*tri(vWP, tw, 41.0));\n';
+        // the two finest layers only show up close: they fade to their average with distance and are skipped beyond it
+        + ' float rh = tri(vWP, tw, 0.9)*0.5 + tri(vWP, tw, 3.1)*0.3; float vd = length(vWP - cameraPosition);\n'
+        + ' float fine = 0.1; if (vd < 30.0) fine = mix(0.1, tri(vWP, tw, 9.0)*0.14 + tri(vWP, tw, 26.0)*0.06, smoothstep(30.0, 20.0, vd)); rh += fine;\n'
+        + ' float grain = 0.5; if (vd < 10.0) grain = mix(0.5, tri(vWP, tw, 41.0), smoothstep(10.0, 6.0, vd));\n'
+        + ' diffuseColor.rgb *= 0.42 + 1.15*rh * (0.8 + 0.4*grain);\n';
       // layers of rock: bands of uneven thickness that break off here and there, with thin dark partings between them
       if (o.strata) c += ' float band = sin(vWP.y*1.7 + tri(vWP, tw, 0.22)*2.4 + vWP.z*0.05); float brk = smoothstep(0.3, 0.62, tri(vWP, tw, 0.13));\n'
         + ' float lay = smoothstep(0.25, 0.8, band) * brk; float part = 1.0 - (1.0 - smoothstep(0.0, 0.07, abs(sin(vWP.y*1.9 + tri(vWP, tw, 0.3)*3.0)))) * 0.35 * smoothstep(0.45, 0.7, tri(vWP, tw, 0.2));\n'

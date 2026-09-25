@@ -11,7 +11,8 @@ import { ACTORS } from './life/actors.js';
 import { BARRA } from './life/barramundi.js';
 import { look, swim } from './diver/input.js';
 import { music } from './audio/music.js';
-import { constrain, BODY } from './diver/collision.js';
+import { constrain, inRock, BODY } from './diver/collision.js';
+import { reshuffle } from './life/variety.js';
 import { HIT, bodyGap } from './life/touch.js';
 import { PASSERS, inSight } from './life/passers.js';
 import { SOLIDS, pushOutOfSolids } from './world/solids.js';
@@ -19,7 +20,7 @@ import { sightRange } from './world/culling.js';
 
 function exposeForTesting(extra) {
   Object.assign(window, { THREE, renderer, display, scene, camera, SMALL, U, state, TOTAL, pathAt, groups, ACTORS, BARRA, look, swim, music,
-    constrain, BODY, HIT, bodyGap, PASSERS, inSight, SOLIDS, pushOutOfSolids, sightRange }, extra);
+    constrain, inRock, BODY, HIT, bodyGap, PASSERS, inSight, SOLIDS, pushOutOfSolids, sightRange, reshuffle }, extra);
 }
 
 export { exposeForTesting };

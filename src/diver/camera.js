@@ -4,7 +4,7 @@ import { LEGS, pathAt } from '../dive/route.js';
 import { depthAt } from '../dive/depth.js';
 import { state } from '../dive/state.js';
 import { updateGlide } from './glide.js';
-import { gyro, look, swim, zee } from './input.js';
+import { gyro, look, swim, zee, updateKeys } from './input.js';
 import { REDUCED } from '../engine/device.js';
 import { camera } from '../engine/renderer.js';
 import { U } from '../engine/uniforms.js';
@@ -25,6 +25,7 @@ function updateZoom(dt) {
 
 function updateCamera(dt) {
   const p = pathAt(state.t);
+  updateKeys(dt);   // smooth turning with the arrow keys
   // the route's suggested direction, then your own looking around on top
   const basePitch = Math.asin(clamp(p.fwd.y, -1, 1));
   look.pitch = clamp(look.pitch, -1.55 - basePitch, 1.55 - basePitch);
@@ -32,12 +33,13 @@ function updateCamera(dt) {
   eD.set(look.pitch, look.yaw, 0); qDrag.setFromEuler(eD);
   camera.quaternion.copy(qBase).multiply(qDrag);
   if (gyro.on) camera.quaternion.multiply(gyro.q);
-  if (!REDUCED) { qRoll.setFromAxisAngle(zee, 0.025 * Math.sin(state.t * 0.9)); camera.quaternion.multiply(qRoll); }
+  // a gentle sway (and bob, below) that goes on while you hover
+  if (!REDUCED) { qRoll.setFromAxisAngle(zee, 0.025 * Math.sin(U.time.value * 0.9)); camera.quaternion.multiply(qRoll); }
   if (swim.jolt > 0) { swim.jolt = Math.max(0, swim.jolt - dt * 3); eD.set(rand(-1, 1) * 0.03 * swim.jolt, rand(-1, 1) * 0.03 * swim.jolt, 0, 'XYZ'); qJolt.setFromEuler(eD); camera.quaternion.multiply(qJolt); eD.order = 'YXZ'; }
   camera.updateMatrixWorld();
   updateZoom(dt);
   const pos = updateGlide(dt, p, LEGS[p.si].id);
-  camera.position.copy(pos); if (!REDUCED) camera.position.y += 0.07 * Math.sin(state.t * 1.7);
+  camera.position.copy(pos); if (!REDUCED) camera.position.y += 0.07 * Math.sin(U.time.value * 1.7);
   camera.updateMatrixWorld();
   state.D = depthAt(pos.y); state.stage = p.si;   // the depth where you really are, not where the route is
   return p;

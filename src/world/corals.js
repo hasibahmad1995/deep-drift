@@ -1,5 +1,6 @@
 /* Coral and sponge shapes, and scattering many copies of them on the reef. */
 import * as THREE from '../lib/three.js';
+import { mergeVertices } from '../lib/geometry-utils.js';
 import { DETAIL } from '../engine/device.js';
 import { wet } from '../engine/wet.js';
 import { col, mixc } from '../util/color.js';
@@ -11,8 +12,10 @@ import { addSolidsFor } from './solids.js';
 import { addTiled } from './tiles.js';
 
 /* ---- coral shapes (each is one merged shape, so thousands cost little) ---- */
-// How solid a shape is for the diver (0 to 1 of its widest part): low for airy branches and flat fans. See solids.js.
-const firm = (g, thick) => { g.userData.thick = thick; return g; };
+// Every finished shape passes through here: corners shared by neighbouring faces are joined (mergeVertices), so the
+// graphics card works each out once instead of up to six times. thick = how solid the shape is for the diver
+// (0 to 1 of its widest part): low for airy branches and flat fans. See solids.js.
+const firm = (g, thick) => { const r = g.index ? g : mergeVertices(g, 1e-4); r.userData.thick = thick; return r; };
 function branchGeo(seed, depth = 3) {
   const R = seeded(seed), parts = [];
   const grow = (m, len, r, d) => {
@@ -26,7 +29,7 @@ function branchGeo(seed, depth = 3) {
     }
   };
   grow(new THREE.Matrix4(), 0.36, 0.075, depth);
-  const g = mergeGeo(parts); g.computeVertexNormals();
+  const g = mergeGeo(parts);   // each branch keeps its own round normals
   return firm(paintGeo(g, p => mixc('#8b8b8b', '#ffffff', clamp(p.y / 1.0))), 0.55);
 }
 function brainGeo() {
@@ -80,7 +83,7 @@ function anemoneGeo() {
     const g = new THREE.CylinderGeometry(0.004, 0.022, 0.5, 4, 1, true); g.translate(0, 0.25, 0);
     parts.push(place(g, (R() - 0.5) * 0.14, 0, (R() - 0.5) * 0.14, (R() - 0.5) * 1.6, R() * TAU, (R() - 0.5) * 1.6));
   }
-  const g = mergeGeo(parts); g.computeVertexNormals();
+  const g = mergeGeo(parts);   // keeps each part's round normals
   return firm(paintGeo(g, p => mixc('#b0b0b0', '#ffffff', clamp(p.y / 0.5))), 0.5);
 }
 const fanTexture = canvasTexture(256, 256, (c, w, h) => {
@@ -119,7 +122,7 @@ function whipGeo() {
     for (let k = 0; k <= 6; k++) { const u = k / 6; pts.push(new THREE.Vector3(Math.cos(a) * lean * u * u * h + (R() - 0.5) * 0.04, u * h, Math.sin(a) * lean * u * u * h)); }
     parts.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.018, 5));
   }
-  const g = mergeGeo(parts); g.computeVertexNormals();
+  const g = mergeGeo(parts);   // keeps each part's round normals
   return firm(paintGeo(g, p => mixc('#9a9a9a', '#ffffff', clamp(p.y / 2))), 0.3);
 }
 

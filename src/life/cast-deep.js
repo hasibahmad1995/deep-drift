@@ -20,7 +20,7 @@ import { trenchFloorY } from '../world/trench.js';
 function buildDeepCast() {
   // hatchetfish: a loose school of small mirror-silver fish in the twilight zone
   { const tm = tu(2, 0.5), c = pathAt(tm).pos.clone().add(view(tm, 6, -2, 0));
-    const mat = wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, metalness: 0.6, side: THREE.DoubleSide }), { bend: { mode: 1, amp: 0.1, speed: 10, wave: 5, len: 0.18 } });
+    const mat = wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.2, metalness: 0.6, side: THREE.DoubleSide }), { bend: { mode: 1, amp: 0.1, speed: 30, wave: 5, len: 0.18 } });   // tiny fish: quick tail beats (about 5 a second)
     const sch = new School(hatchetGeo(), mat, 70, { center: [c.x, c.y, c.z], radius: 3, omega: 0.3, phase: 0, spread: 2, scale: 0.45, colors: ['#e8f0f4', '#d0dce4'], rise: 1, name: 'Hatchetfish' });
     scene.add(sch.mesh); ACTORS.push({ obj: null, update: t => sch.update(t) }); pseudo('Hatchetfish', c, 10); }
   // a vampire squid near the bottom of the twilight zone, and a gulper eel in the midnight zone (both sink with you as they pass)

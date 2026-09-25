@@ -35,7 +35,7 @@ This writes `dist/` with only the files a visitor needs. Upload that folder to a
 | `assets/` | The barramundi model and its pictures; the fonts (SIL Open Font License) |
 | `tools/` | Local server, build, vendoring; `fish-model/` holds the Node scripts used once to shrink the fish model |
 | `tests/` | Playwright screenshot and behaviour checks |
-| `docs/` | The git tracking guide (PDF) and the script that makes it |
+| `docs/` | The git tracking guide (PDF), a report after every fix (`docs/reports/`), Claude's notes (`claude-notes.md`), and the scripts that make the PDFs |
 
 ## Tests
 
@@ -47,7 +47,8 @@ python tests/ui.py                # phone and desktop menus
 python tests/live.py              # live play: pause, restart, music
 python tests/glide.py             # the gliding swim: steering, never rising, the roaming limit
 python tests/solid.py             # nothing passes through the diver, nothing pops in or out, no jumps
-python tests/startup.py           # how fast the page opens, freezes, shaders built too late
+python tests/startup.py           # how fast the page opens, freezes, shaders built too late (--gpu: real graphics card)
+python tests/life.py              # pause keeps the sea moving, a new dive each time, smooth keys, school surges
 ```
 
 ## Credits

@@ -1,7 +1,8 @@
 /* Random visitors: animals and schools that swim right past the diver every few seconds.
    Each kind only appears between the depths where it really lives (minD, maxD in metres), and some only near a place.
    Nothing pops in or out: a visitor starts somewhere you cannot see it (outside the screen, or so far that the water
-   hides it), swims across, and is taken away only once it is out of sight again. Its path never goes through rock. */
+   hides it), swims across, and is taken away only once it is out of sight again. Its path never goes through rock.
+   Visitors keep coming while the diver hovers (paused): they are timed by the sea's own clock (state.life). */
 import * as THREE from '../lib/three.js';
 import { pathAt } from '../dive/route.js';
 import { swim } from '../diver/input.js';
@@ -16,7 +17,7 @@ import { makeCreature } from './creature.js';
 import { makeJelly } from './jelly.js';
 import { orient } from './motion.js';
 import { School } from './school.js';
-import { shrimpGeo, smallFishGeo } from './small-shapes.js';
+import { SMALL_FISH_SWIM, shrimpGeo, smallFishGeo } from './small-shapes.js';
 import { SPECIES } from './species.js';
 import { GRENADIER, hatchetGeo } from './species-deep.js';
 import { makeTurtle } from './turtle.js';
@@ -25,7 +26,7 @@ import { sightRange } from '../world/culling.js';
 import { UP } from '../world/layout.js';
 import { seafloorY } from '../world/terrain.js';
 
-const PASSERS = { indiv: [], swarms: [], next: 8, lastT: 0 };
+const PASSERS = { indiv: [], swarms: [], next: 8, lastT: 0 };   // next: in the sea's own time (state.life)
 const LONGEST = 24;    // seconds: the longest a visitor may take to reach the diver
 
 /* ---- can the diver see this spot right now? ---- */
@@ -48,7 +49,7 @@ const sizeOf = obj => { const b = new THREE.Box3().setFromObject(obj), f = (lo, 
 
 function initPassers(M) {
   const V = () => new THREE.Vector3(), D = Math.max(DETAIL, 0.5);
-  const small = wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide }), { bend: { mode: 1, amp: 0.14, speed: 12, wave: 6, len: 0.18 } });
+  const small = wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4, metalness: 0.1, side: THREE.DoubleSide }), { bend: SMALL_FISH_SWIM });
   const indiv = (name, make, speed, count, lim) => {
     for (let i = 0; i < count; i++) {
       const obj = make(), size = sizeOf(obj); obj.visible = false; scene.add(obj);
@@ -102,12 +103,12 @@ const spF = new THREE.Vector3(), spR = new THREE.Vector3(), spU = new THREE.Vect
 const jit = { r: 0, u: 0, f: 0 };
 // Where the diver will be in s seconds, with the visitor's small offset from that spot.
 function meetPoint(s, out) {
-  out.copy(pathAt(state.t + s).pos).add(swim.off);
+  out.copy(pathAt(state.t + (state.playing ? s : 0)).pos).add(swim.off);   // hovering: the diver stays where they are
   return out.addScaledVector(spR, jit.r).addScaledVector(spU, jit.u).addScaledVector(spF, jit.f);
 }
 // The straight path from start to well past the meeting point stays out of rock.
 function pathClear(start, vel, s) {
-  for (let k = 0; k <= 8; k++) { probe.copy(start).addScaledVector(vel, s * 1.6 * k / 8); if (inRock(probe)) return false; }
+  for (let k = 0; k <= 8; k++) { probe.copy(start).addScaledVector(vel, s * 1.6 * k / 8); if (inRock(probe, 1)) return false; }
   return true;
 }
 /* Finds how long before the meeting the visitor must set off so that it starts out of sight. Sets spT (meeting point)
@@ -135,7 +136,7 @@ function spawnPasser(p) {
     if (Math.random() < 0.6) spV.copy(spR).multiplyScalar(Math.random() < 0.5 ? 1 : -1).addScaledVector(spF, rand(-0.3, 0.3)); else spV.copy(spF).negate().addScaledVector(spR, rand(-0.25, 0.25));
     spV.y *= 0.3; spV.normalize().multiplyScalar(sp);
     const s = planPath(spV, a.size, rand(3, 5)); if (!s) return;
-    const L = a.sch.cfg.line; L.vel.copy(spV); L.start.copy(spS); L.t0 = state.t;
+    const L = a.sch.cfg.line; L.vel.copy(spV); L.start.copy(spS); L.t0 = state.t + (a.lag || 0);   // in the school's own clock
     a.sch.fish.forEach(f => { f.off.set(0, 0, 0); f.vel.set(0, 0, 0); }); a.sch.mesh.visible = true; a.sch.away = false; a.active = true; a.meetIn = s;
   } else {
     const a = ind[Math.floor(Math.random() * ind.length)];
@@ -143,16 +144,16 @@ function spawnPasser(p) {
     spV.copy(spR).multiplyScalar(Math.random() < 0.5 ? 1 : -1).addScaledVector(spF, rand(-0.3, 0.4)).normalize().multiplyScalar(a.speed);
     if (a.name === 'Jellyfish') spV.set(spV.x * 0.5, 0.25, spV.z * 0.5);
     const s = planPath(spV, a.size, rand(3.5, 6)); if (!s) return;
-    a.vel.copy(spV); a.start.copy(spS); a.t0 = state.t; a.meetIn = s; a.react = null; a.active = true; a.obj.visible = true;
+    a.vel.copy(spV); a.start.copy(spS); a.t0 = state.t + (a.lag || 0); a.meetIn = s; a.react = null; a.active = true; a.obj.visible = true;
     a.obj.position.copy(spS);
   }
 }
 function runPassers(p) {
   if (!state.started) return;
   updateView();
-  if (state.t < PASSERS.lastT - 1) { deactivatePassers(); PASSERS.next = state.t + 3; }   // the dive started over
+  if (state.t < PASSERS.lastT - 1) { deactivatePassers(); PASSERS.next = state.life + 3; }   // the dive started over
   PASSERS.lastT = state.t;
-  if (state.playing && state.t >= PASSERS.next) { spawnPasser(p); PASSERS.next = state.t + rand(5, 11); }
+  if (state.life >= PASSERS.next) { spawnPasser(p); PASSERS.next = state.life + rand(5, 11); }
 }
 
 export { PASSERS, deactivatePassers, initPassers, spawnPasser, runPassers, inSight };

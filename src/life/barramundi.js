@@ -10,7 +10,7 @@ import { smallFishGeo } from './small-shapes.js';
 
 const BARRA = { model: null };   // { geometry, material } once ready
 const BARRA_TURN = -Math.PI / 2;
-const SWIM = { mode: 1, amp: 0.09, speed: 8, wave: 5.5 };
+const SWIM = { mode: 1, amp: 0.08, speed: 13, wave: 5.5 };   // about 2 tail beats a second: right for a fish this size at about 1 m/s
 
 function texFrom(uri, srgb) {
   const t = new THREE.Texture(); t.flipY = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; if (srgb) t.colorSpace = THREE.SRGBColorSpace;
