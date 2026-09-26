@@ -17,7 +17,7 @@ function togglePause() {
 
 // Begin: the intro card fades away over the live picture, and this dive's version of every animal is rolled.
 function beginDive() {
-  const intro = $('intro'); intro.classList.add('leaving');
+  const intro = $('intro'); intro.classList.add('leaving'); document.body.classList.remove('home');
   setTimeout(() => { if (intro.classList.contains('leaving')) intro.hidden = true; }, 800);
   reshuffle(); musicAtBegin();
   state.started = true; state.playing = !REDUCED; $('btnPause').textContent = state.playing ? 'Pause' : 'Play';
@@ -32,7 +32,7 @@ function goHome() {
   PASSERS.lastT = 0; deactivatePassers(); ACTORS.forEach(a => { a.lag = 0; });
   $('btnPause').textContent = 'Pause';
   ['journal', 'credits'].forEach(id => { $(id).hidden = true; });
-  const intro = $('intro'); intro.hidden = false;
+  const intro = $('intro'); intro.hidden = false; document.body.classList.add('home');
   requestAnimationFrame(() => intro.classList.remove('leaving'));   // fades back in
   $('btnBegin').focus();
 }

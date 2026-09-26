@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="styles/fonts.css">
 <link rel="stylesheet" href="styles/main.css">
 </head>
-<body>
+<body class="home">
 
 <canvas id="gl" aria-label="First-person underwater dive. Drag to look around."></canvas>
 <canvas id="hose" aria-hidden="true"></canvas>
@@ -52,15 +52,21 @@
 </div>
 <div id="live" class="sr" aria-live="polite"></div>
 
+<!-- the start screen: written here in full, so it appears the moment the page opens (the code only fills the progress bar) -->
 <div id="intro">
-  <div>
+  <div class="introCard">
+    <p class="eyebrow">An interactive ocean dive</p>
     <h1 id="siteName">Deep Drift</h1>
-    <p id="tagline"></p>
-    <p class="small">You are the diver, sinking slowly from the surface to the deepest place in the ocean. Drag to look around: you drift toward wherever you look. You can never swim back up, so aim early for anything you want to see, and look up to sink more slowly. Pinch or scroll to zoom. Touch an animal and it will dart away.</p>
-    <p class="small hint"><b>Controls:</b> move the mouse to the left edge of the screen (or tap the small handle there) for Recenter view, Pause, Music and Zoom. Click <b>Deep Drift</b> at the top at any time to come back here and start a new dive; every dive is a little different.</p>
+    <p class="tagline">Descend from sunlight into the deepest dark on Earth.</p>
+    <ul class="howto" aria-label="How to play">
+      <li><b>Drag</b> to look and swim</li>
+      <li><b>Left edge</b> for controls</li>
+      <li><b>Deep Drift</b> to start over</li>
+    </ul>
+    <button class="btn primary" id="btnBegin" type="button" disabled>Begin the dive</button>
+    <div class="progress" id="loadProgress" aria-hidden="true"><span id="loadBar"></span></div>
     <p id="loadMsg" role="status">Loading the ocean...</p>
-    <p><button class="btn primary" id="btnBegin" type="button" disabled>Begin the dive</button></p>
-    <p class="small"><a href="#" id="linkBlog">Read the blog</a> &nbsp;|&nbsp; <a href="#" id="linkCredits">About the pictures and credits</a></p>
+    <p class="links"><a href="#" id="linkBlog">Blog</a><span aria-hidden="true">&middot;</span><a href="#" id="linkCredits">About and credits</a></p>
   </div>
 </div>
 
