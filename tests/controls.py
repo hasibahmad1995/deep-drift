@@ -2,7 +2,7 @@
   1. Zoom: presses step smoothly up to the top and then back down (never a jump from the top to 1x); holding zooms smoothly.
   2. Turning: left and right is always around the true vertical (the horizon stays level), also where the dive heads
      steeply down and while paused.
-  3. Side panel: its buttons are hidden until you hover over it.
+  3. Side panel: its buttons are hidden until you hover over it; while closed it never blocks a swipe (v1.5.2).
   4. Home: Deep Drift at the top goes back to the start screen; Begin starts a new dive; there is no Restart button.
   5. Variety: scripted animals meet you at different depths each dive, but only within the depths where they live.
 Usage: python tests/controls.py      (exit code 1 if something is wrong)"""
@@ -64,6 +64,34 @@ def main():
         pg.mouse.move(700, 400); pg.wait_for_timeout(400)
         print("3. side panel: away", hidden, "| hovering", shown)
         if hidden != "hidden" or shown != "visible": bad.append("side panel does not hide and show on hover")
+        # 3b. the closed panel must not block turning: its old invisible box used to swallow swipes on the left edge
+        pg.evaluate("look.yaw = 0; look.pitch = 0")
+        box = pg.evaluate("(() => { const r = document.getElementById('dockBody').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; })()")
+        over = pg.evaluate(f"document.elementFromPoint({box['x']}, {box['y']}).id")
+        pg.mouse.move(box["x"], box["y"]); pg.mouse.down(); pg.mouse.move(box["x"] + 120, box["y"], steps=6); pg.mouse.up()
+        yaw = pg.evaluate("look.yaw"); pg.evaluate("look.yaw = 0")
+        print("3b. closed panel area: element there =", over, "| swipe turned the view by", round(yaw, 2))
+        if over == "dock" or over == "dockBody" or yaw < 0.3: bad.append("the closed side panel still blocks swipes")
+        pg.hover("#dockTab"); pg.wait_for_timeout(400)
+        pg.mouse.move(60, 400, steps=8); pg.wait_for_timeout(400)   # from the handle across to a button
+        still = pg.evaluate("getComputedStyle(document.getElementById('dockBody')).visibility")
+        pg.hover("#btnPause"); pg.wait_for_timeout(300)
+        reach = pg.evaluate("document.elementFromPoint(...(() => { const r = document.getElementById('btnPause').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()).id")
+        print("   reaching a button from the handle: panel", still, "| button under the mouse:", reach)
+        if reach != "btnPause": bad.append("the side panel closes on the way to a button")
+        pg.mouse.move(700, 400); pg.wait_for_timeout(400)
+        # 3c. touch: the handle opens and closes it, a tap elsewhere closes it, and a finger swipe on the closed area turns
+        tb = b.new_context(viewport={"width": 420, "height": 800}, has_touch=True, is_mobile=True)
+        tp = tb.new_page(); tp.route("**/*", shot.route); tp.goto(shot.URL)
+        tp.wait_for_selector("#btnBegin:not([disabled])", timeout=60000); tp.tap("#btnBegin"); tp.wait_for_timeout(1000)
+        tp.evaluate("window.__hold = true")
+        tp.tap("#dockTab"); tp.wait_for_timeout(400)
+        t_open = tp.evaluate("getComputedStyle(document.getElementById('dockBody')).visibility")
+        tp.tap("#dockTab"); tp.wait_for_timeout(400)
+        t_shut = tp.evaluate("getComputedStyle(document.getElementById('dockBody')).visibility")
+        print("3c. touch: after tapping the handle", t_open, "| tapping again", t_shut)
+        if t_open != "visible" or t_shut != "hidden": bad.append("the handle does not open and close the panel on touch")
+        tb.close()
         # 4. home button and no Restart
         pg.evaluate("window.__hold = false; state.playing = true"); pg.wait_for_timeout(500)
         pg.click("#brand"); pg.wait_for_timeout(1000)

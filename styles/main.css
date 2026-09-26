@@ -37,14 +37,19 @@ a { color: var(--accent); }
 .brand:hover { background: rgba(20, 70, 100, 0.5); }
 
 /* ---- the side panel on the left edge: Pause, Music, Zoom. Hidden until you hover over it (or tap its handle) ---- */
-#dock { position: fixed; z-index: 12; left: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 10px; padding: 24px 24px 24px 0; }
-.dockTab { width: 16px; height: 72px; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer;
+#dock { position: fixed; z-index: 12; left: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; pointer-events: none; }   /* the box itself never catches touches, so swipes on the left edge still turn you */
+.dockTab { pointer-events: auto; width: 16px; height: 72px; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer;
   background: rgba(6, 28, 48, 0.72); border: 1px solid var(--line); border-left: 0; border-radius: 0 10px 10px 0; }
 .dockTab span { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-soft); }
-#dockBody { display: flex; flex-direction: column; align-items: stretch; gap: 8px; opacity: 0; visibility: hidden; transform: translateX(-14px);
+#dockBody { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 24px 24px 24px 10px; pointer-events: none; opacity: 0; visibility: hidden; transform: translateX(-14px);
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s; }
-#dock:hover #dockBody, #dock:focus-within #dockBody, #dock.open #dockBody { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
-#dock:hover .dockTab, #dock.open .dockTab { background: rgba(20, 70, 100, 0.85); }
+#dock.open #dockBody, #dock:has(:focus-visible) #dockBody { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; pointer-events: auto; }
+#dock.open .dockTab { background: rgba(20, 70, 100, 0.85); }
+/* hover only on screens with a real mouse: on a touch screen a tap leaves :hover stuck on, which kept the panel open */
+@media (hover: hover) {
+  #dock:hover #dockBody { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; pointer-events: auto; }
+  #dock:hover .dockTab { background: rgba(20, 70, 100, 0.85); }
+}
 #dockBody .btn { min-width: 9.5rem; text-align: left; }
 @media (prefers-reduced-motion: reduce) { #dockBody { transition: none; } }
 #bar nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
