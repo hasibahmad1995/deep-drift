@@ -98,4 +98,9 @@ function pop() {   // a tiny bubble sound for a touch (only if the music is on)
   o.connect(g); g.connect(music.bus); o.start(st); o.stop(st + 0.2);
 }
 
-export { music, toggleMusic, pop };
+// The home screen is quiet: going home stops the music, and the next Begin brings it back if it was playing.
+const home = { wasOn: false };
+function musicAtHome() { home.wasOn = music.on; if (music.on) toggleMusic(); }
+function musicAtBegin() { if (home.wasOn && !music.on) toggleMusic(); home.wasOn = false; }
+
+export { music, toggleMusic, musicAtHome, musicAtBegin, pop };
