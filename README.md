@@ -50,6 +50,7 @@ python tests/solid.py             # nothing passes through the diver, nothing po
 python tests/startup.py           # how fast the page opens, freezes, shaders built too late (--gpu: real graphics card)
 python tests/life.py              # pause keeps the sea moving, a new dive each time, smooth keys, school surges
 python tests/controls.py          # zoom, level turning, the side panel, the home button, animals only at their depths
+python tests/load.py --cloudlike  # first-visit loading speed (start node tests/cloudlike_server.mjs first)
 ```
 
 ## Credits
