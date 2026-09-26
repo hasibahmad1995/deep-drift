@@ -498,6 +498,86 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="ui: move Recenter view into the side panel",
+        version="", lane="feature",
+        title="Recenter view moves into the side panel",
+        what="Hasib's first change made by himself, as a lesson: the Recenter view button moved from the top row into the side panel on the left edge, with its hidden label and the start-screen hint updated, and the phone Menu no longer closing for it.",
+        files=["<code>index.html</code>, <code>src/ui/panels.js</code>"],
+        state="Recenter view sits in the side panel.",
+        checks="Tried in the browser; menu and live tests pass.",
+        status="Kept",
+    ),
+    dict(
+        subject="audio: music is off on the home screen and comes back on Begin if it was playing",
+        version="", lane="feature",
+        title="A quiet home screen",
+        what="Going back to the start screen stops the music; pressing Begin brings it back only if it was playing before.",
+        files=["<code>src/audio/music.js</code>, <code>src/ui/playback.js</code>"],
+        state="Music stops at home.",
+        checks="Checked: on, home (off), Begin (on); off before home stays off.",
+        status="Kept",
+    ),
+    dict(
+        subject="build: cache the 3D library, fish model and fonts for return visits; add a loading-speed test",
+        version="", lane="feature",
+        title="Faster return visits; measuring loading",
+        what="Measured first-visit loading on a slowed connection with the files compressed like Cloudflare does: 1.2 MB, about 3 s to download at 9 Mbit/s; the real wait is building the world (about 3 s on Hasib's laptop). A list of early downloads was tried and gave no gain, so it was left out. Kept: cache rules (<code>_headers</code>) so returning visitors keep the 3D library, the fish model and the fonts for a day.",
+        files=["<code>tools/build.py</code>, new <code>tests/load.py</code>, <code>tests/cloudlike_server.mjs</code>"],
+        state="Same dive; return visits load faster.",
+        checks="load.py measured before and after.",
+        status="Kept",
+    ),
+    dict(
+        subject="ui: a clean start screen that appears at once, with a progress bar",
+        version="", lane="feature",
+        title="A clean start screen that appears at once",
+        what="The long paragraph and the controls box are gone. The start screen shows a small line (An interactive ocean dive), the title, the subtitle Descend from sunlight into the deepest dark on Earth., three short hints, and Begin with a slim progress bar. It is written in the page itself, so it appears before any code runs. Nothing else shows behind it.",
+        files=["<code>index.html</code>, <code>styles/main.css</code>, <code>src/main.js</code>, <code>src/config.js</code>, <code>src/ui/playback.js</code>"],
+        state="New start screen.",
+        checks="Pictures while loading, ready, in the dive and home again; all tests pass.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: describe v1.5.1 and add a commit log",
+        version="", lane="feature",
+        title="A commit log",
+        what="<code>docs/commit-log.md</code> lists every commit and whether it is uploaded to GitHub and live; <code>tools/commit_log.py</code> rebuilds the table from git. CLAUDE.md describes publishing and the new rules.",
+        files=["<code>CLAUDE.md</code>, <code>README.md</code>, <code>docs/claude-notes.md</code>, <code>docs/make_report.py</code>, <code>docs/commit-log.md</code>, <code>tools/commit_log.py</code>"],
+        state="Same as the commit before.",
+        checks="Read through.",
+        status="Kept",
+    ),
+    dict(
+        subject="release: set the version to 1.5.1",
+        version="", lane="feature",
+        title="Set the version number to 1.5.1",
+        what="The last step on the branch before merging: <code>package.json</code> says 1.5.1. Small improvements get the third number.",
+        files=["<code>package.json</code>"],
+        state="Same as the commit before.",
+        checks="None needed.",
+        status="Kept",
+    ),
+    dict(
+        subject="v1.5.1: a clean start screen, Recenter view in the side panel, a quiet home screen",
+        version="v1.5.1", merge=True,
+        title="Release v1.5.1: merge the branch into main",
+        what="The merge commit that brings the six commits of <code>feature/start-screen</code> into <code>main</code>, tagged <code>v1.5.1</code>.",
+        files=["Everything changed on the branch (the six rows above it)."],
+        state="v1.5.1: new start screen, Recenter in the side panel, quiet home screen.",
+        checks="All tests passed on the branch before merging.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: update the tracking guide and commit log for v1.5.1",
+        version="", lane="main",
+        title="Update this guide and the commit log for v1.5.1",
+        what="New rows for v1.5.1.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>, <code>docs/commit-log.md</code>"],
+        state="Same as v1.5.1.",
+        checks="PDF opened and read through.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)
@@ -715,11 +795,12 @@ so an old version would not come back byte for byte.</td></tr>
 <p>The project file <code>package.json</code> said <code>0.4.0</code> before git was set up. A number starting with 0 usually means
 "still being built". You chose to call the current dive <b>v1.0</b>: the first saved version. <code>package.json</code> was
 changed to <code>1.0.0</code> so everything agrees.</p>
-<p>The rule from now on (<b>vMAJOR.MINOR</b>):</p>
+<p>The rule from now on (<b>vMAJOR.MINOR</b>, plus a third number for small fixes):</p>
 <ul>
 <li><b>MINOR goes up by one</b> for each finished, tested change to the dive: v1.1 (the realism work), v1.2 (the continuous dive), and so on.
 After v1.9 comes v1.10, not v2.0.</li>
 <li><b>MAJOR goes up</b> (v2.0) only for a very big change you decide on, for example a full redesign.</li>
+<li><b>The third number goes up</b> for a set of small improvements, like v1.5.1 (a new start screen, a button moved, music quiet at home). A single tiny change does not need a number at all: it is still a saved commit you can go back to.</li>
 <li><b>No new number</b> for commits that do not change the dive: this guide, test fixes, notes. They still get a row in the
 table, with "none" as the version.</li>
 <li>If a version is undone, its number is <b>not reused</b>. The next change takes the next number, so a number always means one thing.</li>

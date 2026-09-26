@@ -5,10 +5,11 @@ website. Claude reads this to know what is done and where to pick up. The table 
 `python tools/commit_log.py` (run it after committing and again after uploading); the notes below are written by hand.
 
 ## Where we are
-- Working on branch `feature/start-screen`, which becomes **v1.5.1**: Recenter view in the side panel, a clean start
-  screen that appears at once, music off on the home screen, caching for faster return visits.
-- Next after uploading: merge into `main`, tag `v1.5.1`, upload (`git push origin --all`, `git push origin --tags`),
-  check the live site, run `python tools/commit_log.py` again so the table shows Uploaded and Live.
+- **v1.5.1 is finished on this computer** (merged into `main`, tagged `v1.5.1`): Recenter view in the side panel, a clean
+  start screen that appears at once, music off on the home screen, caching for faster return visits.
+- **Next: upload it** (`git push origin --all`, then `git push origin --tags`). Cloudflare then publishes it; check the
+  live site, then run `python tools/commit_log.py` so the table shows Uploaded and Live.
+- After that: v1.6, animal behaviour (see CLAUDE.md, Known weak spots).
 
 ## How to read the table
 - **Uploaded:** GitHub has this commit. **no** means it is only on this computer so far.
@@ -18,6 +19,9 @@ website. Claude reads this to know what is done and where to pick up. The table 
 <!-- TABLE START (made by tools/commit_log.py) -->
 | Date | Commit | Branch | Version | What changed | Uploaded | Live |
 |---|---|---|---|---|---|---|
+| 26 Sep 2026 | `1a9359f` | main | v1.5.1 | v1.5.1: a clean start screen, Recenter view in the side panel, a quiet home screen | **no** | no |
+| 26 Sep 2026 | `1acbe68` | feature/start-screen |  | release: set the version to 1.5.1 | **no** | no |
+| 26 Sep 2026 | `931c81c` | feature/start-screen |  | docs: describe v1.5.1 and add a commit log | **no** | no |
 | 26 Sep 2026 | `68cd156` | feature/start-screen |  | ui: a clean start screen that appears at once, with a progress bar | **no** | no |
 | 26 Sep 2026 | `abb9c0e` | feature/start-screen |  | build: cache the 3D library, fish model and fonts for return visits; add a loading-speed test | **no** | no |
 | 26 Sep 2026 | `7e7028c` | feature/start-screen |  | audio: music is off on the home screen and comes back on Begin if it was playing | **no** | no |
