@@ -19,7 +19,6 @@
   <button class="brand" id="brand" type="button" title="Back to the start screen for a new dive">Deep Drift</button>
   <button class="btn" id="btnMenu" type="button" aria-expanded="false" aria-controls="sheet" hidden>Menu</button>
   <nav id="controls" aria-label="Controls">
-    <button class="btn" id="btnRecenter" type="button">Recenter view</button>
     <button class="btn" id="btnMotion" type="button" aria-pressed="false" hidden>Motion look: off</button>
     <button class="btn" id="btnBlog" type="button">Blog</button>
     <button class="btn" id="btnCredits" type="button">Credits</button>
@@ -27,8 +26,9 @@
 </header>
 <!-- the side panel on the left edge: shows its buttons when you hover over it (or tap its handle on a touch screen) -->
 <nav id="dock" aria-label="Dive controls">
-  <button class="dockTab" id="dockTab" type="button" aria-expanded="false" aria-controls="dockBody" aria-label="Dive controls: pause, music and zoom"><span></span><span></span><span></span></button>
+  <button class="dockTab" id="dockTab" type="button" aria-expanded="false" aria-controls="dockBody" aria-label="Dive controls: recenter view, pause, music and zoom"><span></span><span></span><span></span></button>
   <div id="dockBody">
+    <button class="btn" id="btnRecenter" type="button">Recenter view</button>
     <button class="btn" id="btnPause" type="button">Pause</button>
     <button class="btn" id="btnMusic" type="button" aria-pressed="false">Music: off</button>
     <button class="btn" id="btnZoom" type="button" title="Press to zoom a step; hold to zoom smoothly">Zoom in: 1.0x</button>
@@ -57,7 +57,7 @@
     <h1 id="siteName">Deep Drift</h1>
     <p id="tagline"></p>
     <p class="small">You are the diver, sinking slowly from the surface to the deepest place in the ocean. Drag to look around: you drift toward wherever you look. You can never swim back up, so aim early for anything you want to see, and look up to sink more slowly. Pinch or scroll to zoom. Touch an animal and it will dart away.</p>
-    <p class="small hint"><b>Controls:</b> move the mouse to the left edge of the screen (or tap the small handle there) for Pause, Music and Zoom. Click <b>Deep Drift</b> at the top at any time to come back here and start a new dive; every dive is a little different.</p>
+    <p class="small hint"><b>Controls:</b> move the mouse to the left edge of the screen (or tap the small handle there) for Recenter view, Pause, Music and Zoom. Click <b>Deep Drift</b> at the top at any time to come back here and start a new dive; every dive is a little different.</p>
     <p id="loadMsg" role="status">Loading the ocean...</p>
     <p><button class="btn primary" id="btnBegin" type="button" disabled>Begin the dive</button></p>
     <p class="small"><a href="#" id="linkBlog">Read the blog</a> &nbsp;|&nbsp; <a href="#" id="linkCredits">About the pictures and credits</a></p>
