@@ -11,11 +11,11 @@ import { clamp, rand } from '../util/math.js';
 /* ---- the diver's hand: anything inside this small ball (in front of the mask) is "touched" ---- */
 const TOUCH = { point: new THREE.Vector3(), r: 0.75, hit: () => {} };
 /* How big each animal is: len = body length, rad = body thickness (radius), wide = half its width if it is flat and
-   wide (a manta's wings). flee = how fast it swims aside, k = how quickly it calms down afterwards.
+   wide (a manta's wings), at = how far its middle is from the model's centre toward the nose (a manta's disc sits ahead of its tail). flee = how fast it swims aside, k = how quickly it calms down afterwards.
    shy = how close (m) it lets the diver come before it moves off. heavy = pushes the diver instead of being pushed. */
 const HIT = {
   'Blacktip reef shark': { len: 1.7, rad: 0.3, flee: 2.4, k: 1.3, shy: 2.0 }, 'Green sea turtle': { len: 0.9, rad: 0.45, flee: 1.4, k: 1.5, shy: 1.0 },
-  'Giant manta ray': { len: 2.5, rad: 0.5, wide: 2.3, flee: 1.8, k: 1.0, shy: 1.2, heavy: true },
+  'Giant manta ray': { len: 3.6, at: 1.6, rad: 0.5, wide: 2.9, flee: 2.4, k: 1.0, shy: 4, heavy: true },   // len, at and wide match the drawn disc (about 5.9 m across); it starts turning away 4 m before you touch
   'Whale shark': { len: 7, rad: 1.1, flee: 0.9, k: 0.7, shy: 0.8, heavy: true }, 'Great white shark': { len: 3.6, rad: 0.6, flee: 2.0, k: 1.0, shy: 2.5 },
   'Humpback whale': { len: 10, rad: 1.5, flee: 0.6, k: 0.6, shy: 1.0, heavy: true }, 'Sperm whale': { len: 10, rad: 1.5, flee: 0.6, k: 0.6, shy: 1.0, heavy: true },
   'Dolphin': { len: 2, rad: 0.35, flee: 3.2, k: 1.2, shy: 1.5 }, 'Jellyfish': { len: 0, rad: 0.75, flee: 0.9, k: 1.2, shy: 0 },
@@ -25,7 +25,7 @@ const HIT = {
   'Gulper eel': { len: 0.75, rad: 0.1, flee: 1.2, k: 1.5, shy: 1.0 }, 'Grenadier fish': { len: 0.8, rad: 0.15, flee: 1.6, k: 1.3, shy: 1.5 },
   'Tripod fish': { len: 0.3, rad: 0.12, flee: 1.5, k: 1.4, shy: 1.2 }
 };
-const rA = new THREE.Vector3(), rP1 = new THREE.Vector3(), rD = new THREE.Vector3(), rN = new THREE.Vector3(), rQ = new THREE.Quaternion(), rE = new THREE.Euler(0, 0, 0, 'YZX');
+const rC = new THREE.Vector3(), rA = new THREE.Vector3(), rP1 = new THREE.Vector3(), rD = new THREE.Vector3(), rN = new THREE.Vector3(), rQ = new THREE.Quaternion(), rE = new THREE.Euler(0, 0, 0, 'YZX');
 const inv = new THREE.Quaternion(), rel = new THREE.Vector3(), away = new THREE.Vector3(), shove = new THREE.Vector3();
 
 // The point of the animal's body closest to p (its body is a line along its length, see HIT), into out.
@@ -33,6 +33,7 @@ const inv = new THREE.Quaternion(), rel = new THREE.Vector3(), away = new THREE.
 function bodyGap(o, h, sc, p, out) {
   if (h.len > 0) {
     rA.set(1, 0, 0).applyQuaternion(o.quaternion).multiplyScalar(h.len * 0.5 * sc); rP1.copy(o.position).sub(rA);
+    if (h.at) rP1.addScaledVector(rC.set(1, 0, 0).applyQuaternion(o.quaternion), h.at * sc);   // the body's middle is not the model's centre
     rD.copy(rA).multiplyScalar(2); const t = clamp(rN.copy(p).sub(rP1).dot(rD) / rD.lengthSq()); out.copy(rP1).addScaledVector(rD, t);
   } else out.copy(o.position);
   if (!h.wide) return out.distanceTo(p) - h.rad * sc;

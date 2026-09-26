@@ -8,7 +8,7 @@ import { wet } from '../engine/wet.js';
 import { ACTORS } from './actors.js';
 import { BARRA } from './barramundi.js';
 import { makeCreature } from './creature.js';
-import { makeJelly } from './jelly.js';
+import { jellyAt, jellyDepth, makeJelly } from './jelly.js';
 import { clearPath, orbit, passBy, view } from './motion.js';
 import { vary } from './variety.js';
 import { School } from './school.js';
@@ -52,15 +52,15 @@ function buildLife() {
   passBy(makeCreature(SPECIES.whaleshark), tu(1, 0.35), view(tu(1, 0.35), 5, 16, -1), view(tu(1, 0.35), 0, -1.3, 0), 'Whale shark', 40);
   passBy(makeCreature(SPECIES.greatwhite), tu(1, 0.68), view(tu(1, 0.68), 6, -12, -2), view(tu(1, 0.68), -0.2, 1.2, 0), 'Great white shark', 34);
   passBy(makeCreature(SPECIES.humpback), tu(1, 0.92), view(tu(1, 0.92), 8, 26, -5), view(tu(1, 0.92), 0, -1.4, 0), 'Humpback whale', 60);
-  // jellyfish drift up through the twilight and midnight water
+  // jellyfish hang and wander in the twilight and midnight water
   const jelly = (si, u0, u1, n, hue, glow) => {
     for (let i = 0; i < n; i++) {
       const j = makeJelly(hue + rand(-0.05, 0.05), glow), s = rand(0.6, 1.5), meet = new THREE.Vector3(); let tm = 0;
       j.scale.setScalar(s);
-      const drift = (t, out) => out.set(meet.x, meet.y + (t - tm) * 0.18, meet.z), actor = { active: true };
-      vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(si, lerp(u0, u1, Math.random())); meet.copy(pathAt(tm).pos).add(view(tm, rand(4, 16), rand(-9, 9), rand(-4, 5))); actor.active = clearPath(drift, tm - 60, tm + 60, 1, 1.3); } });   // a new spot each dive, clear of rock (or none)
+      const drift = (t, out) => jellyAt(meet, t - tm, i, out), actor = { active: true };
+      vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(si, lerp(u0, u1, Math.random())); meet.copy(pathAt(tm).pos).add(view(tm, rand(4, 16), rand(-9, 9), rand(-4, 5))); meet.y = jellyDepth(meet.y, s); actor.active = clearPath(drift, tm - 60, tm + 60, 1, 1.3); } });   // a new spot each dive, clear of rock (or none)
       scene.add(j);
-      ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 12, cyclic: true, update(t) { j.position.set(meet.x + Math.sin(t * 0.13 + i) * 0.6, meet.y + (t - tm) * 0.18, meet.z + Math.cos(t * 0.11 + i) * 0.6); } }));
+      ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 12, cyclic: true, update(t) { jellyAt(meet, t - tm, i, j.position); } }));
     }
   };
   jelly(2, 0.0, 1.0, SMALL ? 9 : 16, 0.85, 0.5);    // twilight zone

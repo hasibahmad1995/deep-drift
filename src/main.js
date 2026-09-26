@@ -23,6 +23,7 @@ import { buildLife } from './life/cast.js';
 import { buildExtras } from './life/extras.js';
 import { buildDeepCast } from './life/cast-deep.js';
 import { runPassers } from './life/passers.js';
+import { keepInWater } from './life/surface.js';
 import { TOUCH, HIT, reactActor } from './life/touch.js';
 import { updateBubbles } from './diver/bubbles.js';
 import { recenter, toggleMotion } from './diver/input.js';
@@ -79,7 +80,7 @@ function step(dt) {
     a.update(state.t + (a.lag || 0));
     if (a.obj) {
       a.obj.visible = a.obj.position.distanceToSquared(camera.position) <= 90000 && a.active !== false;
-      if (a.obj.visible) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); }
+      if (a.obj.visible) { if (a.hit === undefined) a.hit = HIT[a.name] || null; if (a.hit) reactActor(a, dt); keepInWater(a); }
     }
   }
   updateBubbles(dt); drawHose(dt);

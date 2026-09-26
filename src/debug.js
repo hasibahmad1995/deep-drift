@@ -17,12 +17,13 @@ import { LIVES } from './life/depths.js';
 import { depthAt } from './dive/depth.js';
 import { HIT, bodyGap } from './life/touch.js';
 import { PASSERS, inSight } from './life/passers.js';
+import { bubbles } from './diver/bubbles.js';
 import { SOLIDS, pushOutOfSolids } from './world/solids.js';
 import { sightRange } from './world/culling.js';
 
 function exposeForTesting(extra) {
   Object.assign(window, { THREE, renderer, display, scene, camera, SMALL, U, state, TOTAL, pathAt, groups, ACTORS, BARRA, look, swim, music,
-    constrain, inRock, BODY, HIT, bodyGap, PASSERS, inSight, SOLIDS, pushOutOfSolids, sightRange, reshuffle, LIVES, depthAt }, extra);
+    constrain, inRock, BODY, HIT, bodyGap, PASSERS, inSight, SOLIDS, pushOutOfSolids, sightRange, reshuffle, LIVES, depthAt, bubbles }, extra);
 }
 
 export { exposeForTesting };

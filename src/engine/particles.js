@@ -28,7 +28,8 @@ function makeSnow(count, size, additive, box = 60, beam = false) {
         // inside the torch cone and close by: lit. Brightest near the lamp, fading with distance.
         float inCone = smoothstep(0.72, 0.9, dot(normalize(mv.xyz), vec3(0.0, 0.0, -1.0)));
         vLit = ${beam ? 'uBeam * inCone * smoothstep(0.25, 0.8, vDist) / (1.0 + vDist * vDist * 0.06)' : '0.0'};
-        gl_Position = projectionMatrix * mv; gl_PointSize = min(uSize * uPix * (60.0 / max(-mv.z, 0.5)) * (0.6 + aSeed * 0.8), ${beam ? '9.0' : '64.0'} * uPix); }`,   // beam specks stay small, even right at the lens
+        gl_Position = projectionMatrix * mv; gl_PointSize = min(uSize * uPix * (60.0 / max(-mv.z, 0.5)) * (0.6 + aSeed * 0.8), ${beam ? '9.0' : '64.0'} * uPix);
+        if (uCam.y + q.y > -0.1) gl_Position = vec4(2.0, 2.0, 2.0, 1.0); }`,   // above the surface: pushed off screen, so no speck floats in the air. Beam specks stay small, even right at the lens
     fragmentShader: `uniform float uAlpha; uniform vec3 uAbs; varying float vDist; varying vec3 vC; varying float vTw; varying float vLit;
       void main(){ vec2 c = gl_PointCoord - 0.5; float r = length(c); if (r > 0.5) discard; float a = smoothstep(0.5, 0.0, r) * uAlpha * exp(-uAbs.b * vDist * 1.4) * ${additive ? 'vTw' : '1.0'};
         a = max(a, smoothstep(0.5, 0.1, r) * min(vLit, 1.0));

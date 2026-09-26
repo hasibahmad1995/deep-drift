@@ -39,7 +39,7 @@ function updateBubbles(dt) {
   for (let i = 0; i < NB; i++) {
     if (bubbleLife[i] < 0) { bubbleSize[i] = 0; continue; }
     bubbleLife[i] += dt; bubblePos[i * 3 + 1] += bubbleVel[i] * dt; bubblePos[i * 3] += Math.sin(bubbleLife[i] * 5 + i) * 0.1 * dt;
-    if (bubbleLife[i] > 6) bubbleLife[i] = -1;
+    if (bubbleLife[i] > 6 || bubblePos[i * 3 + 1] > -0.05) bubbleLife[i] = -1;   // a bubble that reaches the surface is gone (it never rises into the air)
   }
   bubbleGeo.attributes.position.needsUpdate = true; bubbleGeo.attributes.aSize.needsUpdate = true;
 }

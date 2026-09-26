@@ -1,12 +1,12 @@
 /* More to see: dolphins, moon jellies, swirling schools, the siphonophore, vent shrimp, named spots. */
 import * as THREE from '../lib/three.js';
 import { pathAt, tu } from '../dive/route.js';
-import { DETAIL } from '../engine/device.js';
+import { DETAIL, SMALL } from '../engine/device.js';
 import { scene } from '../engine/renderer.js';
 import { wet } from '../engine/wet.js';
 import { ACTORS } from './actors.js';
 import { makeCreature } from './creature.js';
-import { makeJelly } from './jelly.js';
+import { jellyAt, jellyDepth, makeJelly } from './jelly.js';
 import { clearPath, passBy, view } from './motion.js';
 import { dice, vary } from './variety.js';
 import { initPassers } from './passers.js';
@@ -30,12 +30,12 @@ function buildExtras() {
     passBy(d, tu(0, 0.16), view(tu(0, 0.16), 9 + f, 3 + s, 1.5 - i * 0.3), view(tu(0, 0.16), 0, -2.4, 0.1), 'Dolphin', 20, null, false, pod);
   });
   // moon jellies drift near the reef
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < (SMALL ? 2 : 4); i++) {
     const j = makeJelly(0.56 + rand(-0.05, 0.05), 0.05), s = rand(0.35, 0.8), meet = new THREE.Vector3(); let tm = 0;
-    const drift = (t, out) => out.set(meet.x, meet.y + (t - tm) * 0.1, meet.z), actor = { active: true };
-    vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(0, rand(0.1, 0.7)); meet.copy(pathAt(tm).pos).add(view(tm, rand(3, 9), rand(-6, 6), rand(-2, 3))); actor.active = clearPath(drift, tm - 60, tm + 60, 1, 1.3); } });   // a new spot each dive, clear of rock (or none)
+    const drift = (t, out) => jellyAt(meet, t - tm, i, out), actor = { active: true };
+    vary(() => { actor.active = false; for (let k = 0; k < 8 && !actor.active; k++) { tm = tu(0, rand(0.1, 0.7)); meet.copy(pathAt(tm).pos).add(view(tm, rand(3, 9), rand(-6, 6), rand(-2, 3))); meet.y = jellyDepth(meet.y, s); actor.active = clearPath(drift, tm - 60, tm + 60, 1, 1.3); } });   // a new spot each dive, clear of rock (or none)
     j.scale.setScalar(s); scene.add(j);
-    ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 8, cyclic: true, update(t) { j.position.set(meet.x + Math.sin(t * 0.13 + i) * 0.5, meet.y + (t - tm) * 0.1, meet.z + Math.cos(t * 0.11 + i) * 0.5); } }));
+    ACTORS.push(Object.assign(actor, { obj: j, name: 'Jellyfish', range: 8, cyclic: true, update(t) { jellyAt(meet, t - tm, i, j.position); } }));
   }
   // schools that swirl: silver jacks in the open blue, glowing lanternfish in the dark
   const silverMat = wet(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.25, metalness: 0.45, side: THREE.DoubleSide }), { bend: SMALL_FISH_SWIM });

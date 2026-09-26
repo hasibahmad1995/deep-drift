@@ -18,6 +18,7 @@ import { makeCreature } from './creature.js';
 import { makeJelly } from './jelly.js';
 import { orient } from './motion.js';
 import { School } from './school.js';
+import { HIT } from './touch.js';
 import { SMALL_FISH_SWIM, shrimpGeo, smallFishGeo } from './small-shapes.js';
 import { SPECIES } from './species.js';
 import { GRENADIER, hatchetGeo } from './species-deep.js';
@@ -143,8 +144,10 @@ function spawnPasser(p) {
   } else {
     const a = ind[Math.floor(Math.random() * ind.length)];
     jit.r = rand(-1.5, 1.5); jit.u = rand(-1, 1); jit.f = rand(0, 2.5);
+    // a wide or heavy animal (a manta, a whale) crosses well ahead of the diver, more than its own reach plus 2.5 m, so it never sweeps through them
+    const h = HIT[a.name]; if (h && (h.heavy || h.wide)) { const miss = Math.max(h.wide || 0, h.rad) + 2.5; jit.f = rand(miss, miss + 2); }
     spV.copy(spR).multiplyScalar(Math.random() < 0.5 ? 1 : -1).addScaledVector(spF, rand(-0.3, 0.4)).normalize().multiplyScalar(a.speed);
-    if (a.name === 'Jellyfish') spV.set(spV.x * 0.5, 0.25, spV.z * 0.5);
+    if (a.name === 'Jellyfish') spV.set(spV.x * 0.5, 0, spV.z * 0.5);   // jellyfish hang in the water: they drift sideways, never up
     const s = planPath(spV, a.size, rand(3.5, 6)); if (!s) return;
     a.vel.copy(spV); a.start.copy(spS); a.t0 = state.t + (a.lag || 0); a.meetIn = s; a.react = null; a.active = true; a.obj.visible = true;
     a.obj.position.copy(spS);

@@ -55,4 +55,14 @@ function makeJelly(hue, glow) {
   return g;
 }
 
-export { makeJelly };
+/* Where a jellyfish is (into out) dt seconds after the dive was planned: it hangs and wanders about its own spot, at most
+   1.5 m sideways and 1.8 m up or down. It never climbs steadily (that would carry it out of the water), and it never
+   sits closer to the surface than JELLY_DEPTH plus its size (see meetSpot). */
+const JELLY_WANDER = 1.8;
+function jellyAt(meet, dt, i, out) {
+  return out.set(meet.x + Math.sin(dt * 0.13 + i) * 1.5, meet.y + Math.sin(dt * 0.17 + i * 2.1) * 1 + Math.sin(dt * 0.05 + i) * 0.8, meet.z + Math.cos(dt * 0.11 + i) * 1.5);
+}
+// Keeps the spot far enough under the surface that the wandering bell stays in the water.
+function jellyDepth(y, size) { return Math.min(y, -(size * 1.1 + JELLY_WANDER + 0.5)); }
+
+export { makeJelly, jellyAt, jellyDepth };
