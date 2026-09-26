@@ -3,7 +3,16 @@
 My own reference, updated after every fix (Hasib's rule since v1.4). Read this, then CLAUDE.md, at the start of a session.
 Plain words, no em dashes. Newest state at the top.
 
-## State now (v1.5, 26 Sep 2026)
+## State now (v1.5.1 in progress, 26 Sep 2026)
+- Published: private GitHub repo + Cloudflare Pages (see CLAUDE.md "Publishing"). Commit log: docs/commit-log.md
+  (`python tools/commit_log.py`). Hasib wants to learn: teach step by step, he checks results himself.
+- v1.5.1 on `feature/start-screen`: Recenter view in the side panel, clean instant start screen (subtitle "Descend from
+  sunlight into the deepest dark on Earth."), music off at home and back on Begin if it was on, cache rules.
+  Measured (tests/load.py --cloudlike): compressed site 1.2 MB, ~3 s download at 9 Mbit/s; a modulepreload list gave no
+  gain, so it was dropped. The real wait is building the world (~3 s on his laptop). "Begin sooner by building the deep
+  places in the background" was offered; Hasib said not now.
+
+## Before v1.5.1
 - `main` is tagged v1.5. Branches kept: `feature/v1.2-continuous-dive`, `feature/v1.3-solid-and-smooth`, `feature/v1.4-feel`, `feature/v1.5-controls`.
 - Reports: `docs/reports/report-v1.4.pdf`, `report-v1.5.pdf` (made by `docs/make_report.py`, entries in `REPORTS`, site overview in `SITE`).
 - Tracking guide: `docs/git-tracking.pdf` (made by `docs/make_git_tracking.py`). Both use `docs/pdf_tools.py`.

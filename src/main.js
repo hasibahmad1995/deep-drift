@@ -1,6 +1,5 @@
 /* Deep Drift: starts everything and runs one picture (frame) after another. */
 import * as THREE from './lib/three.js';
-import { SETTINGS } from './config.js';
 import { $ } from './util/dom.js';
 import { clamp } from './util/math.js';
 import { renderer, scene, camera } from './engine/renderer.js';
@@ -97,7 +96,6 @@ function resize() {
 
 function boot() {
   STARTUP.bootAt = Math.round(performance.now());   // when our code started (after the files arrived)
-  document.title = SETTINGS.siteName; $('brand').textContent = SETTINGS.siteName; $('siteName').textContent = SETTINGS.siteName; $('tagline').textContent = SETTINGS.tagline;
   resize(); window.addEventListener('resize', resize); layoutControls(); buildJournal();
   $('btnPause').addEventListener('click', togglePause); $('btnMusic').addEventListener('click', toggleMusic); $('btnRecenter').addEventListener('click', recenter); $('btnMotion').addEventListener('click', toggleMotion);
   wireDock();
@@ -118,7 +116,11 @@ function boot() {
     ['the animals', () => { buildLife(); buildExtras(); buildDeepCast(); }],
     ['the lights and colours', warmUp],
     ['the picture for your screen', chooseSharpness],
-  ], (label, done) => { $('loadMsg').textContent = label ? `Loading ${label}... ${Math.round(done * 100)}%` : ''; })
+  ], (label, done) => {   // the progress bar and a short note under Begin
+    $('loadBar').style.width = Math.round(done * 100) + '%';
+    $('loadMsg').textContent = label ? `Preparing ${label}...` : '';
+    if (!label) $('intro').classList.add('ready');
+  })
     .then(() => { $('btnBegin').disabled = false; $('btnBegin').focus(); });
 }
 boot();

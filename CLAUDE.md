@@ -19,7 +19,8 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
   `python tests/glide.py` (the swim), `python tests/solid.py` (nothing passes through the diver, no pops, no jumps; runs the whole dive without drawing via `window.__noRender`),
   `python tests/startup.py` (opening time, freezes, shaders built after the warm-up; add `--gpu --screen=1536x790@1.25` to use this laptop's real graphics card at Hasib's screen size),
   `python tests/life.py` (pause keeps the sea moving, a different dive each time with no path through rock, smooth arrow keys, school surges),
-  `python tests/controls.py` (zoom steps up and back down, level turning, the side panel, the home button, animals only at their depths).
+  `python tests/controls.py` (zoom steps up and back down, level turning, the side panel, the home button, animals only at their depths),
+  `python tests/load.py --cloudlike` (first-visit loading on a slowed connection; start `node tests/cloudlike_server.mjs` first: it serves `dist/` compressed like Cloudflare).
   The tests serve the project from a made-up https address with a strict page policy (only the site's own files may run or load). Keep it strict.
 - Software WebGL is slow. The tests use `?still` and `window.__hold` so the page stops its own loop and you call `step(0.03)` yourself.
 - Handy in the page console (set up by `src/debug.js`): `state.t = 120` jumps in time, `step(0.03)` draws a frame, `look`, `swim`, `ACTORS`, `groups`, `pathAt(t)`, `display.pixelRatio`,
@@ -30,6 +31,13 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
 - Update `docs/claude-notes.md` (Claude's own notes: state, decisions, gotchas, next steps). Read it at the start of a session.
 - Bump the version in `package.json` and update the tracking PDF (below).
 
+## Publishing (since 26 Sep 2026)
+- The code is in Hasib's PRIVATE GitHub repository (remote `origin`); Cloudflare Pages builds `python3 tools/build.py` and publishes `dist/` whenever GitHub's `main` changes. Preview addresses for other branches.
+- `tools/build.py` also writes `dist/_headers` (cache rules for return visits).
+- `docs/commit-log.md`: every commit and whether it is uploaded and live; rebuild the table with `python tools/commit_log.py` after committing and after uploading. Keep its "Where we are" notes current.
+- Commit messages: plain description only, no co-author or Claude lines (Hasib's rule). Small changes: no version number and no PDF report; a set of small changes gets a third-number version (v1.5.1).
+- Hasib uploads with `git push origin --all` and `git push origin --tags`; ask before uploading for him.
+
 ## Versions and git
 - Branch `main` holds released versions, tagged `v1.0`, `v1.1`, ... Each new version is built on a branch like `feature/v1.2-continuous-dive`, then merged and tagged. Docs and test-only commits get no version number.
 - After commits, add an entry to `COMMITS` in `docs/make_git_tracking.py`, run `python docs/make_git_tracking.py`, and commit the new `docs/git-tracking.pdf`. Hasib uses that PDF to track versions.
@@ -38,7 +46,7 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
 ## Where things are
 | Folder | What is in it |
 |---|---|
-| `index.html`, `styles/` | Page shell (buttons, panels) and CSS. `styles/fonts.css` loads the included fonts. |
+| `index.html`, `styles/` | Page shell (buttons, panels, the start screen written in full so it shows at once) and CSS. `styles/fonts.css` loads the included fonts. |
 | `src/main.js` | Starts everything; the frame loop `step(dt)`; window resize. |
 | `src/config.js` | Easy settings and the water colour and light absorption per depth (`ENV`). |
 | `src/engine/` | Renderer, scene and camera; lights; `wet()` underwater materials; environment per depth; sky, surface and sun rays; drifting specks and backscatter; `warmup.js` (shaders ready before Begin); `quality.js` (pixel count adapts to speed). |
@@ -79,10 +87,10 @@ Prefer plain language over jargon. If you write study notes as .md, also make a 
   `passBy(..., follow)` makes a scripted animal sink with the diver around the meeting and then ease to a stop (the anglerfish and trench snailfish), because in the deep the camera sinks about 12 m/s and a still animal flashes past.
   Animals more than 300 m away are hidden and moved on only twice a second.
 - **Mask and hose:** 2D canvases (`#mask`, `#hose`) drawn in ui/mask.js.
-- **Controls (v1.5):** Pause/Play, Music and Zoom sit in a side panel on the left edge (`#dock`, ui/dock.js), hidden until hovered (CSS) or opened by its handle on touch screens. Zoom (diver/zoom.js): a press steps 1x to 2.5x and back down (ping-pong), holding zooms smoothly; `U.zoom` keeps small corals drawn farther out when zoomed. "Deep Drift" at the top is the home button (`goHome` in ui/playback.js): back to the start screen; Begin (`beginDive`) rolls a new dive. There is no Restart button; the end of the dive also goes home. The top row (Recenter view, Motion look, Blog, Credits) goes into the bottom sheet behind a Menu button on phones and tablets (ui/panels.js).
+- **Controls (v1.5):** Pause/Play, Music and Zoom sit in a side panel on the left edge (`#dock`, ui/dock.js), hidden until hovered (CSS) or opened by its handle on touch screens. Zoom (diver/zoom.js): a press steps 1x to 2.5x and back down (ping-pong), holding zooms smoothly; `U.zoom` keeps small corals drawn farther out when zoomed. "Deep Drift" at the top is the home button (`goHome` in ui/playback.js): back to the start screen; Begin (`beginDive`) rolls a new dive. There is no Restart button; the end of the dive also goes home; music stops at home and resumes on Begin if it was playing (`musicAtHome`, `musicAtBegin` in audio/music.js). Recenter view is in the side panel too (v1.5.1). While the start screen shows, `body.home` hides the top bar, meter and side panel. The top row (Motion look, Blog, Credits) goes into the bottom sheet behind a Menu button on phones and tablets (ui/panels.js).
 
 ## Known weak spots (good next tasks)
-1. Animal behaviour (planned for v1.6): curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, flounder, scorpionfish, garden eels), deep-sea light displays, feeding at vents and the whale fall.
+1. Animal behaviour (planned for v1.6). Also on the list: Begin sooner by building the deep places in the background (measure first). Curious and startled school fish, predators chasing schools, hidden animals (day octopus with ink, flounder, scorpionfish, garden eels), deep-sea light displays, feeding at vents and the whale fall.
 2. Animals right in front of the torch look paler than they should (tone mapping of strong light); deep scenes are lit only by torch and lamp, so rock far from the route is dark.
 3. The reef wall still turns teal beyond ~10 m; the deckhouse of the wreck is plain boxes; glass sponges look like plain white cones.
 4. Performance on phones is untested. `DETAIL` (engine/device.js) halves counts on small screens; pixel ratio adapts automatically. The tests' 900x540 window counts as a small screen.

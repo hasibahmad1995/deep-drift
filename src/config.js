@@ -1,8 +1,7 @@
 /* Easy-to-change settings and the colour of the water at each depth. */
 
+// The site's name and subtitle are written in index.html (so the start screen appears at once, before any code runs).
 const SETTINGS = {
-  siteName: 'Deep Drift',
-  tagline: 'A dive from the sunlit surface to the deepest trench.',
   speed: 1,            // 1 = normal dive speed. 0.5 = half speed. 2 = double speed.
   musicVolume: 0.5,    // 0 is silent, 1 is loudest
   lookRange: 1.25,     // how far you can turn your head (in radians)
