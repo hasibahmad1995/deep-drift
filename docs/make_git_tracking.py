@@ -578,6 +578,46 @@ COMMITS = [
         checks="PDF opened and read through.",
         status="Kept",
     ),
+    dict(
+        subject="fix: the closed side panel no longer blocks swipes, and touch opens and closes it properly",
+        version="", lane="feature",
+        title="Side panel: swipes on the left edge turn you again",
+        what="Hasib found that on a phone (and with a mouse) a swipe starting on the hidden side panel did not turn the view. "
+             "The panel's invisible box covered the left edge and caught the touch. Now only the small handle catches touches. "
+             "Also, hover only counts on screens with a real mouse (a tap left it stuck on, so the handle needed two taps), "
+             "and only keyboard focus keeps the panel open.",
+        files=["<code>styles/main.css</code>", "<code>tests/controls.py</code>: new checks for swipes, hover and touch"],
+        state="Swipes turn the view everywhere; the panel still opens by hover (mouse) or the handle (touch).",
+        checks="controls, ui and live tests pass. Touch was tried in the test browser only, not yet on a real phone.",
+        status="Kept",
+    ),
+    dict(
+        subject="fix: nothing leaves the water; jellyfish hang in place; the manta keeps clear of the diver",
+        version="", lane="feature",
+        title="Nothing leaves the water; jellyfish stay put; the manta keeps clear",
+        what="Hasib saw jellyfish rise out of the water like parachutes, and a manta collide with him. Jellyfish now hang and wander "
+             "around their own spot (4 at the reef instead of 9, kept a few metres under the surface). Every animal is held under the "
+             "surface by its size, breath bubbles vanish when they reach it, and floating specks are hidden above it. The manta's hit "
+             "shape now matches the drawn animal (about 5.9 m across, disc ahead of the centre), it turns away 4 m sooner, and "
+             "big visitors cross well ahead of the diver.",
+        files=["<code>src/life/surface.js</code> (new), <code>jelly.js</code>, <code>cast.js</code>, <code>extras.js</code>, "
+               "<code>passers.js</code>, <code>touch.js</code>", "<code>src/diver/bubbles.js</code>, <code>src/engine/particles.js</code>, "
+               "<code>src/main.js</code>, <code>src/debug.js</code>", "<code>tests/surface.py</code> (new)"],
+        state="Nothing shows above the surface; jellyfish stay within about 2 m of their spot.",
+        checks="New surface test passes, and fails on the old code (jellyfish drifted 44 m, a bubble rose 3.85 m into the air). "
+               "controls and life tests pass. The solid test sometimes shows a turtle appearing on screen; the old code does the same.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: track the side panel and surface fixes",
+        version="", lane="main",
+        title="Update this guide, the notes and the commit log",
+        what="Rows for the two fixes above.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>, <code>docs/commit-log.md</code>, <code>docs/claude-notes.md</code>"],
+        state="Same as the fixes above.",
+        checks="PDF made from the real commits.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)

@@ -5,11 +5,12 @@ website. Claude reads this to know what is done and where to pick up. The table 
 `python tools/commit_log.py` (run it after committing and again after uploading); the notes below are written by hand.
 
 ## Where we are
-- **v1.5.1 is finished on this computer** (merged into `main`, tagged `v1.5.1`): Recenter view in the side panel, a clean
-  start screen that appears at once, music off on the home screen, caching for faster return visits.
-- **Next: upload it** (`git push origin --all`, then `git push origin --tags`). Cloudflare then publishes it; check the
-  live site, then run `python tools/commit_log.py` so the table shows Uploaded and Live.
-- After that: v1.6, animal behaviour (see CLAUDE.md, Known weak spots).
+- **Two small fixes after v1.5.1** (side panel swipes; nothing leaves the water, manta keeps clear) are committed and merged
+  to main (see the table for whether they are uploaded).
+- **v1.5.1 is uploaded and live** (26 Sep 2026): Recenter view in the side panel, a clean start screen that appears at
+  once, music off on the home screen, caching for faster return visits. All commits are on GitHub.
+- This file itself is saved with the next commit (a commit cannot list itself, so the newest table waits here).
+- Next: v1.6, animal behaviour (see CLAUDE.md, Known weak spots), or any small change Hasib asks for.
 
 ## How to read the table
 - **Uploaded:** GitHub has this commit. **no** means it is only on this computer so far.
@@ -19,13 +20,16 @@ website. Claude reads this to know what is done and where to pick up. The table 
 <!-- TABLE START (made by tools/commit_log.py) -->
 | Date | Commit | Branch | Version | What changed | Uploaded | Live |
 |---|---|---|---|---|---|---|
-| 26 Sep 2026 | `1a9359f` | main | v1.5.1 | v1.5.1: a clean start screen, Recenter view in the side panel, a quiet home screen | **no** | no |
-| 26 Sep 2026 | `1acbe68` | feature/start-screen |  | release: set the version to 1.5.1 | **no** | no |
-| 26 Sep 2026 | `931c81c` | feature/start-screen |  | docs: describe v1.5.1 and add a commit log | **no** | no |
-| 26 Sep 2026 | `68cd156` | feature/start-screen |  | ui: a clean start screen that appears at once, with a progress bar | **no** | no |
-| 26 Sep 2026 | `abb9c0e` | feature/start-screen |  | build: cache the 3D library, fish model and fonts for return visits; add a loading-speed test | **no** | no |
-| 26 Sep 2026 | `7e7028c` | feature/start-screen |  | audio: music is off on the home screen and comes back on Begin if it was playing | **no** | no |
-| 26 Sep 2026 | `e59b8e3` | feature/start-screen |  | ui: move Recenter view into the side panel | **no** | no |
+| 26 Sep 2026 | `b233511` | fix/side-panel-and-surface |  | fix: nothing leaves the water; jellyfish hang in place; the manta keeps clear of the diver | **no** | no |
+| 26 Sep 2026 | `f376666` | fix/side-panel-and-surface |  | fix: the closed side panel no longer blocks swipes, and touch opens and closes it properly | **no** | no |
+| 26 Sep 2026 | `7c1a59a` | main |  | docs: update the tracking guide and commit log for v1.5.1 | yes | yes |
+| 26 Sep 2026 | `1a9359f` | main | v1.5.1 | v1.5.1: a clean start screen, Recenter view in the side panel, a quiet home screen | yes | yes |
+| 26 Sep 2026 | `1acbe68` | feature/start-screen |  | release: set the version to 1.5.1 | yes | yes |
+| 26 Sep 2026 | `931c81c` | feature/start-screen |  | docs: describe v1.5.1 and add a commit log | yes | yes |
+| 26 Sep 2026 | `68cd156` | feature/start-screen |  | ui: a clean start screen that appears at once, with a progress bar | yes | yes |
+| 26 Sep 2026 | `abb9c0e` | feature/start-screen |  | build: cache the 3D library, fish model and fonts for return visits; add a loading-speed test | yes | yes |
+| 26 Sep 2026 | `7e7028c` | feature/start-screen |  | audio: music is off on the home screen and comes back on Begin if it was playing | yes | yes |
+| 26 Sep 2026 | `e59b8e3` | feature/start-screen |  | ui: move Recenter view into the side panel | yes | yes |
 | 26 Sep 2026 | `d92f0b9` | main |  | docs: update the tracking guide for v1.5 | yes | yes |
 | 26 Sep 2026 | `d7ec890` | main | v1.5 | v1.5: smooth zoom, level turning, a side panel and a home button | yes | yes |
 | 26 Sep 2026 | `502d662` | feature/v1.5-controls |  | release: set the version to 1.5.0 | yes | yes |

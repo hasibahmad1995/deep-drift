@@ -3,7 +3,24 @@
 My own reference, updated after every fix (Hasib's rule since v1.4). Read this, then CLAUDE.md, at the start of a session.
 Plain words, no em dashes. Newest state at the top.
 
-## State now (v1.5.1 in progress, 26 Sep 2026)
+## State now (v1.5.1 live plus two small fixes, 26 Sep 2026)
+- Two small fixes after v1.5.1 (no version number, no PDF report), on `fix/side-panel-and-surface`, then merged to main:
+  1. Side panel: the closed panel's invisible box swallowed swipes on the left edge. Now `#dock` and `#dockBody` have
+     `pointer-events: none` until open; hover only under `@media (hover: hover)`; `:has(:focus-visible)` instead of
+     `:focus-within` (a tap left the panel stuck open). Tests in tests/controls.py (3b, 3c).
+  2. Nothing leaves the water: `life/surface.js` `keepInWater` (called in main.js after reactActor); jellyfish use `jellyAt`
+     (bounded wander, never a steady rise) and `jellyDepth`; bubbles die at y > -0.05; specks hidden above y = -0.1 in the
+     shader; manta HIT shape fixed (`at` = disc offset toward the nose) with `shy: 4`; big passers cross ahead by their reach + 2.5 m.
+     New tests/surface.py (fails on the old code).
+- Known, not caused by these: tests/solid.py sometimes reports the random Green sea turtle passer appearing or vanishing on
+  screen (2 of 5 runs on the old code too). Worth its own fix.
+- Not tried on a real phone: the panel touch behaviour. Hasib said "manta ended up beneath me" and I could not reproduce that.
+- v1.5.1 is merged, tagged, uploaded to GitHub and published by Cloudflare. All commits uploaded (see docs/commit-log.md).
+- Uncommitted on purpose: docs/commit-log.md (its newest table) and this file; they go into the next commit.
+- Start of a new session: read this file, CLAUDE.md and docs/commit-log.md ("Where we are"), check `git status`.
+- Next: v1.6 animal behaviour, or small changes Hasib asks for. For small changes: branch, commits, merge, no PDF report.
+
+## How v1.5.1 was made
 - Published: private GitHub repo + Cloudflare Pages (see CLAUDE.md "Publishing"). Commit log: docs/commit-log.md
   (`python tools/commit_log.py`). Hasib wants to learn: teach step by step, he checks results himself.
 - v1.5.1 on `feature/start-screen`: Recenter view in the side panel, clean instant start screen (subtitle "Descend from
