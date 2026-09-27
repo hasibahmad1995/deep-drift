@@ -69,16 +69,16 @@ a { color: var(--accent); }
 #fact { display: block; font-size: 0.86rem; color: var(--ink-soft); max-width: 30rem; margin-top: 2px; }
 
 #intro { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;
-  background: radial-gradient(ellipse at 50% 40%, rgba(2, 30, 55, 0.35), rgba(0, 6, 14, 0.82)); transition: opacity 0.8s ease; }
+  background: radial-gradient(ellipse at 50% 42%, rgba(2, 24, 44, 0.74), rgba(0, 6, 14, 0.93));   /* dark enough that every line of text reads, with the sea still showing through */ transition: opacity 0.8s ease; }
 #intro.leaving { opacity: 0; pointer-events: none; }
 /* the start screen: a small line, the title, one subtitle, three short hints, Begin with a slim progress bar */
 .introCard { max-width: 40rem; display: flex; flex-direction: column; align-items: center; }
-#intro .eyebrow { margin: 0 0 0.9rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: var(--accent); }
+#intro .eyebrow { margin: 0 0 0.9rem; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.32em; text-transform: uppercase; color: var(--accent); text-shadow: 0 1px 12px rgba(0, 4, 10, 0.9), 0 0 3px rgba(0, 4, 10, 0.8); }
 #intro h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(3.2rem, 12vw, 6.6rem); line-height: 0.95; letter-spacing: -0.01em; margin: 0;
   text-shadow: 0 0 42px rgba(127, 230, 242, 0.28), 0 2px 24px rgba(0, 0, 0, 0.6); }
-#intro .tagline { margin: 1rem 0 1.8rem; font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 2.6vw, 1.35rem); color: var(--ink); opacity: 0.9; }
+#intro .tagline { margin: 1rem 0 1.8rem; font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 2.6vw, 1.35rem); color: var(--ink); opacity: 0.95; text-shadow: 0 1px 14px rgba(0, 4, 10, 0.85); }
 #intro .howto { list-style: none; margin: 0 0 2rem; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 0.88rem; color: var(--ink-soft); }
-#intro .howto li { padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; background: rgba(6, 28, 48, 0.45); }
+#intro .howto li { padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; background: rgba(6, 28, 48, 0.7); }
 #intro .howto b { color: var(--ink); font-weight: 600; }
 #intro .progress { width: 12rem; height: 3px; margin: 1rem 0 0.4rem; border-radius: 3px; background: rgba(150, 215, 235, 0.18); overflow: hidden; }
 #intro .progress span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.3s ease; }
