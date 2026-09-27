@@ -36,8 +36,8 @@ function applyEnvironment(D) {
   domeUniforms.uGlow.value = day;
   surfaceUniforms.uFogCol.value.copy(envColor); surfaceUniforms.uDay.value = clamp(1 - D / 120);
   surface.visible = D < 140;
-  rayUniforms.uI.value = clamp(1 - D / 260);
-  rayGroup.visible = D < 260;
+  rayUniforms.uI.value = Math.exp(-D / 45);   // clear beams fade out within about the top 100 m (deeper, the light is only a faint glow from above)
+  rayGroup.visible = D < 200;
   glowSpecks.material.uniforms.uAlpha.value = clamp((D - 120) / 500) * 0.9;
   snow.material.uniforms.uAlpha.value = 0.5 * (0.25 + 0.75 * clamp(1 - D / 400));
   backscatter.material.uniforms.uBeam.value = clamp((D - 60) / 200) * 0.9;   // the beam only shows once it is dark enough for the torch to matter
