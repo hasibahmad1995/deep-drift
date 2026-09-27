@@ -618,6 +618,52 @@ COMMITS = [
         checks="PDF made from the real commits.",
         status="Kept",
     ),
+    dict(
+        subject="fix: bubbles slow down and dissolve under the surface instead of popping",
+        version="", lane="feature",
+        title="Bubbles dissolve under the surface",
+        what="Hasib saw breath bubbles seem to rise out of the water when looking up from a few metres down. Bubbles used to vanish at full "
+             "size on touching the surface. Now they slow to a third of their speed over the last 1.5 m, shrink smoothly, fan out a little "
+             "sideways, and old bubbles fade instead of popping.",
+        files=["<code>src/diver/bubbles.js</code>", "<code>tests/surface.py</code>: fails if a bubble is still big near the surface"],
+        state="Bubbles never look like they leave the water.",
+        checks="surface, life, controls tests pass. Hasib confirmed the bubble problem was solved.",
+        status="Kept",
+    ),
+    dict(
+        subject="feat: the water surface and sunbeams look like real water light",
+        version="", lane="feature",
+        title="The surface and the sunbeams look like real water light",
+        what="Hasib said the surface looked like sky, then like silk, and the sunbeams like pipes. After reading how light really enters the sea "
+             "(waves act as lenses and make curved sheets of light, sharp near the top and blurrier and fainter deeper), the surface seen from "
+             "below is now a web of moving light lines with a sun glare and a silvery edge. Beams lean at the refracted sun angle (about 23 "
+             "degrees), are all parallel, are brightest at the surface and fade within the top 100 m, and are streaks of light and shadow tied "
+             "to the water instead of plain tubes. Two bugs fixed: the sheets leaned in random directions and their brightness was upside down.",
+        files=["<code>src/engine/sky.js</code>", "<code>src/engine/environment.js</code>"],
+        state="A rippled water ceiling; parallel, slanted, streaky sunbeams in the top tens of metres; plain diffuse blue deeper.",
+        checks="startup, surface, ui, controls, life tests pass, no shaders built late. Looked at screenshots at 3, 14, 40 and 120 m. Not measured on the Intel laptop.",
+        status="Kept",
+    ),
+    dict(
+        subject="ui: a darker start screen so all of its text can be read",
+        version="", lane="feature",
+        title="A darker start screen",
+        what="The small line 'An interactive ocean dive' could not be read over the bright sea. The backdrop is darker and the small text has a soft shadow.",
+        files=["<code>styles/main.css</code>"],
+        state="All lines of the start screen read clearly on desktop and phone.",
+        checks="Screenshots of desktop and phone.",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: track the surface, sunbeam and start screen changes",
+        version="", lane="main",
+        title="Update this guide, the notes and the commit log",
+        what="Rows for the three changes above.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>, <code>docs/commit-log.md</code>, <code>docs/claude-notes.md</code>"],
+        state="Same as the changes above.",
+        checks="PDF made from the real commits.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)

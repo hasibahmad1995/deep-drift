@@ -12,6 +12,21 @@ Plain words, no em dashes. Newest state at the top.
      (bounded wander, never a steady rise) and `jellyDepth`; bubbles die at y > -0.05; specks hidden above y = -0.1 in the
      shader; manta HIT shape fixed (`at` = disc offset toward the nose) with `shy: 4`; big passers cross ahead by their reach + 2.5 m.
      New tests/surface.py (fails on the old code).
+- Then three more small changes (branch `fix/surface-light-and-start-screen`):
+  1. Bubbles dissolve under the surface (bubbles.js: slow to 0.3x, shrink over the last 1.5 m, gone at 0.1 m under, sideways fan).
+  2. Surface and sunbeams (engine/sky.js, environment.js). Research: waves are lenses, light forms curved sheets that look like
+     vertical streaks, sharp near the top, blurrier and fainter deeper; sun light bends toward the vertical (Snell): sun 32 deg
+     from overhead gives beams about 23 deg. Surface = Voronoi cell-edge light web (two layers) with weak normals (0.75; strong
+     ones broke the bright window into puddles). Beams = 14 wide sheets (8 on small screens) shaded from streaks of the entry
+     point (`vWP.xz - uLean * vWP.y`), so the pattern is fixed in the water; contrast `exp(-depth/30)`, fade `exp(-depth/42)`,
+     `uI = exp(-D/45)`, hidden past 200 m. Bugs fixed: shear was applied before a random yaw (random lean), and `along` was upside down.
+     The beam sheets still follow the camera x,z (main.js); only the stripes are world-fixed.
+  3. Darker start screen (main.css #intro).
+- Loading (measured 27 Sep 2026 on Hasib's laptop, real GPU, 1536x790@1.25): Begin ready at ~4.0 s after our code starts: build
+  ~1.3 s, warm-up 1.76 s (shaders 0.76, shapes 1.0), sharpness check 0.45 s. First visit at 9 Mbit/s: ~1.18 MB compressed, 89
+  requests, code ready ~3.4 s. The barramundi (tex json 379 KB + glb 126 KB) is 43 percent of the download; three.js ~410 KB.
+  Hasib chose "option 2": staged world building (Begin after reef and sea floor, build and warm the deep places in the background).
+  If it is not a fit he wants to go back to the state before it (main after these commits).
 - Known, not caused by these: tests/solid.py sometimes reports the random Green sea turtle passer appearing or vanishing on
   screen (2 of 5 runs on the old code too). Worth its own fix.
 - Not tried on a real phone: the panel touch behaviour. Hasib said "manta ended up beneath me" and I could not reproduce that.
