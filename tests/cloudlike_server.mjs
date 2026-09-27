@@ -10,7 +10,7 @@ import { gzipSync } from 'node:zlib';
 const ROOT = normalize(join(fileURLToPath(import.meta.url), '..', '..', 'dist'));
 const PORT = Number(process.argv[2] || 8091);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json', '.glb': 'model/gltf-binary', '.woff2': 'font/woff2' };
+  '.json': 'application/json', '.glb': 'model/gltf-binary', '.woff2': 'font/woff2', '.webp': 'image/webp' };
 const TEXT = new Set(['.html', '.js', '.css', '.json']);
 
 createServer((req, res) => {
