@@ -1,7 +1,8 @@
 """Checks that nothing leaves the water (v1.5.2):
   1. Through whole dives (a new dive each time, and long pauses): no animal, jellyfish or school pokes through the surface,
      and jellyfish stay near their own spot (they never climb away).
-  2. The diver's breathing bubbles never rise above the surface (also when the diver is only a few metres down).
+  2. The diver's breathing bubbles never rise above the surface (also when the diver is only a few metres down) and dissolve
+     smoothly on the way up instead of popping at it.
   3. The manta's hit shape matches the drawn animal (wing tip, disc, tail), and big visitors cross well ahead of the diver.
 Usage: python tests/surface.py      (exit code 1 if something is wrong)"""
 import sys
@@ -33,12 +34,12 @@ DIVES = r"""() => {
 
 BUBBLES = r"""() => {
   window.__noRender = true; state.playing = false; state.t = 1; step(0.05);   // the diver is only a few metres down here
-  let highest = -1e9, live = 0;
+  let highest = -1e9, live = 0, big = 0;
   for (let i = 0; i < 1600; i++) { step(0.05);
     const pos = bubbles.geometry.attributes.position.array, size = bubbles.geometry.attributes.aSize.array;
-    for (let b = 0; b < size.length; b++) if (size[b] > 0) { live++; highest = Math.max(highest, pos[b * 3 + 1]); } }
+    for (let b = 0; b < size.length; b++) if (size[b] > 0) { live++; highest = Math.max(highest, pos[b * 3 + 1]); if (pos[b * 3 + 1] > -0.3 && size[b] > 0.006) big++; } }
   window.__noRender = false;
-  return { cameraY: +camera.position.y.toFixed(2), live, highest: +highest.toFixed(2) };
+  return { cameraY: +camera.position.y.toFixed(2), live, highest: +highest.toFixed(2), bigAtSurface: big };
 }"""
 
 MANTA = r"""async () => {
@@ -58,9 +59,10 @@ def main():
         if r["wander"] > 3.7: bad.append("a jellyfish climbed or sank away from its spot")
         if r["bad"]: bad.append("through the surface: " + "; ".join(r["bad"][:4]))
         r = pg.evaluate(f"({BUBBLES})()")
-        print("2. bubbles: camera at", r["cameraY"], "m, bubbles seen:", r["live"], "| highest bubble:", r["highest"])
+        print("2. bubbles: camera at", r["cameraY"], "m, bubbles seen:", r["live"], "| highest bubble:", r["highest"], "| big ones within 0.3 m of the surface:", r["bigAtSurface"])
         if r["live"] == 0: bad.append("no bubbles seen, the test checked nothing")
         if r["highest"] > 0: bad.append("a bubble rose above the surface")
+        if r["bigAtSurface"]: bad.append("a bubble is still big right at the surface (it should dissolve, not pop)")
         r = pg.evaluate(f"({MANTA})()"); print("3. manta hit shape:", r)
         if not (r["discCentre"] < 0 and r["wingTipInside"] < 0 and r["wingTipOutside"] > 0 and r["farAhead"] > 3): bad.append("manta hit shape does not match the drawn animal")
         print("ERRORS:", [e for e in errs if "GPU stall" not in e][:6])
