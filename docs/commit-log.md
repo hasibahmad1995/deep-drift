@@ -20,9 +20,11 @@ website. Claude reads this to know what is done and where to pick up. The table 
 <!-- TABLE START (made by tools/commit_log.py) -->
 | Date | Commit | Branch | Version | What changed | Uploaded | Live |
 |---|---|---|---|---|---|---|
-| 27 Sep 2026 | `e9e7579` | fix/surface-light-and-start-screen |  | ui: a darker start screen so all of its text can be read | **no** | no |
-| 27 Sep 2026 | `22e206d` | fix/surface-light-and-start-screen |  | feat: the water surface and sunbeams look like real water light | **no** | no |
-| 27 Sep 2026 | `0de4d1b` | fix/surface-light-and-start-screen |  | fix: bubbles slow down and dissolve under the surface instead of popping | **no** | no |
+| 27 Sep 2026 | `47a052e` | feature/faster-opening |  | perf: smaller fish pictures, fetched while the code is still arriving | **no** | no |
+| 27 Sep 2026 | `f7eeef4` | main |  | docs: track the surface, sunbeam and start screen changes | yes | yes |
+| 27 Sep 2026 | `e9e7579` | main |  | ui: a darker start screen so all of its text can be read | yes | yes |
+| 27 Sep 2026 | `22e206d` | main |  | feat: the water surface and sunbeams look like real water light | yes | yes |
+| 27 Sep 2026 | `0de4d1b` | main |  | fix: bubbles slow down and dissolve under the surface instead of popping | yes | yes |
 | 26 Sep 2026 | `2153ae5` | main |  | docs: track the side panel and surface fixes | yes | yes |
 | 26 Sep 2026 | `b233511` | main |  | fix: nothing leaves the water; jellyfish hang in place; the manta keeps clear of the diver | yes | yes |
 | 26 Sep 2026 | `f376666` | main |  | fix: the closed side panel no longer blocks swipes, and touch opens and closes it properly | yes | yes |

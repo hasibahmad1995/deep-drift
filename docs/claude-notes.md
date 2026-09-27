@@ -25,6 +25,14 @@ Plain words, no em dashes. Newest state at the top.
 - Loading (measured 27 Sep 2026 on Hasib's laptop, real GPU, 1536x790@1.25): Begin ready at ~4.0 s after our code starts: build
   ~1.3 s, warm-up 1.76 s (shaders 0.76, shapes 1.0), sharpness check 0.45 s. First visit at 9 Mbit/s: ~1.18 MB compressed, 89
   requests, code ready ~3.4 s. The barramundi (tex json 379 KB + glb 126 KB) is 43 percent of the download; three.js ~410 KB.
+  MEASURED upper bound of option 2 (27 Sep, skipping vents, wreck, trench, benthos and deep animals in the opening, real GPU, 2 runs each):
+  Begin ready 3.3 s -> 2.55 s (saves ~0.8 s, 23 percent: trench build 311 ms, its warm-up ~320 ms). Builders are monolithic (trench wall
+  loops alone are ~300 ms), so hiding the cost needs time-sliced (generator) builders plus a safeguard if the diver arrives early.
+  Not started: gain judged small for the complexity. Done instead (branch `feature/faster-opening`, option 1): fish textures 1024 JPEG in
+  a JSON (518 KB text) -> 512 WebP files (105 KB) made by tools/fish-model/shrink_textures.py from tools/fish-model/barra_tex_source.json,
+  plus `<link rel=preload>` for the glb and three pictures in index.html so they download while the code does. Slowed network test:
+  fish step 760 ms -> 10 ms, download 1,177 -> 904 KB. (My first estimate of 1 s was too high: 270 KB is only ~0.25 s at 9 Mbit/s;
+  the main gain is removing the extra round trip after the code.) No gain on localhost. Waiting for a Cloudflare preview test.
   Hasib chose "option 2": staged world building (Begin after reef and sea floor, build and warm the deep places in the background).
   If it is not a fit he wants to go back to the state before it (main after these commits).
 - Known, not caused by these: tests/solid.py sometimes reports the random Green sea turtle passer appearing or vanishing on

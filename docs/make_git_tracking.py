@@ -664,6 +664,34 @@ COMMITS = [
         checks="PDF made from the real commits.",
         status="Kept",
     ),
+    dict(
+        subject="perf: smaller fish pictures, fetched while the code is still arriving",
+        version="", lane="feature",
+        title="A faster first visit: smaller fish pictures, fetched early",
+        what="Hasib asked for a more efficient first loading. Measured first: on his laptop Begin is ready about 3.3 s after the code starts, and "
+             "the fish was 43 percent of the download and was only requested after all the code had arrived. The fish's three 1024 pixel pictures "
+             "(518 KB of text inside a JSON file) are now 512 pixel WebP files (105 KB in all, the same to the eye at twice the real size), and "
+             "index.html tells the browser to start fetching the fish files at once, side by side with the code. In a slowed-network test "
+             "(9 Mbit/s, 150 ms) the fish step went from 760 ms to 10 ms and the first-visit download from 1,177 KB to 904 KB. "
+             "On a local run there is no difference, because there is no network delay.",
+        files=["<code>assets/barra_color.webp, barra_normal.webp, barra_orm.webp</code> (new); <code>assets/barra_tex.json</code> removed",
+               "<code>src/life/barramundi.js</code>, <code>index.html</code>",
+               "<code>tools/fish-model/shrink_textures.py</code> (new) and the original pictures kept in <code>tools/fish-model/</code>",
+               "<code>tests/shot.py</code>, <code>tests/cloudlike_server.mjs</code>: know the .webp type"],
+        state="Same look, less to download, and the fish arrives with the code.",
+        checks="startup, ui, controls, live and surface tests pass, no shaders built late. Real-internet speed not yet tested (waiting for the Cloudflare preview).",
+        status="Kept",
+    ),
+    dict(
+        subject="docs: track the faster opening change",
+        version="", lane="feature",
+        title="Update the guide, the notes and the commit log",
+        what="A row for the faster opening change, and the loading measurements in the notes.",
+        files=["<code>docs/git-tracking.pdf</code>, <code>docs/make_git_tracking.py</code>, <code>docs/commit-log.md</code>, <code>docs/claude-notes.md</code>"],
+        state="Same as the change above.",
+        checks="PDF made from the real commits.",
+        status="Kept",
+    ),
 ]
 
 # Before and after pictures (section 7): (image in docs/img, caption)
